@@ -4,7 +4,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Eye, EyeOff, GraduationCap, Loader2, Mail, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,15 +94,23 @@ function LoginForm() {
   const navigate = useNavigate();
 
   const handleGoogle = async () => {
-    setBusy(true);
-    try {
-      const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-      if (res.error) toast.error(res.error.message);
-      else if (!res.redirected) navigate({ to: "/dashboard" });
-    } finally {
-      setBusy(false);
+  setBusy(true);
+
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
     }
-  };
+  } finally {
+    setBusy(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,15 +207,23 @@ function RegisterForm() {
   const setField = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleGoogle = async () => {
-    setBusy(true);
-    try {
-      const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-      if (res.error) toast.error(res.error.message);
-      else if (!res.redirected) navigate({ to: "/dashboard" });
-    } finally {
-      setBusy(false);
+  setBusy(true);
+
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
     }
-  };
+  } finally {
+    setBusy(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,7 +234,7 @@ function RegisterForm() {
       email: form.email,
       password: form.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/verify-email`,
+        emailRedirectTo: `${window.location.origin}/auth`,
         data: {
           full_name: form.full_name,
           role,

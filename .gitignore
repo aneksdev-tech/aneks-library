@@ -30,3 +30,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Supabase CLI temporary files
+supabase/.temp/
+
+# Optional OS files
+Thumbs.db
