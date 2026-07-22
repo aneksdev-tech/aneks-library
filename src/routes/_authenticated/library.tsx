@@ -5,13 +5,14 @@ import { useAccess } from "@/hooks/useAccess";
 import { downloadResource } from "@/lib/download";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { BookMarked, Download, Search, Filter, Eye,} from "lucide-react";
+import { BookMarked, Download, Search, Filter, Eye, Loader2,} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { ResourceTypeBadge } from "@/components/ResourceTypeBadge";
 
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({ meta: [{ title: "Library — Aneks Library" }, { name: "robots", content: "noindex" }] }),
@@ -124,6 +125,9 @@ export function ResourceCard({
   const qc = useQueryClient();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
+  const [previewing, setPreviewing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
   const { data: bookmarked } = useQuery({
     queryKey: ["bookmarked", r.id, user?.id],
     enabled: !!user,
@@ -149,6 +153,8 @@ export function ResourceCard({
   });
 
   const download = async () => {
+  if (downloading) return;
+
   if (!user) {
     toast.error("Sign in to download");
     return;
@@ -160,6 +166,8 @@ export function ResourceCard({
     return;
   }
 
+  setDownloading(true);
+
   try {
     await downloadResource(r.id);
 
@@ -168,6 +176,8 @@ export function ResourceCard({
     });
   } catch (err: any) {
     toast.error(err.message);
+  } finally {
+    setDownloading(false);
   }
 };
 
@@ -179,11 +189,9 @@ export function ResourceCard({
           {r.category?.name ?? "General"}
         </span>
 
-        {r.year && (
-          <span className="text-xs text-muted-foreground">
-            {r.year}
-          </span>
-        )}
+        <ResourceTypeBadge
+  filePath={r.file_path}
+/>
       </div>
 
       <h3 className="line-clamp-2 font-display text-lg font-semibold">
@@ -226,28 +234,52 @@ export function ResourceCard({
         </span>
       </div>
 
-      <div className="mt-4 flex gap-2">
+  <div className="mt-4 flex gap-2">
 
   <Button
-    asChild
-    variant="outline"
-    size="sm"
-    className="flex-1"
+  asChild
+  variant="outline"
+  size="sm"
+  className="flex-1"
+  disabled={previewing}
+>
+  <Link
+    to="/preview/$resourceId"
+    params={{ resourceId: r.id }}
+    onClick={() => setPreviewing(true)}
   >
-    <Link to="/preview/$resourceId" params={{ resourceId: r.id }}>
-      <Eye className="mr-1.5 h-3.5 w-3.5" />
-      Preview
-    </Link>
-  </Button>
+    {previewing ? (
+  <>
+    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+    Previewing...
+  </>
+) : (
+  <>
+    <Eye className="mr-1.5 h-3.5 w-3.5" />
+    Preview
+  </>
+)}
+  </Link>
+</Button>
 
   <Button
-    onClick={download}
-    className="flex-1 bg-gradient-emerald text-primary-foreground"
-    size="sm"
-  >
+  onClick={download}
+  disabled={downloading}
+  className="flex-1 bg-gradient-emerald text-primary-foreground"
+  size="sm"
+>
+  {downloading ? (
+  <>
+    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+    Preparing Download...
+  </>
+) : (
+  <>
     <Download className="mr-1.5 h-3.5 w-3.5" />
     Download
-  </Button>
+  </>
+)}
+</Button>
 
   <Button
     onClick={() => toggleBookmark.mutate()}

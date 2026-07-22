@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
-import heroImg from "@/assets/hero-library.jpg";
+import heroImg from "@/assets/hero4.jpg";
+import logo from "@/assets/Logo__Circle.png";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "register", "forgot"]).catch("login"),
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in — Aneks Library" },
+      { title: "Sign in | Aneks Library" },
       { name: "description", content: "Sign in or create an Aneks Library account." },
       { name: "robots", content: "noindex" },
     ],
@@ -50,10 +51,12 @@ function AuthPage() {
       {/* Left — form */}
       <div className="relative flex flex-col p-6 sm:p-10">
         <Link to="/" className="inline-flex w-fit items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
-            <GraduationCap className="h-5 w-5" />
-          </span>
-          <span className="font-display text-lg font-semibold">Aneks<span className="text-gold">.</span>Library</span>
+          <img
+          src={logo}
+          alt="Aneks Library"
+          className="h-5 w-5 rounded-lg object-contain"
+        />
+          <span className="font-display text-sm font-semibold"><span className="text-gold">Aneks</span>Library</span>
         </Link>
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
@@ -72,12 +75,12 @@ function AuthPage() {
         <img src={heroImg} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-emerald opacity-80 mix-blend-multiply" />
         <div className="relative flex h-full flex-col justify-end p-12 text-primary-foreground">
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">The academic archive</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-gold">EMBRACE KNOWLEDGE AND EMPOWER MINDS</p>
           <h2 className="mt-3 max-w-md font-display text-4xl font-semibold leading-tight">
-            Every past question, project and paper — one calm library.
+            Develop a passion for learning. If you do, you will never cease to grow
           </h2>
           <p className="mt-3 max-w-md text-sm text-primary-foreground/80">
-            Join thousands of students and lecturers sharing quality resources across universities.
+            Access verified academic resources, contribute valuable materials, and learn with a growing community of students and lecturers, all in one trusted library.
           </p>
         </div>
       </div>
@@ -129,7 +132,7 @@ function LoginForm() {
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold">Welcome back</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Sign in to your Aneks Library account.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Login to your Aneks Library account.</p>
 
       <Button
         type="button"
@@ -253,7 +256,7 @@ function RegisterForm() {
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold">Create your account</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Join Aneks Library — free forever.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Join Aneks Library — free</p>
 
       <Button type="button" variant="outline" className="mt-6 w-full" onClick={handleGoogle} disabled={busy}>
         <GoogleIcon /> Continue with Google
