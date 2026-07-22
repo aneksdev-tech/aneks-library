@@ -14,9 +14,14 @@ export interface Profile {
   college: string | null;
   department: string | null;
   level: string | null;
+
   status: AccountStatus;
   primary_role: AppRole;
   reputation: number;
+
+  subscription_plan: "free" | "premium";
+  subscription_started_at: string | null;
+  subscription_expires_at: string | null;
 }
 
 interface AuthState {

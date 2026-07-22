@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
   BookMarked,
+  Crown,
   Home,
   Library,
   LogOut,
@@ -48,6 +49,7 @@ const NAV: NavItem[] = [
   { to: "/upload", icon: Upload, label: "Upload" },
   { to: "/my-uploads", icon: FileCheck2, label: "My Uploads" },
   { to: "/bookmarks", icon: BookMarked, label: "Bookmarks" },
+  { to: "/premium", icon: Crown, label: "Premium" },
   { to: "/notifications", icon: Bell, label: "Notifications" },
   { to: "/profile", icon: User, label: "Profile" },
   { to: "/admin", icon: Shield, label: "Admin", admin: true },

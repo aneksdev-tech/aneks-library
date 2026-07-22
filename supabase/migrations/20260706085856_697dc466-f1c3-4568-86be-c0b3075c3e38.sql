@@ -258,10 +258,25 @@ BEGIN
     v_status
   );
 
-  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, v_role)
-  ON CONFLICT DO NOTHING;
+  INSERT INTO public.user_roles (user_id, role)
+VALUES (NEW.id, v_role)
+ON CONFLICT DO NOTHING;
 
-  RETURN NEW;
+INSERT INTO public.subscriptions (
+  user_id,
+  plan,
+  status,
+  started_at
+)
+VALUES (
+  NEW.id,
+  'free',
+  'active',
+  now()
+)
+ON CONFLICT DO NOTHING;
+
+RETURN NEW;
 END; $$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

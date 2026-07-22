@@ -1,0 +1,19 @@
+{
+  "name": "aneks-library-watermark-server",
+  "version": "1.0.0",
+  "description": "Aneks Library Image Watermark Service",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "docx": "^9.7.1",
+    "express": "^4.21.2",
+    "pdf-lib": "^1.17.1",
+    "sharp": "^0.34.3",
+    "uuid": "^14.0.1"
+  }
+}

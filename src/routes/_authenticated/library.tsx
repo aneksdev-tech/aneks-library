@@ -1,14 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useAccess } from "@/hooks/useAccess";
+import { downloadResource } from "@/lib/download";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { BookMarked, Download, Search, Filter, ExternalLink } from "lucide-react";
+import { BookMarked, Download, Search, Filter, Eye,} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
 
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({ meta: [{ title: "Library — Aneks Library" }, { name: "robots", content: "noindex" }] }),
@@ -19,6 +22,8 @@ function LibraryPage() {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<"newest" | "downloads" | "bookmarks">("newest");
+
+  const { isPremium, isAdmin } = useAccess();
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -80,7 +85,7 @@ function LibraryPage() {
         </div>
       ) : data && data.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((r) => <ResourceCard key={r.id} r={r as unknown as ResourceRow} />)}
+          {data.map((r) => <ResourceCard key={r.id} r={r as unknown as ResourceRow} isPremium={isPremium} isAdmin={isAdmin} />)}
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-card">
@@ -106,9 +111,18 @@ export type ResourceRow = {
   category: { name: string | null; slug: string | null } | null;
 };
 
-export function ResourceCard({ r }: { r: ResourceRow }) {
+export function ResourceCard({
+  r,
+  isPremium,
+  isAdmin,
+}: {
+  r: ResourceRow;
+  isPremium: boolean;
+  isAdmin: boolean;
+}) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const { data: bookmarked } = useQuery({
     queryKey: ["bookmarked", r.id, user?.id],
@@ -135,48 +149,122 @@ export function ResourceCard({ r }: { r: ResourceRow }) {
   });
 
   const download = async () => {
-    if (!user) return toast.error("Sign in to download");
-    const { data, error } = await supabase.storage.from("resources").createSignedUrl(r.file_path, 60);
-    if (error) return toast.error(error.message);
-    await supabase.from("downloads").insert({ resource_id: r.id, user_id: user.id });
-    window.open(data.signedUrl, "_blank");
-    qc.invalidateQueries({ queryKey: ["library"] });
-  };
+  if (!user) {
+    toast.error("Sign in to download");
+    return;
+  }
+
+  // Admins and Premium users can download immediately
+  if (!isAdmin && !isPremium) {
+    setUpgradeOpen(true);
+    return;
+  }
+
+  try {
+    await downloadResource(r.id);
+
+    qc.invalidateQueries({
+      queryKey: ["library"],
+    });
+  } catch (err: any) {
+    toast.error(err.message);
+  }
+};
 
   return (
+  <>
     <article className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
           {r.category?.name ?? "General"}
         </span>
-        {r.year && <span className="text-xs text-muted-foreground">{r.year}</span>}
+
+        {r.year && (
+          <span className="text-xs text-muted-foreground">
+            {r.year}
+          </span>
+        )}
       </div>
-      <h3 className="line-clamp-2 font-display text-lg font-semibold">{r.title}</h3>
-      {r.description && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{r.description}</p>}
+
+      <h3 className="line-clamp-2 font-display text-lg font-semibold">
+        {r.title}
+      </h3>
+
+      {r.description && (
+        <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+          {r.description}
+        </p>
+      )}
+
       <div className="mt-3 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-        {r.course_code && <span className="rounded-md bg-muted px-2 py-0.5">{r.course_code}</span>}
-        {r.department && <span className="rounded-md bg-muted px-2 py-0.5">{r.department}</span>}
+        {r.course_code && (
+          <span className="rounded-md bg-muted px-2 py-0.5">
+            {r.course_code}
+          </span>
+        )}
+
+        {r.department && (
+          <span className="rounded-md bg-muted px-2 py-0.5">
+            {r.department}
+          </span>
+        )}
       </div>
+
       <div className="mt-auto flex items-center justify-between pt-5 text-xs text-muted-foreground">
         <span>{new Date(r.created_at).toLocaleDateString()}</span>
+
         <span className="inline-flex items-center gap-3">
-          <span className="inline-flex items-center gap-1"><Download className="h-3 w-3" /> {r.download_count}</span>
-          <span className="inline-flex items-center gap-1"><BookMarked className="h-3 w-3" /> {r.bookmark_count}</span>
+          <span className="inline-flex items-center gap-1">
+            <Download className="h-3 w-3" />
+            {r.download_count}
+          </span>
+
+          <span className="inline-flex items-center gap-1">
+            <BookMarked className="h-3 w-3" />
+            {r.bookmark_count}
+          </span>
         </span>
       </div>
+
       <div className="mt-4 flex gap-2">
-        <Button onClick={download} className="flex-1 bg-gradient-emerald text-primary-foreground" size="sm">
-          <Download className="mr-1.5 h-3.5 w-3.5" /> Download
-        </Button>
-        <Button
-          onClick={() => toggleBookmark.mutate()}
-          variant={bookmarked ? "default" : "outline"}
-          size="sm"
-          aria-label="Bookmark"
-        >
-          <BookMarked className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+
+  <Button
+    asChild
+    variant="outline"
+    size="sm"
+    className="flex-1"
+  >
+    <Link to="/preview/$resourceId" params={{ resourceId: r.id }}>
+      <Eye className="mr-1.5 h-3.5 w-3.5" />
+      Preview
+    </Link>
+  </Button>
+
+  <Button
+    onClick={download}
+    className="flex-1 bg-gradient-emerald text-primary-foreground"
+    size="sm"
+  >
+    <Download className="mr-1.5 h-3.5 w-3.5" />
+    Download
+  </Button>
+
+  <Button
+    onClick={() => toggleBookmark.mutate()}
+    variant={bookmarked ? "default" : "outline"}
+    size="sm"
+    aria-label="Bookmark"
+  >
+    <BookMarked className="h-3.5 w-3.5" />
+  </Button>
+
+</div>
     </article>
-  );
+
+    <UpgradeDialog
+      open={upgradeOpen}
+      onOpenChange={setUpgradeOpen}
+    />
+  </>
+);
 }
