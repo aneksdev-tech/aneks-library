@@ -16,7 +16,7 @@ const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 const ALLOWED = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "image/png", "image/jpeg", "application/zip"];
 
 export const Route = createFileRoute("/_authenticated/upload")({
-  head: () => ({ meta: [{ title: "Upload — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Upload | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: UploadPage,
 });
 

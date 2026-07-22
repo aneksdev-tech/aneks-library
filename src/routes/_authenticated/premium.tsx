@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/premium")({
   head: () => ({
     meta: [
-      { title: "Premium — Aneks Library" },
+      { title: "Premium | Aneks Library" },
       { name: "robots", content: "noindex" },
     ],
   }),

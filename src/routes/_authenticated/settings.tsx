@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sun, Moon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Settings | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: SettingsPage,
 });
 

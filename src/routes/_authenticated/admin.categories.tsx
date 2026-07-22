@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/categories")({
-  head: () => ({ meta: [{ title: "Categories — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Categories | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: CategoriesAdmin,
 });
 

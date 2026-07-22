@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Reset password | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: ResetPassword,
 });
 

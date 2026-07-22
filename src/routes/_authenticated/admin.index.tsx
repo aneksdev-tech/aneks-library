@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Users, FileCheck2, Download, BookMarked, HardDrive, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  head: () => ({ meta: [{ title: "Admin Overview — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin Overview | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: AdminOverview,
 });
 

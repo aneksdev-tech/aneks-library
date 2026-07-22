@@ -8,7 +8,7 @@ import type { AccountStatus, AppRole } from "@/lib/auth";
 import { Shield } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
-  head: () => ({ meta: [{ title: "Users — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Users | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: UsersPage,
 });
 

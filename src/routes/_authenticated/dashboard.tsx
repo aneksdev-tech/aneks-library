@@ -6,7 +6,7 @@ import { ArrowUpRight, BookMarked, Download, FileCheck2, Upload, TrendingUp } fr
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Dashboard | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: DashboardPage,
 });
 
@@ -72,7 +72,7 @@ function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+          <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-elegant">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase tracking-wider text-muted-foreground">{c.label}</span>
               <c.icon className="h-4 w-4 text-primary" />
@@ -83,7 +83,7 @@ function DashboardPage() {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-soft">
+      <div className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden">
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>
             <h2 className="font-display text-lg font-semibold">Recent uploads</h2>
@@ -96,7 +96,7 @@ function DashboardPage() {
         {recent && recent.length > 0 ? (
           <ul className="divide-y divide-border">
             {recent.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-4 p-5">
+              <li key={r.id} className="flex items-center justify-between gap-4 p-5 transition-colors hover:bg-muted/40">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{r.title}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -121,14 +121,23 @@ function DashboardPage() {
 
 export function StatusPill({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    approved: "bg-primary/10 text-primary",
-    pending: "bg-gold/15 text-gold",
-    rejected: "bg-destructive/10 text-destructive",
-    draft: "bg-muted text-muted-foreground",
-    archived: "bg-secondary text-secondary-foreground",
-  };
+  approved:
+    "bg-emerald-500/15 text-emerald-500 border border-emerald-500/25",
+
+  pending:
+    "bg-amber-500/15 text-amber-500 border border-amber-500/25",
+
+  rejected:
+    "bg-red-500/15 text-red-500 border border-red-500/25",
+
+  draft:
+    "bg-muted border border-border text-muted-foreground",
+
+  archived:
+    "bg-secondary border border-border text-secondary-foreground",
+};
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${styles[status] ?? "bg-muted"}`}>
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${styles[status] ?? "bg-muted"}`}>
       {status}
     </span>
   );

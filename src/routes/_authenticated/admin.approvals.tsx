@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { EmptyState } from "./dashboard";
 
 export const Route = createFileRoute("/_authenticated/admin/approvals")({
-  head: () => ({ meta: [{ title: "Approvals — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Approvals | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: Approvals,
 });
 

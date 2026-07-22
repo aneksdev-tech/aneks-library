@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Aneks Library" },
+      { title: "Pricing | Aneks Library" },
       {
         name: "description",
         content:

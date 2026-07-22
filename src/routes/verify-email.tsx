@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/verify-email")({
   validateSearch: z.object({ email: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Verify your email — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Verify your email | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: VerifyEmail,
 });
 

@@ -79,13 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Aneks Library — Academic Resources for Students, Lecturers & Researchers" },
+      { title: "Aneks Library | Built for Academic Excellence" },
       {
         name: "description",
         content:
           "Discover, share and download past questions, project reports, seminar papers, lecture notes, research and e-books on Aneks Library.",
       },
-      { property: "og:title", content: "Aneks Library — Academic Resources Made Effortless" },
+      { property: "og:title", content: "Aneks Library | Built for Academic Excellence" },
       {
         property: "og:description",
         content:

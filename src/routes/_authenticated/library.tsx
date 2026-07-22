@@ -15,7 +15,7 @@ import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { ResourceTypeBadge } from "@/components/ResourceTypeBadge";
 
 export const Route = createFileRoute("/_authenticated/library")({
-  head: () => ({ meta: [{ title: "Library — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Library | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: LibraryPage,
 });
 
@@ -235,62 +235,53 @@ export function ResourceCard({
       </div>
 
   <div className="mt-4 flex gap-2">
+  <div className="flex flex-1 min-w-0 gap-2">
+
+    <Button
+      asChild
+      variant="outline"
+      size="sm"
+      className="flex-1 min-w-0"
+      disabled={previewing}
+    >
+      <Link
+        to="/preview/$resourceId"
+        params={{ resourceId: r.id }}
+        onClick={() => setPreviewing(true)}
+        className="flex items-center justify-center"
+      >
+        <Eye className="h-3.5 w-3.5 shrink-0" />
+        <span className="ml-1.5 hidden sm:inline truncate">
+          {previewing ? "Previewing..." : "Preview"}
+        </span>
+      </Link>
+    </Button>
+
+    <Button
+      onClick={download}
+      disabled={downloading}
+      size="sm"
+      className="flex-1 min-w-0 bg-gradient-emerald text-primary-foreground"
+    >
+      <Download className="h-3.5 w-3.5 shrink-0" />
+      <span className="ml-1.5 hidden sm:inline truncate">
+        {downloading ? "Preparing Download..." : "Download"}
+      </span>
+    </Button>
+
+  </div>
 
   <Button
-  asChild
-  variant="outline"
-  size="sm"
-  className="flex-1"
-  disabled={previewing}
->
-  <Link
-    to="/preview/$resourceId"
-    params={{ resourceId: r.id }}
-    onClick={() => setPreviewing(true)}
-  >
-    {previewing ? (
-  <>
-    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-    Previewing...
-  </>
-) : (
-  <>
-    <Eye className="mr-1.5 h-3.5 w-3.5" />
-    Preview
-  </>
-)}
-  </Link>
-</Button>
-
-  <Button
-  onClick={download}
-  disabled={downloading}
-  className="flex-1 bg-gradient-emerald text-primary-foreground"
-  size="sm"
->
-  {downloading ? (
-  <>
-    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-    Preparing Download...
-  </>
-) : (
-  <>
-    <Download className="mr-1.5 h-3.5 w-3.5" />
-    Download
-  </>
-)}
-</Button>
-
-  <Button
-    onClick={() => toggleBookmark.mutate()}
+    className="shrink-0"
     variant={bookmarked ? "default" : "outline"}
     size="sm"
+    onClick={() => toggleBookmark.mutate()}
     aria-label="Bookmark"
   >
     <BookMarked className="h-3.5 w-3.5" />
   </Button>
-
 </div>
+
     </article>
 
     <UpgradeDialog

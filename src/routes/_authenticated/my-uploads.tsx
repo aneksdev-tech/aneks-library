@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { EmptyState, StatusPill } from "./dashboard";
 
 export const Route = createFileRoute("/_authenticated/my-uploads")({
-  head: () => ({ meta: [{ title: "My Uploads — Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My Uploads | Aneks Library" }, { name: "robots", content: "noindex" }] }),
   component: MyUploads,
 });
 

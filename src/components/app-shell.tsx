@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
             <GraduationCap className="h-4 w-4" />
           </span>
-          <span className="font-display text-base font-semibold">Aneks<span className="text-gold">.</span>Library</span>
+          <span className="font-display text-base font-semibold"><span className="text-gold">Aneks</span>Library</span>
         </Link>
         <SidebarNav items={items} pathname={pathname} />
       </aside>
@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
                   <GraduationCap className="h-4 w-4" />
                 </span>
-                <span className="font-display text-base font-semibold">Aneks<span className="text-gold">.</span>Library</span>
+                <span className="font-display text-base font-semibold"><span className="text-gold">Aneks</span>Library</span>
               </span>
               <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
                 <X className="h-5 w-5" />
