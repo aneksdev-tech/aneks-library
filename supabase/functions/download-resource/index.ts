@@ -247,9 +247,28 @@ const response = await fetch(
 );
 
 if (!response.ok) {
-  throw new Error(
-    "Watermark server failed.",
-  );
+
+  let message =
+    "Watermark server failed.";
+
+  try {
+
+    const body =
+      await response.json();
+
+    if (
+      body &&
+      typeof body.error === "string"
+    ) {
+      message = body.error;
+    }
+
+  } catch {
+    // Ignore invalid JSON
+  }
+
+  throw new Error(message);
+
 }
 
 const watermarkedImage =
@@ -277,30 +296,8 @@ return new Response(watermarkedImage, {
 
 if (isPdf) {
 
-  const originalBlob =
-    await downloadStorageFile(
-      supabase,
-      resource.file_path,
-    );
-
-  const bytes =
-    new Uint8Array(
-      await originalBlob.arrayBuffer(),
-    );
-
-  const base64 =
-    btoa(
-      Array.from(bytes)
-        .map((b) =>
-          String.fromCharCode(b),
-        )
-        .join(""),
-    );
-
   const watermarkServer =
-    Deno.env.get(
-      "WATERMARK_SERVER",
-    );
+    Deno.env.get("WATERMARK_SERVER");
 
   if (!watermarkServer) {
     throw new Error(
@@ -309,7 +306,7 @@ if (isPdf) {
   }
 
   console.log(
-    "Sending PDF to watermark server...",
+    "Requesting PDF watermark...",
   );
 
   const response =
@@ -319,13 +316,12 @@ if (isPdf) {
         method: "POST",
 
         headers: {
-          "Content-Type":
-            "application/json",
+          "Content-Type": "application/json",
         },
 
         body: JSON.stringify({
 
-          pdf: base64,
+          filePath: resource.file_path,
 
           email: user.email,
 
@@ -336,9 +332,29 @@ if (isPdf) {
 
   if (!response.ok) {
 
-    throw new Error(
-      "PDF watermark server failed.",
+    let message =
+      "PDF watermark server failed.";
+
+    try {
+
+      const body =
+        await response.json();
+
+      if (
+        body &&
+        typeof body.error === "string"
+      ) {
+        message = body.error;
+      }
+
+    } catch {}
+
+    console.error(
+      "PDF watermark error:",
+      message,
     );
+
+    throw new Error(message);
 
   }
 
@@ -380,30 +396,8 @@ if (isPdf) {
 
 if (isDocx) {
 
-  const originalBlob =
-    await downloadStorageFile(
-      supabase,
-      resource.file_path,
-    );
-
-  const bytes =
-    new Uint8Array(
-      await originalBlob.arrayBuffer(),
-    );
-
-  const base64 =
-    btoa(
-      Array.from(bytes)
-        .map((b) =>
-          String.fromCharCode(b),
-        )
-        .join(""),
-    );
-
   const watermarkServer =
-    Deno.env.get(
-      "WATERMARK_SERVER",
-    );
+    Deno.env.get("WATERMARK_SERVER");
 
   if (!watermarkServer) {
     throw new Error(
@@ -412,7 +406,7 @@ if (isDocx) {
   }
 
   console.log(
-    "Sending DOCX to watermark server...",
+    "Requesting DOCX watermark...",
   );
 
   const response =
@@ -428,7 +422,7 @@ if (isDocx) {
 
         body: JSON.stringify({
 
-          docx: base64,
+          filePath: resource.file_path,
 
           email: user.email,
 
@@ -439,35 +433,31 @@ if (isDocx) {
 
   if (!response.ok) {
 
-  let message =
-    "DOCX watermark server failed.";
+    let message =
+      "DOCX watermark server failed.";
 
-  try {
+    try {
 
-    const body =
-      await response.json();
+      const body =
+        await response.json();
 
-    if (
-      body &&
-      typeof body.error === "string"
-    ) {
-      message = body.error;
-    }
+      if (
+        body &&
+        typeof body.error === "string"
+      ) {
+        message = body.error;
+      }
 
-  } catch {
+    } catch {}
 
-    // Ignore invalid JSON responses
+    console.error(
+      "DOCX watermark error:",
+      message,
+    );
+
+    throw new Error(message);
 
   }
-
-  console.log(
-    "DOCX server response:",
-    message,
-  );
-
-  throw new Error(message);
-
-}
 
   const pdf =
     await response.arrayBuffer();

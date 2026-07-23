@@ -209,3 +209,26 @@
   backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
 }
+
+/* ===========================================
+   Announcement Banner Marquee
+=========================================== */
+
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.announcement-marquee {
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.announcement-marquee:hover {
+  animation-play-state: paused;
+}

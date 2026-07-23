@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ArrowUpRight, BookMarked, Download, FileCheck2, Upload, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getContributorLevel, getLevelProgress, getNextContributorLevel,} from "@/lib/reputation";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | Aneks Library" }, { name: "robots", content: "noindex" }] }),
@@ -45,12 +47,16 @@ function DashboardPage() {
       return data ?? [];
     },
   });
+  
+  const contributor = getContributorLevel(profile?.reputation ?? 0);
+  const progress = getLevelProgress(profile?.reputation ?? 0);
+  const nextLevel = getNextContributorLevel(profile?.reputation ?? 0);
 
   const cards = [
     { label: "My Uploads", value: stats?.uploads ?? 0, icon: Upload, sub: `${stats?.approved ?? 0} approved` },
     { label: "Downloads", value: stats?.downloads ?? 0, icon: Download, sub: "All time" },
     { label: "Bookmarks", value: stats?.bookmarks ?? 0, icon: BookMarked, sub: "Saved for later" },
-    { label: "Reputation", value: profile?.reputation ?? 0, icon: TrendingUp, sub: "Contribution score" },
+    { label: "Reputation", value: profile?.reputation ?? 0, icon: TrendingUp, sub: `${contributor.emoji} ${contributor.name}`, },
   ];
 
   return (
@@ -70,6 +76,8 @@ function DashboardPage() {
         </Button>
       </div>
 
+      <AnnouncementBanner />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-elegant">
@@ -77,8 +85,30 @@ function DashboardPage() {
               <span className="text-xs uppercase tracking-wider text-muted-foreground">{c.label}</span>
               <c.icon className="h-4 w-4 text-primary" />
             </div>
-            <div className="mt-4 font-display text-3xl font-semibold">{c.value}</div>
-            <div className="mt-1 text-xs text-muted-foreground">{c.sub}</div>
+            <div className="mt-4 font-display text-3xl font-semibold">
+  {c.value}
+</div>
+
+<div className="mt-1 text-xs text-muted-foreground">
+  {c.sub}
+</div>
+
+{c.label === "Reputation" && (
+  <>
+    <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+      <div
+        className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+
+    <p className="mt-2 text-[11px] text-muted-foreground">
+      {nextLevel
+        ? `${nextLevel.pointsNeeded} pts to ${nextLevel.emoji} ${nextLevel.name}`
+        : "Highest contributor level reached 👑"}
+    </p>
+  </>
+)}
           </div>
         ))}
       </div>

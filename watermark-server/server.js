@@ -9,8 +9,19 @@ import os from "os";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import { v4 as uuid } from "uuid";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+dotenv.config({
+  path: "../.env",
+});
 
 const execFileAsync = promisify(execFile);
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const SOFFICE =
   "C:\\Program Files\\LibreOffice\\program\\soffice.com";
@@ -161,10 +172,8 @@ async function processPdf(
 
   const watermarkText =
 `Aneks Library
-
 Downloaded by:
 ${email}
-
 ${date}
 ${time}`;
 
@@ -179,17 +188,17 @@ ${time}`;
         x: width * 0.22,
         y: height * 0.35,
 
-        size: 28,
+        size: 8,
 
         font,
 
         color: rgb(
-          0.72,
-          0.72,
-          0.72,
+          0.35,
+          0.35,
+          0.35,
         ),
 
-        opacity: 0.08,
+        opacity: 0.70,
 
         rotate: degrees(-45),
       },
@@ -259,7 +268,7 @@ app.post("/watermark", async (req, res) => {
     // -----------------------------------------
 
     const watermarkWidth = Math.round(
-      width * 0.25,
+      width * 0.18,
     );
 
     const watermark =
@@ -465,13 +474,13 @@ app.post("/watermark-pdf", async (req, res) => {
   try {
 
     const {
-      pdf,
+      filePath,
       email,
     } = req.body;
 
-    if (!pdf) {
+    if (!filePath) {
       return res.status(400).json({
-        error: "Missing PDF.",
+        error: "Missing filePath.",
       });
     }
 
@@ -481,16 +490,34 @@ app.post("/watermark-pdf", async (req, res) => {
       });
     }
 
-    const pdfBytes = Buffer.from(
-      pdf,
-      "base64",
-    );
+    const {
+      data: pdfBlob,
+      error: downloadError,
+    } = await supabase.storage
+      .from("resources")
+      .download(filePath);
+
+    if (downloadError || !pdfBlob) {
+
+      console.error(downloadError);
+
+      return res.status(404).json({
+        error: "Unable to download PDF from Storage.",
+      });
+
+    }
+
+    const pdfBytes =
+      Buffer.from(
+        await pdfBlob.arrayBuffer(),
+      );
 
     console.log(
-      "Received PDF:",
+      "Downloaded PDF:",
       pdfBytes.length,
       "bytes",
     );
+
 
     const output =
       await processPdf(
@@ -524,14 +551,14 @@ app.post("/watermark-docx", async (req, res) => {
   try {
 
     const {
-      docx,
-      email,
-    } = req.body;
+  filePath,
+  email,
+} = req.body;
 
-    if (!docx) {
+    if (!filePath) {
       return res.status(400).json({
-        error: "Missing DOCX.",
-      });
+      error: "Missing filePath.",
+    });
     }
 
     if (!email) {
@@ -540,17 +567,32 @@ app.post("/watermark-docx", async (req, res) => {
       });
     }
 
-    const docxBytes =
-      Buffer.from(
-        docx,
-        "base64",
-      );
+    const {
+  data: docxBlob,
+  error: downloadError,
+} = await supabase.storage
+  .from("resources")
+  .download(filePath);
 
-    console.log(
-      "Received DOCX:",
-      docxBytes.length,
-      "bytes",
-    );
+if (downloadError || !docxBlob) {
+
+  console.error(downloadError);
+
+  return res.status(404).json({
+    error: "Unable to download DOCX from Storage.",
+  });
+
+}
+
+const docxBytes = Buffer.from(
+  await docxBlob.arrayBuffer(),
+);
+
+console.log(
+  "Downloaded DOCX:",
+  docxBytes.length,
+  "bytes",
+);
 
     const pdfBytes =
       await processDocx(

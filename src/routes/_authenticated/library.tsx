@@ -36,7 +36,7 @@ function LibraryPage() {
     queryFn: async () => {
       let query = supabase
         .from("resources")
-        .select("id, title, description, course_code, department, year, tags, file_path, download_count, bookmark_count, created_at, category:categories(name, slug)")
+        .select("id, title, description, course_code, college, department, level, semester, year, tags, file_path, download_count, bookmark_count, created_at, category:categories(name, slug)")
         .eq("status", "approved");
       if (category !== "all") query = query.eq("category_id", category);
       if (q.trim()) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,course_code.ilike.%${q}%`);
@@ -101,8 +101,11 @@ export type ResourceRow = {
   id: string;
   title: string;
   description: string | null;
-  course_code: string | null;
+  course_code: string |null;
+  college: string | null;
   department: string | null;
+  level: string | null;
+  semester: string | null;
   year: number | null;
   tags: string[];
   file_path: string;
@@ -127,6 +130,9 @@ export function ResourceCard({
 
   const [previewing, setPreviewing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  const collegeShort =
+  r.college?.match(/\((.*?)\)/)?.[1] ?? r.college;
 
   const { data: bookmarked } = useQuery({
     queryKey: ["bookmarked", r.id, user?.id],
@@ -194,54 +200,72 @@ export function ResourceCard({
 />
       </div>
 
-      <h3 className="line-clamp-2 font-display text-lg font-semibold">
-        {r.title}
-      </h3>
+      <h3 className="line-clamp-2 font-display text-lg font-semibold leading-snug">
+  {r.title}
+</h3>
 
-      {r.description && (
-        <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
-          {r.description}
-        </p>
-      )}
+{r.description && (
+  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+    {r.description}
+  </p>
+)}
 
-      <div className="mt-3 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-        {r.course_code && (
-          <span className="rounded-md bg-muted px-2 py-0.5">
-            {r.course_code}
-          </span>
-        )}
+<div className="mt-3 space-y-2 text-sm">
+  {r.course_code && (
+    <div className="font-medium text-primary">
+      📘 {r.course_code}
+    </div>
+  )}
 
-        {r.department && (
-          <span className="rounded-md bg-muted px-2 py-0.5">
-            {r.department}
-          </span>
-        )}
-      </div>
+  {r.college && (
+    <div className="text-muted-foreground">
+      🏛️ {collegeShort}
+    </div>
+  )}
 
-      <div className="mt-auto flex items-center justify-between pt-5 text-xs text-muted-foreground">
-        <span>{new Date(r.created_at).toLocaleDateString()}</span>
+  {r.department && (
+    <div className="text-muted-foreground">
+      🏢 {r.department}
+    </div>
+  )}
 
-        <span className="inline-flex items-center gap-3">
-          <span className="inline-flex items-center gap-1">
-            <Download className="h-3 w-3" />
-            {r.download_count}
-          </span>
+  {r.level && (
+  <div>
+    🎓 {r.level}
+  </div>
+)}
 
-          <span className="inline-flex items-center gap-1">
-            <BookMarked className="h-3 w-3" />
-            {r.bookmark_count}
-          </span>
-        </span>
-      </div>
+{r.semester && (
+  <div>
+    📅 {r.semester}
+  </div>
+)}
+</div>
 
-  <div className="mt-4 flex gap-2">
-  <div className="flex flex-1 min-w-0 gap-2">
+<div className="mt-auto flex items-center justify-between pt-5 text-xs text-muted-foreground">
+  <span>{new Date(r.created_at).toLocaleDateString()}</span>
+
+  <span className="inline-flex items-center gap-3">
+    <span className="inline-flex items-center gap-1">
+      <Download className="h-3 w-3" />
+      {r.download_count}
+    </span>
+
+    <span className="inline-flex items-center gap-1">
+      <BookMarked className="h-3 w-3" />
+      {r.bookmark_count}
+    </span>
+  </span>
+</div>
+
+<div className="mt-4 flex gap-2">
+  <div className="flex min-w-0 flex-1 gap-2">
 
     <Button
       asChild
       variant="outline"
       size="sm"
-      className="flex-1 min-w-0"
+      className="min-w-0 flex-1"
       disabled={previewing}
     >
       <Link
@@ -250,8 +274,13 @@ export function ResourceCard({
         onClick={() => setPreviewing(true)}
         className="flex items-center justify-center"
       >
-        <Eye className="h-3.5 w-3.5 shrink-0" />
-        <span className="ml-1.5 hidden sm:inline truncate">
+        {previewing ? (
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+        ) : (
+          <Eye className="h-3.5 w-3.5 shrink-0" />
+        )}
+
+        <span className="ml-1.5 hidden truncate sm:inline">
           {previewing ? "Previewing..." : "Preview"}
         </span>
       </Link>
@@ -261,10 +290,15 @@ export function ResourceCard({
       onClick={download}
       disabled={downloading}
       size="sm"
-      className="flex-1 min-w-0 bg-gradient-emerald text-primary-foreground"
+      className="min-w-0 flex-1 bg-gradient-emerald text-primary-foreground"
     >
-      <Download className="h-3.5 w-3.5 shrink-0" />
-      <span className="ml-1.5 hidden sm:inline truncate">
+      {downloading ? (
+        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+      ) : (
+        <Download className="h-3.5 w-3.5 shrink-0" />
+      )}
+
+      <span className="ml-1.5 hidden truncate sm:inline">
         {downloading ? "Preparing Download..." : "Download"}
       </span>
     </Button>
@@ -282,12 +316,12 @@ export function ResourceCard({
   </Button>
 </div>
 
-    </article>
+</article>
 
-    <UpgradeDialog
-      open={upgradeOpen}
-      onOpenChange={setUpgradeOpen}
-    />
+<UpgradeDialog
+  open={upgradeOpen}
+  onOpenChange={setUpgradeOpen}
+/>
   </>
 );
 }

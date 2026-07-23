@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Upload as UploadIcon, FileText, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { academicData, colleges, levels, semesters, years } from "@/lib/academicData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,16 +28,21 @@ function UploadPage() {
   const [progress, setProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    category_id: "",
-    course_code: "",
-    department: profile?.department ?? "",
-    level: profile?.level ?? "",
-    author: profile?.full_name ?? "",
-    year: new Date().getFullYear().toString(),
-    tags: "",
-  });
+  title: "",
+  description: "",
+  category_id: "",
+  course_code: "",
+  college: "",
+  department: "",
+  semester: "",
+  level: "",
+  year: new Date().getFullYear().toString(),
+});
+
+const departments =
+  form.college && form.college in academicData
+    ? academicData[form.college as keyof typeof academicData]
+    : [];
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -58,39 +64,79 @@ function UploadPage() {
 
   const upload = useMutation({
     mutationFn: async () => {
-      if (!user || !file) throw new Error("No file selected");
-      if (!form.title.trim()) throw new Error("Title is required");
-      if (!form.category_id) throw new Error("Choose a category");
+  if (!user || !file) throw new Error("No file selected");
 
-      const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
-      setProgress(30);
-      const { error: upErr } = await supabase.storage.from("resources").upload(path, file, {
-        contentType: file.type,
-        upsert: false,
-      });
-      if (upErr) throw upErr;
-      setProgress(70);
+  if (!form.title.trim())
+    throw new Error("Title is required");
 
-      const { error: insErr } = await supabase.from("resources").insert({
-        uploader_id: user.id,
-        category_id: form.category_id,
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        course_code: form.course_code.trim() || null,
-        department: form.department.trim() || null,
-        level: form.level.trim() || null,
-        author: form.author.trim() || null,
-        year: form.year ? parseInt(form.year) : null,
-        tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
-        file_path: path,
-        file_name: file.name,
-        file_size: file.size,
-        mime_type: file.type,
-        status: "pending",
-      });
-      if (insErr) throw insErr;
-      setProgress(100);
-    },
+  if (!form.category_id)
+    throw new Error("Choose a category");
+
+  if (!form.college)
+    throw new Error("Choose a college");
+
+  if (!form.department)
+    throw new Error("Choose a department");
+
+  if (!form.level)
+    throw new Error("Choose a level");
+
+  if (!form.semester)
+    throw new Error("Choose a semester");
+
+  if (!form.course_code.trim())
+    throw new Error("Course code is required");
+
+  if (!form.year)
+    throw new Error("Choose a year");
+
+  const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(
+    /[^a-zA-Z0-9.\-_]/g,
+    "_"
+  )}`;
+
+  setProgress(30);
+
+  const { error: upErr } = await supabase.storage
+    .from("resources")
+    .upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (upErr) throw upErr;
+
+  setProgress(70);
+
+  const { error: insErr } = await supabase.from("resources").insert({
+    uploader_id: user.id,
+
+    category_id: form.category_id,
+
+    title: form.title.trim(),
+    description: form.description.trim() || null,
+
+    course_code: form.course_code.trim(),
+
+    college: form.college,
+    department: form.department,
+    semester: form.semester,
+    level: form.level,
+
+    year: parseInt(form.year),
+
+    file_path: path,
+    file_name: file.name,
+    file_size: file.size,
+    mime_type: file.type,
+
+    status: "pending",
+  });
+
+  if (insErr) throw insErr;
+
+  setProgress(100);
+},
     onSuccess: () => {
       toast.success("Uploaded. An admin will review it shortly.");
       nav({ to: "/my-uploads" });
@@ -163,7 +209,7 @@ function UploadPage() {
             <Input id="title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="mt-1.5" />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="desc">Description</Label>
+            <Label htmlFor="desc">Description *</Label>
             <Textarea id="desc" rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1.5" />
           </div>
           <div>
@@ -176,29 +222,145 @@ function UploadPage() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="course">Course code</Label>
+            <Label htmlFor="course">Course Code *</Label>
             <Input id="course" placeholder="e.g. CSC 301" value={form.course_code} onChange={(e) => setForm({ ...form, course_code: e.target.value })} className="mt-1.5" />
           </div>
           <div>
-            <Label htmlFor="dept">Department</Label>
-            <Input id="dept" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className="mt-1.5" />
-          </div>
-          <div>
-            <Label htmlFor="level">Level</Label>
-            <Input id="level" placeholder="e.g. 300" value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="mt-1.5" />
-          </div>
-          <div>
-            <Label htmlFor="author">Author</Label>
-            <Input id="author" value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} className="mt-1.5" />
-          </div>
-          <div>
-            <Label htmlFor="year">Year</Label>
-            <Input id="year" type="number" min="1990" max="2100" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} className="mt-1.5" />
-          </div>
-          <div className="sm:col-span-2">
-            <Label htmlFor="tags">Tags (comma separated)</Label>
-            <Input id="tags" placeholder="e.g. algorithms, midterm, 2024" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="mt-1.5" />
-          </div>
+  <Label>College *</Label>
+  <Select
+    value={form.college}
+    onValueChange={(value) =>
+      setForm({
+        ...form,
+        college: value,
+        department: "",
+      })
+    }
+  >
+    <SelectTrigger className="mt-1.5">
+      <SelectValue placeholder="Choose College" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {colleges.map((college) => (
+        <SelectItem key={college} value={college}>
+          {college}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+<div>
+  <Label>Department *</Label>
+
+  <Select
+    value={form.department}
+    onValueChange={(value) =>
+      setForm({
+        ...form,
+        department: value,
+      })
+    }
+    disabled={!form.college}
+  >
+    <SelectTrigger className="mt-1.5">
+      <SelectValue
+        placeholder={
+          form.college
+            ? "Choose Department"
+            : "Select College first"
+        }
+      />
+    </SelectTrigger>
+
+    <SelectContent>
+      {departments.map((dept) => (
+        <SelectItem key={dept} value={dept}>
+          {dept}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+<div>
+  <Label>Level *</Label>
+
+  <Select
+    value={form.level}
+    onValueChange={(value) =>
+      setForm({
+        ...form,
+        level: value,
+      })
+    }
+  >
+    <SelectTrigger className="mt-1.5">
+      <SelectValue placeholder="Choose Level" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {levels.map((level) => (
+        <SelectItem key={level} value={level}>
+          {level}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+<div>
+  <Label>Semester *</Label>
+
+  <Select
+    value={form.semester}
+    onValueChange={(value) =>
+      setForm({
+        ...form,
+        semester: value,
+      })
+    }
+  >
+    <SelectTrigger className="mt-1.5">
+      <SelectValue placeholder="Choose Semester" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {semesters.map((semester) => (
+        <SelectItem key={semester} value={semester}>
+          {semester}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+<div>
+  <Label>Year *</Label>
+
+  <Select
+    value={form.year}
+    onValueChange={(value) =>
+      setForm({
+        ...form,
+        year: value,
+      })
+    }
+  >
+    <SelectTrigger className="mt-1.5">
+      <SelectValue />
+    </SelectTrigger>
+
+    <SelectContent>
+      {years.map((year) => (
+        <SelectItem key={year} value={year.toString()}>
+          {year}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
         </div>
 
         {progress > 0 && <Progress value={progress} />}
