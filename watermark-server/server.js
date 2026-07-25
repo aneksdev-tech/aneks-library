@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { WATERMARK } from "./watermarkTemplate.js";
+import { createCanvas } from "@napi-rs/canvas";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -266,57 +267,53 @@ app.post("/watermark", async (req, res) => {
       });
     }
 
-  const watermarkPath = path.join(
-  __dirname,
-  "aneks-watermark.png",
+// -----------------------------------------
+// Create watermark with Canvas
+// -----------------------------------------
+
+const canvas = createCanvas(width, height);
+const ctx = canvas.getContext("2d");
+
+ctx.clearRect(0, 0, width, height);
+
+ctx.translate(width / 2, height / 2);
+
+ctx.rotate(
+  (-WATERMARK.rotation * Math.PI) / 180,
 );
 
-const watermarkWidth = Math.round(
-  Math.min(width, height) * 0.80
+ctx.globalAlpha = WATERMARK.opacity;
+
+ctx.fillStyle = `rgb(
+  ${WATERMARK.color.r},
+  ${WATERMARK.color.g},
+  ${WATERMARK.color.b}
+)`;
+
+// Regular font
+ctx.font = `${Math.round(
+  Math.min(width, height) *
+    WATERMARK.imageTitleScale
+)}px Arial`;
+
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+ctx.fillText(
+  WATERMARK.text,
+  WATERMARK.horizontalOffset,
+  WATERMARK.verticalOffset,
 );
 
-const watermark = await sharp(watermarkPath)
-  .resize({
-    width: watermarkWidth,
-    withoutEnlargement: true,
-  })
-  .rotate(-WATERMARK.rotation, {
-    background: {
-      r: 0,
-      g: 0,
-      b: 0,
-      alpha: 0,
-    },
-  })
-  .ensureAlpha()
-  .modulate({
-    brightness: 1,
-  })
-  .composite([])
-  .png()
-  .toBuffer();
-
-const meta = await sharp(watermark).metadata();
-
-const wmWidth = meta.width ?? 0;
-const wmHeight = meta.height ?? 0;
-
+const watermark = Buffer.from(
+  await canvas.encode("png"),
+);
 
 const composites = [
   {
     input: watermark,
-
-    blend: "over",
-
-    opacity: WATERMARK.opacity,
-
-    left:
-      Math.round((width - wmWidth) / 2) +
-      WATERMARK.horizontalOffset,
-
-    top:
-      Math.round((height - wmHeight) / 2) +
-      WATERMARK.verticalOffset,
+    left: 0,
+    top: 0,
   },
 ];
 
