@@ -1,3 +1,5 @@
+import { createCanvas } from "@napi-rs/canvas";
+
 export const WATERMARK = {
   text: "ANEKS LIBRARY",
 
@@ -5,16 +7,13 @@ export const WATERMARK = {
 
   opacity: 0.18,
 
-  letterSpacing: "0.25em",
+  letterSpacing: 6,
 
-  // Position adjustments
   horizontalOffset: 60,
   verticalOffset: -110,
 
-  // PDF & DOCX
   pdfTitleScale: 0.05,
 
-  // Images
   imageTitleScale: 0.05,
 
   color: {
@@ -24,30 +23,49 @@ export const WATERMARK = {
   },
 };
 
-export function createWatermarkSvg(width, height) {
+export async function createWatermarkImage(width, height) {
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
   const fontSize =
     Math.min(width, height) *
     WATERMARK.imageTitleScale;
 
-  return `
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="${width}"
-  height="${height}"
->
-  <text
-    x="50%"
-    y="50%"
-    text-anchor="middle"
-    dominant-baseline="middle"
-    font-family="Arial"
-    font-size="${fontSize}"
-    font-weight="bold"
-    fill="rgba(${WATERMARK.color.r},${WATERMARK.color.g},${WATERMARK.color.b},${WATERMARK.opacity})"
-    transform="rotate(${-WATERMARK.rotation}, ${width / 2}, ${height / 2})"
-  >
-    ${WATERMARK.text}
-  </text>
-</svg>
-`;
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.translate(
+    width / 2 + WATERMARK.horizontalOffset,
+    height / 2 + WATERMARK.verticalOffset
+  );
+
+  ctx.rotate((-WATERMARK.rotation * Math.PI) / 180);
+
+  ctx.fillStyle = `rgba(${WATERMARK.color.r},${WATERMARK.color.g},${WATERMARK.color.b},${WATERMARK.opacity})`;
+
+  ctx.font = `700 ${fontSize}px Arial`;
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const text = WATERMARK.text;
+
+  let x = 0;
+
+  const totalWidth =
+    [...text].reduce(
+      (sum, char) =>
+        sum + ctx.measureText(char).width + WATERMARK.letterSpacing,
+      0
+    ) / 2;
+
+  x = -totalWidth;
+
+  for (const char of text) {
+    ctx.fillText(char, x, 0);
+    x +=
+      ctx.measureText(char).width +
+      WATERMARK.letterSpacing;
+  }
+
+  return canvas.encode("png");
 }

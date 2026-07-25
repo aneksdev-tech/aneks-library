@@ -11,7 +11,7 @@ import { promisify } from "util";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { WATERMARK, createWatermarkSvg, } from "./watermarkTemplate.js";
+import { WATERMARK, createWatermarkImage, } from "./watermarkTemplate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -266,22 +266,11 @@ app.post("/watermark", async (req, res) => {
       });
     }
 
-    const watermarkSvg =
-  createWatermarkSvg(
+    const watermark =
+  await createWatermarkImage(
     width,
     height,
   );
-
-const watermarkBuffer = Buffer.from(
-  watermarkSvg,
-  "utf8",
-);
-
-  const watermark = await sharp(
-  watermarkBuffer,
-)
-  .png()
-  .toBuffer();
 
     const meta = await sharp(watermark).metadata();
 
