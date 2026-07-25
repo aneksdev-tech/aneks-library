@@ -152,10 +152,6 @@ const pdfBytes =
   return pdfBytes;
 }
 
-const __filename = fileURLToPath(import.meta.url);
-
-const __dirname = path.dirname(__filename);
-
 async function processPdf(
   pdfBytes,
   email,
