@@ -30,8 +30,8 @@ export function createWatermarkSvg(
   height,
 ) {
   const fontSize =
-  Math.min(width, height) *
-  WATERMARK.imageTitleScale;
+    Math.min(width, height) *
+    WATERMARK.imageTitleScale;
 
   return `
 <svg
@@ -39,27 +39,20 @@ export function createWatermarkSvg(
   width="${width}"
   height="${height}"
 >
-  <style>
-    text {
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: 700;
-      font-size: ${fontSize}px;
-      letter-spacing: ${WATERMARK.letterSpacing};
-      text-transform: uppercase;
-      fill: rgba(0,0,0,${WATERMARK.opacity});
-    }
-  </style>
-
-  <g
-    transform="translate(${width / 2},${height / 2}) rotate(${-WATERMARK.rotation})"
+  <text
+    x="50%"
+    y="50%"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="sans-serif"
+    font-size="${fontSize}"
+    font-weight="700"
+    fill="rgba(0,0,0,${WATERMARK.opacity})"
+    letter-spacing="${WATERMARK.letterSpacing}"
+    transform="rotate(${-WATERMARK.rotation}, ${width / 2}, ${height / 2})"
   >
-    <text
-      text-anchor="middle"
-      dominant-baseline="middle"
-    >
-      ${WATERMARK.text}
-    </text>
-  </g>
+    ${WATERMARK.text}
+  </text>
 </svg>
 `;
 }
