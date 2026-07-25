@@ -11,17 +11,10 @@ import { promisify } from "util";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { WATERMARK } from "./watermarkTemplate.js";
-import { createCanvas } from "@napi-rs/canvas";
+import { WATERMARK, createWatermarkSvg, } from "./watermarkTemplate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const fontPath = path.join(
-  __dirname,
-  "fonts",
-  "NotoSans-Bold.ttf",
-);
 
 dotenv.config();
 
@@ -225,6 +218,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/watermark", async (req, res) => {
+  console.log("===== VERSION 2 =====");
   try {
     const { image } = req.body;
 
@@ -267,53 +261,38 @@ app.post("/watermark", async (req, res) => {
       });
     }
 
-// -----------------------------------------
-// Create watermark with Canvas
-// -----------------------------------------
+  const watermarkSvg =
+  createWatermarkSvg(
+    width,
+    height,
+  );
 
-const canvas = createCanvas(width, height);
-const ctx = canvas.getContext("2d");
+const watermarkBuffer =
+  Buffer.from(watermarkSvg);
 
-ctx.clearRect(0, 0, width, height);
+const watermark =
+  await sharp(watermarkBuffer)
+    .png()
+    .toBuffer();
 
-ctx.translate(width / 2, height / 2);
+const meta =
+  await sharp(watermark).metadata();
 
-ctx.rotate(
-  (-WATERMARK.rotation * Math.PI) / 180,
-);
+const wmWidth =
+  meta.width ?? width;
 
-ctx.globalAlpha = WATERMARK.opacity;
-
-ctx.fillStyle = `rgb(
-  ${WATERMARK.color.r},
-  ${WATERMARK.color.g},
-  ${WATERMARK.color.b}
-)`;
-
-// Regular font
-ctx.font = `${Math.round(
-  Math.min(width, height) *
-    WATERMARK.imageTitleScale
-)}px Arial`;
-
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-
-ctx.fillText(
-  WATERMARK.text,
-  WATERMARK.horizontalOffset,
-  WATERMARK.verticalOffset,
-);
-
-const watermark = Buffer.from(
-  await canvas.encode("png"),
-);
+const wmHeight =
+  meta.height ?? height;
 
 const composites = [
   {
     input: watermark,
-    left: 0,
-    top: 0,
+    left: Math.round(
+      (width - wmWidth) / 2,
+    ),
+    top: Math.round(
+      (height - wmHeight) / 2,
+    ),
   },
 ];
 
