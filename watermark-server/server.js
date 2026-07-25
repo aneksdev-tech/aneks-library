@@ -272,7 +272,7 @@ app.post("/watermark", async (req, res) => {
 );
 
 const watermarkWidth = Math.round(
-  Math.min(width, height) * 0.65
+  Math.min(width, height) * 0.80
 );
 
 const watermark = await sharp(watermarkPath)
