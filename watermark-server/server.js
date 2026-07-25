@@ -271,11 +271,17 @@ app.post("/watermark", async (req, res) => {
     const watermark =
   await createWatermarkImage(width, height,);
 
+  await fs.writeFile("/tmp/watermark-debug.png", watermark);
+
+console.log("Watermark size:", watermark.length);
+
   console.log("=== WATERMARK CREATED ===");
 
   await fs.writeFile("watermark-debug.png", watermark);
 
     const meta = await sharp(watermark).metadata();
+
+    console.log(meta);
 
 const wmWidth =
   meta.width ?? width;
