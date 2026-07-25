@@ -1,3 +1,5 @@
+import { PREVIEW_WATERMARK } from "./watermarkConfig";
+
 interface ImageViewerProps {
   url: string;
   alt?: string;
@@ -42,20 +44,28 @@ export function ImageViewer({
           z-10
         "
       >
-        <span
-          className="
-            text-5xl
-            md:text-7xl
-            font-extrabold
-            uppercase
-            tracking-[0.4em]
-            text-black/5
-            rotate-[-35deg]
-            whitespace-nowrap
-          "
+        <div
+          style={{
+            transform: `rotate(${PREVIEW_WATERMARK.rotation})`,
+            color: PREVIEW_WATERMARK.color,
+          }}
         >
-          Aneks Library
-        </span>
+          <div
+            className="
+              font-bold
+              uppercase
+              whitespace-nowrap
+            "
+            style={{
+              fontSize:
+                PREVIEW_WATERMARK.titleFontSize,
+              letterSpacing:
+                PREVIEW_WATERMARK.titleLetterSpacing,
+            }}
+          >
+            {PREVIEW_WATERMARK.text}
+          </div>
+        </div>
       </div>
 
       {/* Invisible interaction shield */}

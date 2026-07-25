@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
+import { PREVIEW_WATERMARK } from "./watermarkConfig";
 
 interface DocxViewerProps {
   blob: Blob;
@@ -114,45 +115,54 @@ export function DocxViewer({
 
         old?.remove();
 
-        const watermark =
-          document.createElement("div");
+const watermark =
+  document.createElement("div");
 
-        watermark.className =
-          "aneks-watermark";
+watermark.className =
+  "aneks-watermark";
 
-        watermark.textContent =
-          "Aneks Library";
+Object.assign(watermark.style, {
+  position: "absolute",
+  inset: "0",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  pointerEvents: "none",
+  userSelect: "none",
+  zIndex: "999",
 
-        Object.assign(
-          watermark.style,
-          {
-            position: "absolute",
-            inset: "0",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            pointerEvents: "none",
-            userSelect: "none",
-            zIndex: "999",
+  transform: `rotate(${PREVIEW_WATERMARK.rotation})`,
+  color: PREVIEW_WATERMARK.color,
+});
 
-            fontSize: "4rem",
-            fontWeight: "700",
-            letterSpacing: ".35rem",
-            textTransform: "uppercase",
+const title =
+  document.createElement("div");
 
-            color:
-              "rgba(0,0,0,.05)",
+title.textContent =
+  PREVIEW_WATERMARK.text;
 
-            transform:
-              "rotate(-35deg)",
-          }
-        );
+Object.assign(title.style, {
+  fontSize:
+    PREVIEW_WATERMARK.titleFontSize,
 
-        pageEl.appendChild(
-          watermark
-        );
+  fontWeight: "700",
+
+  textTransform: "uppercase",
+
+  letterSpacing:
+    PREVIEW_WATERMARK.titleLetterSpacing,
+
+  whiteSpace: "nowrap",
+});
+
+watermark.appendChild(title);
+
+pageEl.appendChild(watermark);
+
+pageEl.appendChild(watermark);
       });
 
+      
       applyScale();
 
       resizeObserver.current?.disconnect();

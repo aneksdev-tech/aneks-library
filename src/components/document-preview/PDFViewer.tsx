@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Document, pdfjs } from "react-pdf";
+
 import { PDFPage } from "./PDFPage";
 
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface PDFViewerProps {
   url: string;
@@ -19,26 +18,45 @@ export function PDFViewer({ url }: PDFViewerProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const pdfOptions = useMemo(
+    () => ({
+      wasmUrl: "/wasm/",
+    }),
+    [],
+  );
+
   useEffect(() => {
     function updateWidth() {
       if (!containerRef.current) return;
 
-      setPageWidth(containerRef.current.clientWidth + 4);
+      setPageWidth(
+        containerRef.current.clientWidth + 4,
+      );
     }
 
     updateWidth();
 
-    const resizeObserver = new ResizeObserver(updateWidth);
+    const resizeObserver =
+      new ResizeObserver(updateWidth);
 
     if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
+      resizeObserver.observe(
+        containerRef.current,
+      );
     }
 
-    window.addEventListener("resize", updateWidth);
+    window.addEventListener(
+      "resize",
+      updateWidth,
+    );
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateWidth);
+
+      window.removeEventListener(
+        "resize",
+        updateWidth,
+      );
     };
   }, []);
 
@@ -49,8 +67,15 @@ export function PDFViewer({ url }: PDFViewerProps) {
     >
       <Document
         file={url}
+        options={pdfOptions}
         onLoadSuccess={({ numPages }) => {
           setNumPages(numPages);
+        }}
+        onLoadError={(error) => {
+          console.error(
+            "PDF load failed:",
+            error,
+          );
         }}
         loading={
           <div className="flex h-64 items-center justify-center rounded-2xl border bg-muted/30">
@@ -63,13 +88,16 @@ export function PDFViewer({ url }: PDFViewerProps) {
           </div>
         }
       >
-        {Array.from({ length: numPages }, (_, i) => (
-          <PDFPage
-            key={i}
-            pageNumber={i + 1}
-            width={pageWidth}
-          />
-        ))}
+        {Array.from(
+          { length: numPages },
+          (_, i) => (
+            <PDFPage
+              key={i}
+              pageNumber={i + 1}
+              width={pageWidth}
+            />
+          ),
+        )}
       </Document>
     </div>
   );

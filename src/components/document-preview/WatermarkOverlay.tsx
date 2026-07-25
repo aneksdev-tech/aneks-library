@@ -1,12 +1,6 @@
-interface WatermarkOverlayProps {
-  text?: string;
-}
+import { PREVIEW_WATERMARK } from "./watermarkConfig";
 
-export function WatermarkOverlay({
-  text = "ANEKS LIBRARY",
-}: WatermarkOverlayProps) {
-  const today = new Date().toLocaleDateString();
-
+export function WatermarkOverlay() {
   return (
     <div
       className="
@@ -21,35 +15,25 @@ export function WatermarkOverlay({
       "
     >
       <div
-        className="-rotate-[30deg] text-center"
         style={{
-          color: "rgba(16, 185, 129, 0.12)",
+          transform: `rotate(${PREVIEW_WATERMARK.rotation})`,
+          color: PREVIEW_WATERMARK.color,
         }}
       >
         <div
           className="
             font-bold
             uppercase
-            tracking-[0.35em]
+            whitespace-nowrap
           "
           style={{
-            fontSize: "clamp(2.8rem, 5vw, 4.5rem)",
+            fontSize:
+              PREVIEW_WATERMARK.titleFontSize,
+            letterSpacing:
+              PREVIEW_WATERMARK.titleLetterSpacing,
           }}
         >
-          {text}
-        </div>
-
-        <div
-          className="
-            mt-5
-            font-semibold
-            tracking-[0.25em]
-          "
-          style={{
-            fontSize: "clamp(0.9rem, 1.4vw, 1.2rem)",
-          }}
-        >
-          {today}
+          {PREVIEW_WATERMARK.text}
         </div>
       </div>
     </div>

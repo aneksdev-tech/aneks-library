@@ -12,7 +12,6 @@ export function PDFPage({
 }: PDFPageProps) {
   return (
     <div className="relative mb-4 overflow-hidden rounded-2xl border bg-background shadow-soft">
-
       <Page
         pageNumber={pageNumber}
         width={width}
@@ -22,7 +21,6 @@ export function PDFPage({
       />
 
       <WatermarkOverlay />
-
     </div>
   );
 }

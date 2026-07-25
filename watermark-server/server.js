@@ -11,6 +11,7 @@ import { promisify } from "util";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { WATERMARK, createWatermarkSvg, } from "./watermarkTemplate.js";
 
 dotenv.config({
   path: "../.env",
@@ -135,11 +136,6 @@ const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
 
-const WATERMARK_PATH = path.join(
-  __dirname,
-  "aneks-watermark.png",
-);
-
 async function processPdf(
   pdfBytes,
   email,
@@ -155,55 +151,49 @@ async function processPdf(
       StandardFonts.Helvetica,
     );
 
-  const now = new Date();
-
-  const date =
-    now.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-  const time =
-    now.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-  const watermarkText =
-`Aneks Library
-Downloaded by:
-${email}
-${date}
-${time}`;
-
   for (const page of pages) {
 
-    const { width, height } =
-      page.getSize();
+  const { width, height } =
+    page.getSize();
 
-    page.drawText(
-      watermarkText,
-      {
-        x: width * 0.22,
-        y: height * 0.35,
+  const fontSize =
+  Math.min(width, height) *
+  WATERMARK.pdfTitleScale;
 
-        size: 8,
+  const title =
+    WATERMARK.text
 
-        font,
-
-        color: rgb(
-          0.35,
-          0.35,
-          0.35,
-        ),
-
-        opacity: 0.70,
-
-        rotate: degrees(-45),
-      },
+  const titleWidth =
+    font.widthOfTextAtSize(
+      title,
+      fontSize,
     );
-  }
+
+  page.drawText(title, {
+  x:
+    width / 2 -
+    titleWidth / 2 +
+    WATERMARK.horizontalOffset,
+
+  y:
+    height / 2 +
+    WATERMARK.verticalOffset,
+
+  size: fontSize,
+
+  font,
+
+  color: rgb(
+  WATERMARK.color.r,
+  WATERMARK.color.g,
+  WATERMARK.color.b,
+),
+
+  opacity: WATERMARK.opacity,
+
+  rotate: degrees(WATERMARK.rotation),
+});
+}
 
   return Buffer.from(
     await pdfDoc.save(),
@@ -238,10 +228,7 @@ app.post("/watermark", async (req, res) => {
       "bytes",
     );
 
-    const watermarkBuffer =
-      await fs.readFile(WATERMARK_PATH);
-
-    const original =
+      const original =
       sharp(imageBuffer);
 
     const metadata =
@@ -263,98 +250,42 @@ app.post("/watermark", async (req, res) => {
       });
     }
 
-    // -----------------------------------------
-    // Responsive watermark size
-    // -----------------------------------------
+    const watermarkSvg =
+  createWatermarkSvg(
+    width,
+    height,
+  );
 
-    const watermarkWidth = Math.round(
-      width * 0.18,
-    );
+const watermarkBuffer =
+  Buffer.from(watermarkSvg);
 
-    const watermark =
-      await sharp(watermarkBuffer)
-        .resize({
-          width: watermarkWidth,
-        })
-        .png()
-        .toBuffer();
+  const watermark = await sharp(
+  watermarkBuffer,
+)
+  .png()
+  .toBuffer();
 
-    const composites = [];
+    const meta = await sharp(watermark).metadata();
 
-    // -----------------------------------------
-    // JPG / JPEG
-    // Multiple tiled watermark
-    // -----------------------------------------
+const wmWidth =
+  meta.width ?? width;
 
-    if (
-      format === "jpeg" ||
-      format === "jpg"
-    ) {
+const wmHeight =
+  meta.height ?? 0;
 
-      const spacing =
-        watermarkWidth * 2.8;
+const composites = [
+  {
+    input: watermark,
 
-      for (
-        let y = -watermarkWidth;
-        y < height + watermarkWidth;
-        y += spacing
-      ) {
+    left: Math.round(
+      (width - wmWidth) / 2,
+    ),
 
-        const offset =
-          Math.floor(y / spacing) % 2 === 0
-            ? 0
-            : spacing / 2;
-
-        for (
-          let x = -watermarkWidth + offset;
-          x < width + watermarkWidth;
-          x += spacing
-        ) {
-
-          composites.push({
-            input: watermark,
-            left: Math.round(x),
-            top: Math.round(y),
-          });
-
-        }
-
-      }
-
-    }
-
-    // -----------------------------------------
-    // PNG / WEBP
-    // Single centered watermark
-    // -----------------------------------------
-
-    else {
-
-      const meta =
-        await sharp(watermark)
-          .metadata();
-
-      const wmWidth =
-        meta.width ?? watermarkWidth;
-
-      const wmHeight =
-        meta.height ?? watermarkWidth;
-
-      composites.push({
-
-        input: watermark,
-
-        left: Math.round(
-          (width - wmWidth) / 2,
-        ),
-
-        top: Math.round(
-          (height - wmHeight) / 2,
-        ),
-
-      });
-
-    }
+    top: Math.round(
+      (height - wmHeight) / 2,
+    ),
+  },
+];
 
     // -----------------------------------------
     // Apply watermark
