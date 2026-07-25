@@ -11,7 +11,7 @@ import { promisify } from "util";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { WATERMARK, createWatermarkImage, } from "./watermarkTemplate.js";
+import { WATERMARK } from "./watermarkTemplate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -266,40 +266,57 @@ app.post("/watermark", async (req, res) => {
       });
     }
 
-  console.log("=== ABOUT TO CREATE WATERMARK ===");
+  const watermarkPath = path.join(
+  __dirname,
+  "aneks-watermark.png",
+);
 
-    const watermark =
-  await createWatermarkImage(width, height,);
+const watermarkWidth = Math.round(
+  Math.min(width, height) * 0.65
+);
 
-  await fs.writeFile("/tmp/watermark-debug.png", watermark);
+const watermark = await sharp(watermarkPath)
+  .resize({
+    width: watermarkWidth,
+    withoutEnlargement: true,
+  })
+  .rotate(-WATERMARK.rotation, {
+    background: {
+      r: 0,
+      g: 0,
+      b: 0,
+      alpha: 0,
+    },
+  })
+  .ensureAlpha()
+  .modulate({
+    brightness: 1,
+  })
+  .composite([])
+  .png()
+  .toBuffer();
 
-console.log("Watermark size:", watermark.length);
+const meta = await sharp(watermark).metadata();
 
-  console.log("=== WATERMARK CREATED ===");
+const wmWidth = meta.width ?? 0;
+const wmHeight = meta.height ?? 0;
 
-  await fs.writeFile("watermark-debug.png", watermark);
-
-    const meta = await sharp(watermark).metadata();
-
-    console.log(meta);
-
-const wmWidth =
-  meta.width ?? width;
-
-const wmHeight =
-  meta.height ?? 0;
 
 const composites = [
   {
     input: watermark,
 
-    left: Math.round(
-      (width - wmWidth) / 2,
-    ),
+    blend: "over",
 
-    top: Math.round(
-      (height - wmHeight) / 2,
-    ),
+    opacity: WATERMARK.opacity,
+
+    left:
+      Math.round((width - wmWidth) / 2) +
+      WATERMARK.horizontalOffset,
+
+    top:
+      Math.round((height - wmHeight) / 2) +
+      WATERMARK.verticalOffset,
   },
 ];
 
