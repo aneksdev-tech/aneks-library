@@ -13,11 +13,31 @@ import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { WATERMARK, createWatermarkSvg, } from "./watermarkTemplate.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const fontPath = path.join(
+  __dirname,
+  "fonts",
+  "NotoSans-Bold.ttf",
+);
+
+dotenv.config();
+
 dotenv.config({
   path: "../.env",
+  override: false,
 });
 
 const execFileAsync = promisify(execFile);
+
+if (!process.env.SUPABASE_URL) {
+  throw new Error("SUPABASE_URL is missing");
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY is missing");
+}
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -256,8 +276,10 @@ app.post("/watermark", async (req, res) => {
     height,
   );
 
-const watermarkBuffer =
-  Buffer.from(watermarkSvg);
+const watermarkBuffer = Buffer.from(
+  watermarkSvg,
+  "utf8",
+);
 
   const watermark = await sharp(
   watermarkBuffer,
