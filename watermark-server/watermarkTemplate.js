@@ -9,26 +9,22 @@ export const WATERMARK = {
 
   // Position adjustments
   horizontalOffset: 60,
-
   verticalOffset: -110,
 
-   // PDF & DOCX
+  // PDF & DOCX
   pdfTitleScale: 0.05,
 
   // Images
   imageTitleScale: 0.05,
 
-    color: {
+  color: {
     r: 0,
     g: 0,
     b: 0,
   },
 };
 
-export function createWatermarkSvg(
-  width,
-  height,
-) {
+export function createWatermarkSvg(width, height) {
   const fontSize =
     Math.min(width, height) *
     WATERMARK.imageTitleScale;
@@ -47,7 +43,7 @@ export function createWatermarkSvg(
     font-family="sans-serif"
     font-size="${fontSize}"
     font-weight="700"
-    fill="rgba(0,0,0,${WATERMARK.opacity})"
+    fill="rgba(${WATERMARK.color.r}, ${WATERMARK.color.g}, ${WATERMARK.color.b}, ${WATERMARK.opacity})"
     letter-spacing="${WATERMARK.letterSpacing}"
     transform="rotate(${-WATERMARK.rotation}, ${width / 2}, ${height / 2})"
   >
