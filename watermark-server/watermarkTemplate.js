@@ -35,33 +35,15 @@ export function createWatermarkSvg(width, height) {
   width="${width}"
   height="${height}"
 >
-  <defs>
-    <style>
-      @font-face {
-        font-family: 'NotoSans';
-        src: url('./fonts/NotoSans-Bold.ttf');
-      }
-
-      text {
-        font-family: 'NotoSans';
-        font-size: ${fontSize}px;
-        font-weight: bold;
-        fill: rgba(
-          ${WATERMARK.color.r},
-          ${WATERMARK.color.g},
-          ${WATERMARK.color.b},
-          ${WATERMARK.opacity}
-        );
-        letter-spacing: ${WATERMARK.letterSpacing};
-      }
-    </style>
-  </defs>
-
   <text
     x="50%"
     y="50%"
     text-anchor="middle"
     dominant-baseline="middle"
+    font-family="Arial"
+    font-size="${fontSize}"
+    font-weight="bold"
+    fill="rgba(${WATERMARK.color.r},${WATERMARK.color.g},${WATERMARK.color.b},${WATERMARK.opacity})"
     transform="rotate(${-WATERMARK.rotation}, ${width / 2}, ${height / 2})"
   >
     ${WATERMARK.text}
