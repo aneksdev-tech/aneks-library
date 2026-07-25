@@ -4,13 +4,21 @@
   "description": "Aneks Library Image Watermark Service",
   "type": "module",
   "main": "server.js",
+
+  "engines": {
+    "node": ">=20"
+  },
+
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
+
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.8",
     "cors": "^2.8.5",
     "docx": "^9.7.1",
+    "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "pdf-lib": "^1.17.1",
     "sharp": "^0.34.3",
