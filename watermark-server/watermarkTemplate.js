@@ -26,7 +26,9 @@ export const WATERMARK = {
 
   pdfTitleScale: 0.05,
 
-  imageTitleScale: 0.05,
+  imageTitleScale: 0.07,
+
+  letterSpacing: 6,
 
   color: {
     r: 0,
@@ -41,14 +43,15 @@ export function createWatermarkSvg(width, height) {
     WATERMARK.imageTitleScale;
 
   const svgPath = textToSVG.getD(
-    WATERMARK.text,
-    {
-      x: 0,
-      y: 0,
-      fontSize,
-      anchor: "center middle",
-    }
-  );
+  WATERMARK.text,
+  {
+    x: 0,
+    y: 0,
+    fontSize,
+    anchor: "center middle",
+    letterSpacing: WATERMARK.letterSpacing,
+  }
+);
 
   return `
 <svg
