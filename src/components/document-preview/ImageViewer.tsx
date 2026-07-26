@@ -46,9 +46,15 @@ export function ImageViewer({
       >
         <div
           style={{
-            transform: `rotate(${PREVIEW_WATERMARK.rotation})`,
+            transform: `
+            translate(
+            ${PREVIEW_WATERMARK.horizontalOffset},
+            ${PREVIEW_WATERMARK.verticalOffset}
+        )
+            rotate(${PREVIEW_WATERMARK.rotation})
+            `,
             color: PREVIEW_WATERMARK.color,
-          }}
+        }}
         >
           <div
             className="

@@ -16,9 +16,15 @@ export function WatermarkOverlay() {
     >
       <div
         style={{
-          transform: `rotate(${PREVIEW_WATERMARK.rotation})`,
-          color: PREVIEW_WATERMARK.color,
-        }}
+        transform: `
+        translate(
+        ${PREVIEW_WATERMARK.horizontalOffset},
+        ${PREVIEW_WATERMARK.verticalOffset}
+      )
+        rotate(${PREVIEW_WATERMARK.rotation})
+      `,
+        color: PREVIEW_WATERMARK.color,
+      }}
       >
         <div
           className="
