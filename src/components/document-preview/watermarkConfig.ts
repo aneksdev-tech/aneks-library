@@ -7,5 +7,5 @@ export const PREVIEW_WATERMARK = {
 
   titleFontSize: "clamp(2.2rem, 4vw, 3.6rem)",
 
-  titleLetterSpacing: "0.5",
+  titleLetterSpacing: "0.7em",
 };
