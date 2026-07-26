@@ -234,8 +234,7 @@ const { data: isAdmin = false } = useQuery({
   <Button
   className="w-full bg-gradient-emerald"
     onClick={download}
-    disabled={downloading}
-    className="bg-gradient-emerald"
+    disabled={downloading}  
   >
     {downloading ? (
       <>
