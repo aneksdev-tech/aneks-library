@@ -176,8 +176,8 @@ async function processPdf(
       page.getSize();
 
     const scale =
-      (Math.min(width, height) * 0.80) /
-      watermarkImage.width;
+    (Math.min(width, height) * 1.00) /
+    watermarkImage.width;
 
     const wmWidth =
       watermarkImage.width * scale;
@@ -188,13 +188,11 @@ async function processPdf(
     page.drawImage(
       watermarkImage,
       {
-        x:
-          (width - wmWidth) / 2 +
-          WATERMARK.horizontalOffset,
+      x:
+        Math.round((width - wmWidth) / 2),
 
-        y:
-          (height - wmHeight) / 2 +
-          WATERMARK.verticalOffset,
+      y:
+        Math.round((height - wmHeight) / 2),
 
         width: wmWidth,
 
