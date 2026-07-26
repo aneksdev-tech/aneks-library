@@ -156,43 +156,65 @@ async function processPdf(
   const pages =
     pdfDoc.getPages();
 
-  // Load the same watermark PNG used for images
-  const watermarkBytes =
-    await fs.readFile(
-      path.join(
-        __dirname,
-        "aneks-watermark.png",
-      ),
-    );
-
-  const watermarkImage =
-    await pdfDoc.embedPng(
-      watermarkBytes,
-    );
-
   for (const page of pages) {
 
     const { width, height } =
       page.getSize();
 
-    const scale =
-    (Math.min(width, height) * 1.00) /
-    watermarkImage.width;
+    // Calculate desired width (same idea as images)
+    const watermarkWidth =
+      Math.round(
+        Math.min(width, height) * 1.00,
+      );
+
+    // Prepare watermark with Sharp
+    const watermarkBuffer =
+      await sharp(
+        path.join(
+          __dirname,
+          "aneks-watermark.png",
+        ),
+      )
+        .resize({
+          width: watermarkWidth,
+          withoutEnlargement: true,
+        })
+        .rotate(-WATERMARK.rotation, {
+          background: {
+            r: 0,
+            g: 0,
+            b: 0,
+            alpha: 0,
+          },
+        })
+        .png()
+        .toBuffer();
+
+    const watermarkImage =
+      await pdfDoc.embedPng(
+        watermarkBuffer,
+      );
 
     const wmWidth =
-      watermarkImage.width * scale;
+      watermarkImage.width;
 
     const wmHeight =
-      watermarkImage.height * scale;
+      watermarkImage.height;
 
     page.drawImage(
       watermarkImage,
       {
-      x:
-        Math.round((width - wmWidth) / 2),
+        x:
+          Math.round(
+            (width - wmWidth) / 2,
+          ) +
+          WATERMARK.horizontalOffset,
 
-      y:
-        Math.round((height - wmHeight) / 2),
+        y:
+          Math.round(
+            (height - wmHeight) / 2,
+          ) +
+          WATERMARK.verticalOffset,
 
         width: wmWidth,
 
@@ -200,10 +222,6 @@ async function processPdf(
 
         opacity:
           WATERMARK.opacity,
-
-        rotate: degrees(
-          WATERMARK.rotation,
-        ),
       },
     );
   }
