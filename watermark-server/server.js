@@ -39,9 +39,10 @@ const supabase = createClient(
 );
 
 const SOFFICE =
-  process.platform === "win32"
+  process.env.SOFFICE_PATH ??
+  (process.platform === "win32"
     ? "C:\\Program Files\\LibreOffice\\program\\soffice.com"
-    : "soffice";
+    : "soffice");
 
 const app = express();
 
@@ -95,7 +96,9 @@ console.log(
   "bytes",
 );
 
-  const result = await execFileAsync(
+console.log("Using soffice:", SOFFICE);
+
+const result = await execFileAsync(
   SOFFICE,
   [
     "--headless",
