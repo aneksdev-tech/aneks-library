@@ -1,14 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+
+import {
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
+
 import {
   BookOpen,
   Building2,
   GraduationCap,
   CalendarDays,
   School,
+  Download,
+  Loader2,
 } from "lucide-react";
+
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { downloadResource } from "@/lib/download";
 
 export const Route = createFileRoute(
   "/_authenticated/preview/$resourceId",
@@ -18,6 +34,16 @@ export const Route = createFileRoute(
 
 function PreviewPage() {
   const { resourceId } = Route.useParams();
+
+  const { user } = useAuth();
+
+const queryClient = useQueryClient();
+
+const [upgradeOpen, setUpgradeOpen] =
+  useState(false);
+
+const [downloading, setDownloading] =
+  useState(false);
 
   const { data: resource, isLoading } = useQuery({
     queryKey: ["preview", resourceId],
@@ -54,6 +80,36 @@ function PreviewPage() {
     },
   });
 
+  const { data: isPremium = false } = useQuery({
+  queryKey: ["is-premium", user?.id],
+  enabled: !!user,
+  queryFn: async () => {
+    const { data, error } =
+      await supabase.rpc("is_premium", {
+        _user: user!.id,
+      });
+
+    if (error) throw error;
+
+    return Boolean(data);
+  },
+});
+
+const { data: isAdmin = false } = useQuery({
+  queryKey: ["is-admin", user?.id],
+  enabled: !!user,
+  queryFn: async () => {
+    const { data, error } =
+      await supabase.rpc("is_admin", {
+        _user_id: user!.id,
+      });
+
+    if (error) throw error;
+
+    return Boolean(data);
+  },
+});
+
   if (isLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -72,8 +128,37 @@ function PreviewPage() {
 
   const collegeShort =
     resource.college?.match(/\((.*?)\)/)?.[1] ?? resource.college;
+  
+  const download = async () => {
+  if (downloading) return;
+
+  if (!user) {
+    toast.error("Sign in to download");
+    return;
+  }
+
+  if (!isAdmin && !isPremium) {
+    setUpgradeOpen(true);
+    return;
+  }
+
+  setDownloading(true);
+
+  try {
+    await downloadResource(resource.id);
+
+    queryClient.invalidateQueries({
+      queryKey: ["library"],
+    });
+  } catch (err: any) {
+    toast.error(err.message);
+  } finally {
+    setDownloading(false);
+  }
+};
 
   return (
+  <>
     <div className="mx-auto max-w-6xl space-y-8">
       <div>
         <button
@@ -145,6 +230,25 @@ function PreviewPage() {
               year: "numeric",
             })}
           </div>
+          <div className="pt-2">
+  <Button
+    onClick={download}
+    disabled={downloading}
+    className="bg-gradient-emerald"
+  >
+    {downloading ? (
+      <>
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Preparing Download...
+      </>
+    ) : (
+      <>
+        <Download className="mr-2 h-4 w-4" />
+        Download
+      </>
+    )}
+  </Button>
+</div>
         </div>
       </div>
 
@@ -162,6 +266,12 @@ function PreviewPage() {
           </div>
         )}
       </div>
-    </div>
+        </div>
+
+    <UpgradeDialog
+      open={upgradeOpen}
+      onOpenChange={setUpgradeOpen}
+    />
+  </>
   );
 }

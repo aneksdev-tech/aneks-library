@@ -5,7 +5,7 @@ import { useAccess } from "@/hooks/useAccess";
 import { downloadResource } from "@/lib/download";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { BookMarked, Download, Search, Filter, Eye, Loader2,} from "lucide-react";
+import { BookMarked, Download, Search, Filter, Eye, Star, Loader2,} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -252,20 +252,20 @@ export function ResourceCard({
     </span>
 
     <span className="inline-flex items-center gap-1">
-      <BookMarked className="h-3 w-3" />
+      <Star className="h-3 w-3" />
       {r.bookmark_count}
     </span>
   </span>
 </div>
 
 <div className="mt-4 flex gap-2">
-  <div className="flex min-w-0 flex-1 gap-2">
+  <div className="flex min-w-0 flex-1">
 
     <Button
       asChild
       variant="outline"
       size="sm"
-      className="min-w-0 flex-1"
+      className="w-full"
       disabled={previewing}
     >
       <Link
@@ -275,34 +275,22 @@ export function ResourceCard({
         className="flex items-center justify-center"
       >
         {previewing ? (
-          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-        ) : (
-          <Eye className="h-3.5 w-3.5 shrink-0" />
-        )}
-
-        <span className="ml-1.5 hidden truncate sm:inline">
-          {previewing ? "Previewing..." : "Preview"}
-        </span>
+  <>
+    <Loader2 className="hidden h-3.5 w-3.5 animate-spin max-[320px]:block" />
+    <span className="block max-[320px]:hidden">
+      Previewing...
+    </span>
+  </>
+) : (
+  <>
+    <Eye className="hidden h-3.5 w-3.5 max-[320px]:block" />
+    <span className="block max-[320px]:hidden">
+      Preview
+    </span>
+  </>
+)}
       </Link>
     </Button>
-
-    <Button
-      onClick={download}
-      disabled={downloading}
-      size="sm"
-      className="min-w-0 flex-1 bg-gradient-emerald text-primary-foreground"
-    >
-      {downloading ? (
-        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-      ) : (
-        <Download className="h-3.5 w-3.5 shrink-0" />
-      )}
-
-      <span className="ml-1.5 hidden truncate sm:inline">
-        {downloading ? "Preparing Download..." : "Download"}
-      </span>
-    </Button>
-
   </div>
 
   <Button
@@ -312,7 +300,9 @@ export function ResourceCard({
     onClick={() => toggleBookmark.mutate()}
     aria-label="Bookmark"
   >
-    <BookMarked className="h-3.5 w-3.5" />
+    <Star
+  className="h-3.5 w-3.5"
+  fill={bookmarked ? "currentColor" : "none"} />
   </Button>
 </div>
 
