@@ -39,7 +39,9 @@ const supabase = createClient(
 );
 
 const SOFFICE =
-  "C:\\Program Files\\LibreOffice\\program\\soffice.com";
+  process.platform === "win32"
+    ? "C:\\Program Files\\LibreOffice\\program\\soffice.com"
+    : "soffice";
 
 const app = express();
 
