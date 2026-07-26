@@ -201,30 +201,19 @@ async function processPdf(
     const wmHeight =
       watermarkImage.height;
 
-    page.drawImage(
-      watermarkImage,
-      {
-        x:
-          Math.round(
-            (width - wmWidth) / 2,
-          ) +
-          WATERMARK.horizontalOffset,
+    page.drawImage(watermarkImage, {
+  x:
+    Math.round((width - wmWidth) / 2) - 35,
 
-        y:
-          Math.round(
-            (height - wmHeight) / 2,
-          ) +
-          WATERMARK.verticalOffset,
+  y:
+    Math.round((height - wmHeight) / 2) + 35,
 
-        width: wmWidth,
+  width: wmWidth,
+  height: wmHeight,
 
-        height: wmHeight,
-
-        opacity:
-          WATERMARK.opacity,
-      },
-    );
-  }
+  opacity: WATERMARK.opacity,
+});
+}
 
   return Buffer.from(
     await pdfDoc.save(),
