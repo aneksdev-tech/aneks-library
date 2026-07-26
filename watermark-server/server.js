@@ -190,29 +190,36 @@ async function processPdf(
         .png()
         .toBuffer();
 
-    const watermarkImage =
-      await pdfDoc.embedPng(
-        watermarkBuffer,
-      );
+    const rotatedMeta =
+  await sharp(
+    watermarkBuffer,
+  ).metadata();
 
-    const wmWidth =
-      watermarkImage.width;
+const wmWidth =
+  rotatedMeta.width ?? 0;
 
-    const wmHeight =
-      watermarkImage.height;
+const wmHeight =
+  rotatedMeta.height ?? 0;
 
-    page.drawImage(watermarkImage, {
-  x:
-    Math.round((width - wmWidth) / 2) - 35,
+const watermarkImage =
+  await pdfDoc.embedPng(
+    watermarkBuffer,
+  );
 
-  y:
-    Math.round((height - wmHeight) / 2) + 35,
+    page.drawImage(
+  watermarkImage,
+  {
+    x: (width - wmWidth) / 2,
 
-  width: wmWidth,
-  height: wmHeight,
+    y: (height - wmHeight) / 2,
 
-  opacity: WATERMARK.opacity,
-});
+    width: wmWidth,
+
+    height: wmHeight,
+
+    opacity: WATERMARK.opacity,
+  },
+);
 }
 
   return Buffer.from(
