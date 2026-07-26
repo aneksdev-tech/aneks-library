@@ -156,54 +156,59 @@ async function processPdf(
   const pages =
     pdfDoc.getPages();
 
-  const font =
-    await pdfDoc.embedFont(
-      StandardFonts.Helvetica,
+  // Load the same watermark PNG used for images
+  const watermarkBytes =
+    await fs.readFile(
+      path.join(
+        __dirname,
+        "aneks-watermark.png",
+      ),
+    );
+
+  const watermarkImage =
+    await pdfDoc.embedPng(
+      watermarkBytes,
     );
 
   for (const page of pages) {
 
-  const { width, height } =
-    page.getSize();
+    const { width, height } =
+      page.getSize();
 
-  const fontSize =
-  Math.min(width, height) *
-  WATERMARK.pdfTitleScale;
+    const scale =
+      (Math.min(width, height) * 0.80) /
+      watermarkImage.width;
 
-  const title =
-    WATERMARK.text
+    const wmWidth =
+      watermarkImage.width * scale;
 
-  const titleWidth =
-    font.widthOfTextAtSize(
-      title,
-      fontSize,
+    const wmHeight =
+      watermarkImage.height * scale;
+
+    page.drawImage(
+      watermarkImage,
+      {
+        x:
+          (width - wmWidth) / 2 +
+          WATERMARK.horizontalOffset,
+
+        y:
+          (height - wmHeight) / 2 +
+          WATERMARK.verticalOffset,
+
+        width: wmWidth,
+
+        height: wmHeight,
+
+        opacity:
+          WATERMARK.opacity,
+
+        rotate: degrees(
+          WATERMARK.rotation,
+        ),
+      },
     );
-
-  page.drawText(title, {
-  x:
-    width / 2 -
-    titleWidth / 2 +
-    WATERMARK.horizontalOffset,
-
-  y:
-    height / 2 +
-    WATERMARK.verticalOffset,
-
-  size: fontSize,
-
-  font,
-
-  color: rgb(
-  WATERMARK.color.r,
-  WATERMARK.color.g,
-  WATERMARK.color.b,
-),
-
-  opacity: WATERMARK.opacity,
-
-  rotate: degrees(WATERMARK.rotation),
-});
-}
+  }
 
   return Buffer.from(
     await pdfDoc.save(),
