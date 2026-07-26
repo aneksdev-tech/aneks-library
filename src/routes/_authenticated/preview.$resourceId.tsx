@@ -230,8 +230,9 @@ const { data: isAdmin = false } = useQuery({
               year: "numeric",
             })}
           </div>
-          <div className="pt-2">
+          <div className="pt-2 max-w-sm">
   <Button
+  className="w-full bg-gradient-emerald"
     onClick={download}
     disabled={downloading}
     className="bg-gradient-emerald"
