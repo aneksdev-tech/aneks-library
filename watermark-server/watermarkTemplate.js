@@ -28,7 +28,7 @@ export const WATERMARK = {
 
   imageTitleScale: 0.07,
 
-  letterSpacing: 6,
+  letterSpacing: 2,
 
   color: {
     r: 0,
