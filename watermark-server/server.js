@@ -164,7 +164,7 @@ async function processPdf(
     // Calculate desired width (same idea as images)
     const watermarkWidth =
       Math.round(
-        Math.min(width, height) * 1.00,
+        Math.min(width, height) * 1.50,
       );
 
     // Prepare watermark with Sharp
