@@ -26,9 +26,9 @@ export const WATERMARK = {
 
   pdfTitleScale: 0.05,
 
-  imageTitleScale: 0.08,
+  imageTitleScale: 0.06,
 
-  letterSpacing: 0.020,
+  letterSpacing: 0.050,
 
   color: {
     r: 0,
