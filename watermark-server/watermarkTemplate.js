@@ -18,7 +18,7 @@ export const WATERMARK = {
 
   rotation: 55,
 
-  opacity: 0.18,
+  opacity: 0.20,
 
   horizontalOffset: 60,
 
@@ -26,7 +26,7 @@ export const WATERMARK = {
 
   pdfTitleScale: 0.05,
 
-  imageTitleScale: 0.05,
+  imageTitleScale: 0.06,
 
   letterSpacing: 0.5,
 
