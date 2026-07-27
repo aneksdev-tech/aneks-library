@@ -294,16 +294,21 @@ export function ResourceCard({
   </div>
 
   <Button
-    className="shrink-0"
-    variant={bookmarked ? "default" : "outline"}
-    size="sm"
-    onClick={() => toggleBookmark.mutate()}
-    aria-label="Bookmark"
-  >
-    <Star
-  className="h-3.5 w-3.5"
-  fill={bookmarked ? "currentColor" : "none"} />
-  </Button>
+  className="shrink-0"
+  variant="outline"
+  size="sm"
+  onClick={() => toggleBookmark.mutate()}
+  aria-label="Bookmark"
+>
+  <Star
+    className={`h-3.5 w-3.5 ${
+      bookmarked
+        ? "text-yellow-500"
+        : "text-muted-foreground"
+    }`}
+    fill={bookmarked ? "currentColor" : "none"}
+  />
+</Button>
 </div>
 
 </article>
