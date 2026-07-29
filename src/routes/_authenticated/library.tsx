@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAccess } from "@/hooks/useAccess";
 import { downloadResource } from "@/lib/download";
 import { supabase } from "@/integrations/supabase/client";
+import { colleges, levels, semesters, getDepartments, ALL_OPTION, } from "@/lib/academicData";
 import { useAuth } from "@/lib/auth";
 import { BookMarked, Download, Search, Filter, Eye, Star, Loader2,} from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,23 @@ function LibraryPage() {
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<"newest" | "downloads" | "bookmarks">("newest");
 
+  const [college, setCollege] =
+  useState(ALL_OPTION);
+
+const [department, setDepartment] =
+  useState(ALL_OPTION);
+
+const [level, setLevel] =
+  useState(ALL_OPTION);
+
+const [semester, setSemester] =
+  useState(ALL_OPTION);
+
+const departments =
+  college === ALL_OPTION
+    ? []
+    : getDepartments(college);
+
   const { isPremium, isAdmin } = useAccess();
 
   const { data: cats } = useQuery({
@@ -32,13 +50,50 @@ function LibraryPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["library", q, category, sort],
+  queryKey: [
+  "library",
+  q,
+  category,
+  college,
+  department,
+  level,
+  semester,
+  sort,
+  ],
     queryFn: async () => {
       let query = supabase
         .from("resources")
         .select("id, title, description, course_code, college, department, level, semester, year, tags, file_path, download_count, bookmark_count, created_at, category:categories(name, slug)")
         .eq("status", "approved");
-      if (category !== "all") query = query.eq("category_id", category);
+      if (category !== ALL_OPTION) query = query.eq("category_id", category);
+      if (college !== ALL_OPTION) {
+  query = query.eq(
+    "college",
+    college,
+  );
+}
+
+if (department !== ALL_OPTION) {
+  query = query.eq(
+    "department",
+    department,
+  );
+}
+
+if (level !== ALL_OPTION) {
+  query = query.eq(
+    "level",
+    level,
+  );
+}
+
+if (semester !== ALL_OPTION) {
+  query = query.eq(
+    "semester",
+    semester,
+  );
+}
+
       if (q.trim()) query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%,course_code.ilike.%${q}%`);
       const orderCol = sort === "newest" ? "created_at" : sort === "downloads" ? "download_count" : "bookmark_count";
       query = query.order(orderCol, { ascending: false }).limit(60);
@@ -56,27 +111,212 @@ function LibraryPage() {
         <p className="mt-1 text-sm text-muted-foreground">Search, filter and download the collective knowledge of the community.</p>
       </div>
 
-      <div className="flex flex-wrap gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="relative min-w-[240px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search title, course code, description…" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-[200px]"><Filter className="mr-2 h-3 w-3" /><SelectValue placeholder="Category" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {cats?.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest first</SelectItem>
-            <SelectItem value="downloads">Most downloaded</SelectItem>
-            <SelectItem value="bookmarks">Most bookmarked</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+
+    {/* Search */}
+
+    <div className="relative md:col-span-2 xl:col-span-3">
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+      <Input
+        placeholder="Search title, course code, description…"
+        value={q}
+        onChange={(e) =>
+          setQ(e.target.value)
+        }
+        className="pl-9"
+      />
+    </div>
+
+    {/* College */}
+
+    <Select
+      value={college}
+      onValueChange={(value) => {
+        setCollege(value);
+        setDepartment(ALL_OPTION);
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="College" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">
+          All Colleges
+        </SelectItem>
+
+        {colleges.map((college) => (
+        <SelectItem
+        key={college.id}
+        value={college.id}
+      >
+      <>
+        <span className="sm:hidden">
+        {college.id}
+      </span>
+
+      <span className="hidden sm:inline">
+        {college.name} ({college.id})
+      </span>
+    </>
+  </SelectItem>
+))}
+      </SelectContent>
+    </Select>
+
+    {/* Department */}
+
+    <Select
+  value={department}
+  onValueChange={setDepartment}
+>
+  <SelectTrigger
+    className={
+      college === ALL_OPTION
+        ? "opacity-60"
+        : ""
+    }
+  >
+    <span>
+  {department === ALL_OPTION
+    ? "All Departments"
+    : department}
+</span>
+  </SelectTrigger>
+
+  <SelectContent>
+    {college === ALL_OPTION ? (
+      <div className="px-3 py-2 text-sm text-muted-foreground">
+        Select College first
       </div>
+    ) : (
+      <>
+        <SelectItem value={ALL_OPTION}>
+          All Departments
+        </SelectItem>
+
+        {departments.map((dept) => (
+          <SelectItem
+            key={dept}
+            value={dept}
+          >
+            {dept}
+          </SelectItem>
+        ))}
+      </>
+    )}
+  </SelectContent>
+</Select>
+
+    {/* Level */}
+
+    <Select
+      value={level}
+      onValueChange={setLevel}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Level" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">
+          All Levels
+        </SelectItem>
+
+        {levels.map((item) => (
+          <SelectItem
+            key={item}
+            value={item}
+          >
+            {item}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Semester */}
+
+    <Select
+      value={semester}
+      onValueChange={setSemester}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Semester" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">
+          All Semesters
+        </SelectItem>
+
+        {semesters.map((item) => (
+          <SelectItem
+            key={item}
+            value={item}
+          >
+            {item}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Category */}
+
+    <Select
+      value={category}
+      onValueChange={setCategory}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Category" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">
+          All Categories
+        </SelectItem>
+
+        {cats?.map((c) => (
+          <SelectItem
+            key={c.id}
+            value={c.id}
+          >
+            {c.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Sort */}
+
+    <Select
+      value={sort}
+      onValueChange={(v) =>
+        setSort(v as typeof sort)
+      }
+    >
+      <SelectTrigger>
+        <SelectValue />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="newest">
+          Newest first
+        </SelectItem>
+
+        <SelectItem value="downloads">
+          Most downloaded
+        </SelectItem>
+
+        <SelectItem value="bookmarks">
+          Most bookmarked
+        </SelectItem>
+      </SelectContent>
+    </Select>
+
+  </div>
+</div>
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

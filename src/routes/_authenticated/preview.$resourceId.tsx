@@ -4,16 +4,9 @@ import { useQuery, useQueryClient, } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
-import {
-  BookOpen,
-  Building2,
-  GraduationCap,
-  CalendarDays,
-  School,
-  Download,
-  Loader2,
-} from "lucide-react";
-
+import { getCollege } from "@/lib/academicData";
+import { colleges, levels, semesters, years, getDepartments, } from "@/lib/academicData";
+import { BookOpen, Building2, GraduationCap, CalendarDays, School, Download, Loader2, } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
@@ -129,9 +122,6 @@ const { data: isAdmin = false } = useQuery({
     );
   }
 
-  const collegeShort =
-  resource.college?.match(/\((.*?)\)/)?.[1] ?? resource.college;
-
 // Tell TypeScript about the joined uploader object
 const uploader = (resource as typeof resource & {
   uploader?: {
@@ -141,6 +131,10 @@ const uploader = (resource as typeof resource & {
     avatar_url: string | null;
   } | null;
 }).uploader;
+
+const college = getCollege(
+  resource.college ?? "",
+);
   
   const download = async () => {
   if (downloading) return;
@@ -176,9 +170,9 @@ const uploader = (resource as typeof resource & {
       <div>
         <button
           onClick={() => window.history.back()}
-          className="mb-4 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          className="mb-6 inline-flex items-center text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
         >
-          ← Back
+        ← Back
         </button>
 
         <div className="mb-4 flex flex-wrap gap-2">
@@ -208,11 +202,16 @@ const uploader = (resource as typeof resource & {
           )}
 
           {resource.college && (
-            <div className="flex items-center gap-3">
-              <School className="h-4 w-4 text-primary" />
-              <span>{collegeShort}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+          <School className="h-4 w-4 text-primary" />
+
+          <span>
+          {college
+          ? `${college.name} (${college.id})`
+          :  resource.college}
+        </span>
+        </div>
+        )}
 
           {resource.department && (
             <div className="flex items-center gap-3">

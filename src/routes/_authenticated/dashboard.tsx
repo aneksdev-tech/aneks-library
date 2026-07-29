@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { ArrowUpRight, BookMarked, Download, FileCheck2, Upload, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Star, Download, FileCheck2, Upload, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getContributorLevel, getLevelProgress, getNextContributorLevel,} from "@/lib/reputation";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
@@ -55,7 +55,7 @@ function DashboardPage() {
   const cards = [
     { label: "My Uploads", value: stats?.uploads ?? 0, icon: Upload, sub: `${stats?.approved ?? 0} approved` },
     { label: "Downloads", value: stats?.downloads ?? 0, icon: Download, sub: "All time" },
-    { label: "Bookmarks", value: stats?.bookmarks ?? 0, icon: BookMarked, sub: "Saved for later" },
+    { label: "Bookmarks", value: stats?.bookmarks ?? 0, icon: Star, sub: "Saved for later" },
     { label: "Reputation", value: profile?.reputation ?? 0, icon: TrendingUp, sub: `${contributor.emoji} ${contributor.name}`, },
   ];
 

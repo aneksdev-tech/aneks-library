@@ -15,7 +15,7 @@ import {
   Sparkles,
   Upload,
   Users,
-  Bookmark,
+  Star,
   BarChart3,
   UserCog,
   Mail,
@@ -23,7 +23,10 @@ import {
   Sun,
   Moon,
   GraduationCap,
-} from "lucide-react";
+  Menu,
+  X,
+  } from "lucide-react";
+  
 import { useState } from "react";
 import heroImg from "@/assets/hero7.jpeg";
 import logo from "@/assets/Logo__Circle (2).png";
@@ -66,7 +69,7 @@ const features = [
   { icon: UserCog, title: "Role-Based Access", desc: "Distinct experiences for students, lecturers, researchers and admins." },
   { icon: Shield, title: "Admin Moderation", desc: "Every upload is reviewed before it goes public. Quality guaranteed." },
   { icon: BarChart3, title: "Learning Insights", desc: "Track uploads, downloads and community engagement over time." },
-  { icon: Bookmark, title: "Bookmarks", desc: "Save the resources you love and sync them across all your devices." },
+  { icon: Star, title: "Bookmarks", desc: "Save the resources you love and sync them across all your devices." },
 ];
 
 const categories = [
@@ -80,10 +83,10 @@ const categories = [
 ];
 
 const steps = [
-  { n: "01", title: "Create Account", desc: "Create an account as a student, lecturer or researcher, free forever." },
-  { n: "02", title: "Browse Resources", desc: "Browse structured academic contents." },
-  { n: "03", title: "Upload", desc: "An admin reviews and approves your upload, usually within a day." },
-  { n: "04", title: "Available", desc: "Once approved, your resource is discoverable and downloadable by the community." },
+  { n: "01", title: "Create Account", desc: "Create an account as a student, lecturer or researcher, totally free." },
+  { n: "02", title: "Upload", desc: "An admin reviews and approves your upload, usually within a day." },
+  { n: "03", title: "Available", desc: "Once approved, your resource is discoverable and downloadable by the community." },
+  { n: "04", title: "Browse Resources", desc: "Browse structured academic contents." },
   { n: "05", title: "Preview Instantly", desc: "Preview academic resources before download." },
   { n: "06", title: "Download (Premium)", desc: "Premium subscription required before academic resources download." },
 ];
@@ -154,7 +157,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 glass">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-8xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2">
         <img
           src={logo}
@@ -162,11 +165,15 @@ function Header() {
           className="h-10 w-10 rounded-lg object-contain"
         />
 
-          <span className="font-display text-lg font-semibold tracking-tight">
+        <span className="font-display text-lg font-semibold tracking-tight hidden sm:block">
         <span className="text-gold">Aneks</span>Library
-    </span>
+        </span>
 </Link>
-        <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
+  <nav className="hidden items-center gap-3 text-sm text-muted-foreground md:flex">
+  <a href="#about" className="transition-colors hover:text-foreground">
+    About
+  </a>
+
   <a href="#features" className="transition-colors hover:text-foreground">
     Features
   </a>
@@ -175,12 +182,12 @@ function Header() {
     Categories
   </a>
 
-  <Link
+  {/* <Link
     to="/pricing"
     className="transition-colors hover:text-primary font-medium"
   >
     Pricing
-  </Link>
+  </Link> */}
 
   <a href="#how" className="transition-colors hover:text-foreground">
     How it works
@@ -189,25 +196,130 @@ function Header() {
   <a href="#faq" className="transition-colors hover:text-foreground">
     FAQ
   </a>
+
+  <a href="#contact" className="transition-colors hover:text-foreground">
+    Contact
+  </a>
 </nav>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
-          {session ? (
-            <Button asChild size="sm" className="bg-gradient-emerald text-primary-foreground shadow-soft">
-              <Link to="/dashboard">Open dashboard</Link>
-            </Button>
-          ) : (
-            <>
-              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <Link to="/auth" search={{ mode: "login" }}>Login</Link>
-              </Button>
-              <Button asChild size="sm" className="bg-gradient-emerald text-primary-foreground shadow-soft">
-                <Link to="/auth" search={{ mode: "register" }}>Get started</Link>
-              </Button>
-            </>
-          )}
-        </div>
+  <ThemeToggle />
+
+  {session ? (
+    <Button
+      asChild
+      size="sm"
+      className="bg-gradient-emerald text-primary-foreground shadow-soft"
+    >
+      <Link to="/dashboard">
+        <span className="hidden sm:inline">
+          Open Dashboard
+        </span>
+
+        <span className="sm:hidden">
+          Dashboard
+        </span>
+      </Link>
+    </Button>
+  ) : (
+    <Button
+      asChild
+      size="sm"
+      className="bg-gradient-emerald text-primary-foreground shadow-soft"
+    >
+      <Link
+        to="/auth"
+        search={{ mode: "register" }}
+      >
+        <span className="hidden sm:inline">
+          Get Started
+        </span>
+
+        <span className="sm:hidden">
+          Get Started
+        </span>
+      </Link>
+    </Button>
+  )}
+
+  <button
+    onClick={() => setOpen(!open)}
+    className="rounded-md border border-border bg-card p-2 shadow-soft md:hidden"
+    aria-label="Toggle menu"
+  >
+    {open ? (
+      <X className="h-4 w-4" />
+    ) : (
+      <Menu className="h-4 w-4" />
+    )}
+  </button>
+</div>
       </div>
+  
+  {open && (
+  <div className="border-t border-border bg-background md:hidden">
+    <nav className="mx-auto max-w-7xl px-4 py-4">
+      <div className="flex flex-col gap-1">
+
+        <a
+          href="#about"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-3 transition hover:bg-muted"
+        >
+          About
+        </a>
+
+        <a
+          href="#features"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-2 hover:bg-muted"
+        >
+          Features
+        </a>
+
+        <a
+          href="#categories"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-2 hover:bg-muted"
+        >
+          Categories
+        </a>
+
+        {/* <Link
+          to="/pricing"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-2 hover:bg-muted"
+        >
+          Pricing
+        </Link> */}
+
+        <a
+          href="#how"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-2 hover:bg-muted"
+        >
+          How it works
+        </a>
+
+        <a
+          href="#faq"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-2 hover:bg-muted"
+        >
+          FAQ
+        </a>
+
+        <a
+          href="#contact"
+          onClick={() => setOpen(false)}
+          className="rounded-lg px-3 py-2 hover:bg-muted"
+        >
+          Contact
+        </a>
+
+      </div>
+    </nav>
+  </div>
+)}
     </header>
   );
 }
@@ -229,9 +341,7 @@ function LandingPage() {
             <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
             <span className="text-gold">Smart Digital Library,</span> built for Academic Excellence
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-            Access past questions, lecture notes, projects, seminar papers, research materials and premium academic resources from one secure platform. Built first for Michael Okpara University of Agriculture, Umudike (MOUAU), with plans to expand across Nigerian universities.
-            </p>
+            
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="bg-gradient-emerald text-primary-foreground shadow-elegant">
                 <Link to="/auth" search={{ mode: "register" }}>
@@ -241,9 +351,9 @@ function LandingPage() {
               <Button asChild size="lg" variant="outline">
                 <Link to="/library">Login</Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              {/* <Button asChild size="lg" variant="outline">
               <Link to="/pricing">Premium Plans</Link>
-              </Button>
+              </Button> */}
             </div>
             <dl className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {stats.map((s) => (
@@ -266,6 +376,7 @@ function LandingPage() {
                 className="h-full w-full object-cover"
               />
             </div>
+            
             <div className="absolute -bottom-0 -left-0 hidden max-w-[220px] rounded-2xl border border-border bg-card p-4 shadow-elegant sm:block">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
                 <Users className="h-3.5 w-3.5 text-primary" /> Helped Students
@@ -275,7 +386,35 @@ function LandingPage() {
           </div>
         </div>
       </section>
+      <section id="about" className="border-t border-border/60">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+          <div className="mb-14 max-w-7xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-gold">ABOUT</p>
 
+      <p className="mt-8 text-lg leading-8 text-muted-foreground">
+        Aneks Library is a modern academic knowledge management platform
+        developed specifically for Michael Okpara University of Agriculture,
+        Umudike (MOUAU). It centralizes lecture notes, past questions,
+        seminar papers, research materials, projects and other academic
+        resources into one secure, well-organized digital library.
+      </p>
+
+      <p className="mt-6 text-lg leading-8 text-muted-foreground">
+        Designed with students, lecturers and researchers in mind, the
+        platform eliminates the difficulty of finding quality academic
+        materials by providing structured resources for every college and
+        department within the university.
+      </p>
+
+      <p className="mt-6 text-lg leading-8 text-muted-foreground">
+        Our mission is to improve learning efficiency, preserve valuable
+        academic resources and build a trusted digital ecosystem that
+        supports academic excellence across MOUAU, with future expansion
+        to other universities.
+      </p>
+    </div>
+  </div>
+</section>
       {/* FEATURES */}
       <section id="features" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
@@ -393,8 +532,8 @@ function LandingPage() {
 
       {/* FAQ */}
       <section id="faq" className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-          <div className="mb-10 text-center">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+          <div className="mb-10 text-left">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">FAQ</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Common questions.</h2>
           </div>
@@ -411,13 +550,13 @@ function LandingPage() {
 
       {/* CONTACT */}
       <section id="contact" className="border-t border-border/60">
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-20 text-left sm:px-6">
           <p className="text-xs uppercase tracking-[0.2em] text-gold">Contact</p>
           <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Need Help? We're always ready to assist MOUAU students with their academic journey.</h2>
           <p className="mt-3 text-muted-foreground">
             Reach out on email or WhatsApp — we usually respond within a few hours.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <div className="mt-8 flex flex-wrap justify-left gap-3">
             <Button asChild size="lg" className="bg-gradient-emerald text-primary-foreground shadow-elegant">
               <a href="mailto:hello@anekslibrary.com">
                 <Mail className="mr-2 h-4 w-4" /> Email us
@@ -438,7 +577,7 @@ function LandingPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
+        <div className="mx-auto grid max-w-8xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
@@ -454,9 +593,10 @@ function LandingPage() {
             <div className="mb-3 text-sm font-medium">Product</div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/library" className="hover:text-foreground">Library</Link></li>
+              <li><a href="#about" className="hover:text-foreground">About</a></li>
               <li><a href="#features" className="hover:text-foreground">Features</a></li>
               <li><a href="#categories" className="hover:text-foreground">Categories</a></li>
-              <li><Link to="/pricing" className="hover:text-foreground">Pricing</Link></li>
+              {/* <li><Link to="/pricing" className="hover:text-foreground">Pricing</Link></li> */}
             </ul>
           </div>
           <div>
@@ -487,9 +627,9 @@ function LandingPage() {
           </div>
         </div>
         <div className="border-t border-border/60">
-          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
+          <div className="mx-auto flex max-w-8xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
             <p>© {new Date().getFullYear()} Aneks Library. All rights reserved.</p>
-            <p>Built with ❤️ by AneksDev Technologies.</p>
+            <p>Built by AneksDev Technologies.</p>
           </div>
         </div>
       </footer>

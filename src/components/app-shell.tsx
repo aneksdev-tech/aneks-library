@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
-  BookMarked,
+  Star,
   Crown,
   Home,
   Library,
@@ -48,7 +48,7 @@ const NAV: NavItem[] = [
   { to: "/library", icon: Library, label: "Library" },
   { to: "/upload", icon: Upload, label: "Upload" },
   { to: "/my-uploads", icon: FileCheck2, label: "My Uploads" },
-  { to: "/bookmarks", icon: BookMarked, label: "Bookmarks" },
+  { to: "/bookmarks", icon: Star, label: "Bookmarks" },
   { to: "/premium", icon: Crown, label: "Premium" },
   { to: "/notifications", icon: Bell, label: "Notifications" },
   { to: "/profile", icon: User, label: "Profile" },

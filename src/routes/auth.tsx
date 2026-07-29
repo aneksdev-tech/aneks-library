@@ -50,14 +50,18 @@ function AuthPage() {
     <div className="grid min-h-dvh lg:grid-cols-2">
       {/* Left — form */}
       <div className="relative flex flex-col p-6 sm:p-10">
-        <Link to="/" className="inline-flex w-fit items-center gap-2">
-          <img
-          src={logo}
-          alt="Aneks Library"
-          className="h-5 w-5 rounded-lg object-contain"
-        />
-          <span className="font-display text-sm font-semibold"><span className="text-gold">Aneks</span>Library</span>
-        </Link>
+
+  <Link to="/" className="flex items-center gap-2">
+    <img
+      src={logo}
+      alt="Aneks Library"
+      className="h-12 w-12 object-contain"
+    />
+
+    <span className="hidden md:block font-display text-lg font-semibold tracking-tight">
+      <span className="text-gold">Aneks</span>Library
+    </span>
+  </Link>
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
           {mode === "login" && <LoginForm />}

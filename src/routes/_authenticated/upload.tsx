@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Upload as UploadIcon, FileText, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { academicData, colleges, levels, semesters, years } from "@/lib/academicData";
+import { colleges, levels, semesters, years, getDepartments, } from "@/lib/academicData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,10 +39,9 @@ function UploadPage() {
   year: new Date().getFullYear().toString(),
 });
 
-const departments =
-  form.college && form.college in academicData
-    ? academicData[form.college as keyof typeof academicData]
-    : [];
+const departments = getDepartments(
+  form.college,
+);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -243,10 +242,21 @@ const departments =
 
     <SelectContent>
       {colleges.map((college) => (
-        <SelectItem key={college} value={college}>
-          {college}
-        </SelectItem>
-      ))}
+  <SelectItem
+    key={college.id}
+    value={college.id}
+  >
+    <>
+      <span className="sm:hidden">
+        {college.id}
+      </span>
+
+      <span className="hidden sm:inline">
+        {college.name} ({college.id})
+      </span>
+    </>
+  </SelectItem>
+))}
     </SelectContent>
   </Select>
 </div>
