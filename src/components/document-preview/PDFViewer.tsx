@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, } from "react";
 import { Document, pdfjs } from "react-pdf";
-
 import { PDFPage } from "./PDFPage";
-
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
@@ -15,15 +13,29 @@ interface PDFViewerProps {
 export function PDFViewer({ url }: PDFViewerProps) {
   const [numPages, setNumPages] = useState(0);
   const [pageWidth, setPageWidth] = useState(900);
+  const [visiblePages, setVisiblePages] =
+  useState(3);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const loadMorePages = useCallback(() => {
+  setVisiblePages((prev) =>
+    Math.min(prev + 3, numPages),
+  );
+}, [numPages]);
+
+  const containerRef = 
+    useRef<HTMLDivElement>(null);
+  
+  const loaderRef =
+    useRef<HTMLDivElement>(null);
 
   const pdfOptions = useMemo(
-    () => ({
-      wasmUrl: "/wasm/",
-    }),
-    [],
-  );
+  () => ({
+    wasmUrl: "/wasm/",
+    cMapUrl: "/cmaps/",
+    cMapPacked: true,
+  }),
+  [],
+);
 
   useEffect(() => {
     function updateWidth() {
@@ -60,6 +72,31 @@ export function PDFViewer({ url }: PDFViewerProps) {
     };
   }, []);
 
+
+  useEffect(() => {
+  if (!loaderRef.current) return;
+
+  const observer =
+    new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          visiblePages < numPages
+        ) {
+          loadMorePages();
+        }
+      },
+      {
+        rootMargin: "300px",
+      },
+    );
+
+  observer.observe(loaderRef.current);
+
+  return () => observer.disconnect();
+}, [visiblePages, numPages]);
+
+
   return (
     <div
       ref={containerRef}
@@ -89,15 +126,27 @@ export function PDFViewer({ url }: PDFViewerProps) {
         }
       >
         {Array.from(
-          { length: numPages },
-          (_, i) => (
-            <PDFPage
-              key={i}
-              pageNumber={i + 1}
-              width={pageWidth}
-            />
+         {
+          length: Math.min(
+            visiblePages,
+            numPages,
           ),
-        )}
+         },
+          (_, i) => (
+          <PDFPage
+          key={i}
+          pageNumber={i + 1}
+          width={pageWidth}
+        />
+      ),
+    )}
+
+    {visiblePages < numPages && (
+  <div
+    ref={loaderRef}
+    className="h-10"
+  />
+  )}
       </Document>
     </div>
   );

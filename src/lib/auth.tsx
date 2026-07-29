@@ -18,6 +18,7 @@ export interface Profile {
   status: AccountStatus;
   primary_role: AppRole;
   reputation: number;
+  created_at: string;
 
   subscription_plan: "free" | "premium";
   subscription_started_at: string | null;
@@ -53,12 +54,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
 
   const loadProfile = async (uid: string) => {
-    const [{ data: prof }, { data: rls }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile((prof as Profile) ?? null);
-    setRoles(((rls ?? []) as { role: AppRole }[]).map((r) => r.role));
+    const { data: prof } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", uid)
+  .maybeSingle();
+
+const profile = (prof as Profile) ?? null;
+
+setProfile(profile);
+
+setRoles(
+  profile?.primary_role
+    ? [profile.primary_role]
+    : [],
+);
   };
 
   const bootstrap = async () => {

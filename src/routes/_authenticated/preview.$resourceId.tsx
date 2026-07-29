@@ -1,16 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, } from "@tanstack/react-router";
 import { useState } from "react";
-
-import {
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-
+import { useQuery, useQueryClient, } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
-
 import {
   BookOpen,
   Building2,
@@ -52,12 +45,22 @@ const [downloading, setDownloading] =
         .from("resources")
         .select(`
           *,
-          category:categories(name)
-        `)
+          category:categories(name),
+          uploader:profiles!resources_uploader_id_fkey(
+          id,
+          full_name,
+          bio,
+          avatar_url
+      )
+      `)
         .eq("id", resourceId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+      console.error(error);
+      throw error;
+  }
+      console.log("Uploader:", (data as any).uploader);
 
       return data;
     },
@@ -127,7 +130,17 @@ const { data: isAdmin = false } = useQuery({
   }
 
   const collegeShort =
-    resource.college?.match(/\((.*?)\)/)?.[1] ?? resource.college;
+  resource.college?.match(/\((.*?)\)/)?.[1] ?? resource.college;
+
+// Tell TypeScript about the joined uploader object
+const uploader = (resource as typeof resource & {
+  uploader?: {
+    id: string;
+    full_name: string | null;
+    bio: string | null;
+    avatar_url: string | null;
+  } | null;
+}).uploader;
   
   const download = async () => {
   if (downloading) return;
@@ -222,14 +235,67 @@ const { data: isAdmin = false } = useQuery({
             </div>
           )}
 
-          <div className="pt-2 text-sm text-muted-foreground">
-            Uploaded on{" "}
-            {new Date(resource.created_at).toLocaleDateString(undefined, {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </div>
+          <div className="pt-2">
+  <div className="mb-3 text-sm font-medium text-muted-foreground">
+    Uploaded by
+  </div>
+
+  <Link
+  to="/profile/$userId"
+  params={{
+    userId: uploader?.id ?? "",
+  }}
+  className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-muted/40"
+>
+    {uploader?.avatar_url ? (
+      <img
+        src={uploader.avatar_url}
+        alt={uploader.full_name ?? "Uploader"}
+        className="h-12 w-12 rounded-full border object-cover"
+      />
+    ) : (
+      <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+        {(() => {
+  const parts =
+    (uploader?.full_name ?? "?")
+      .trim()
+      .split(/\s+/);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return (
+    parts[0][0] +
+    parts[1][0]
+  ).toUpperCase();
+})()}
+      </div>
+    )}
+
+    <div>
+      <div className="font-medium">
+        {uploader?.full_name ?? "Unknown user"}
+      </div>
+
+      {uploader?.bio && (
+        <div className="text-sm text-muted-foreground">
+          {uploader.bio}
+        </div>
+      )}
+    </div>
+  </Link>
+
+  <div className="mt-4 text-sm text-muted-foreground">
+    Uploaded on{" "}
+    {new Date(resource.created_at).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })}
+  </div>
+</div>
+
           <div className="pt-2 max-w-sm">
   <Button
   className="w-full bg-gradient-emerald"

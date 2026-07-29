@@ -3,13 +3,13 @@ export const PREVIEW_WATERMARK = {
 
   rotation: "-55deg",
 
-  color: "rgba(0, 0, 0, 0.18)",
+  color: "rgba(0, 0, 0, 0.30)",
 
-  titleFontSize: "clamp(2.5rem, 4vw, 3.6rem)",
+  titleFontSize: "clamp(0.6rem, 1.4vw, 1.6rem)",
 
   titleLetterSpacing: "0.6em",
 
-  horizontalOffset: "10px",
+  horizontalOffset: "0px",
 
-  verticalOffset: "-50px",
+  verticalOffset: "0px",
 };

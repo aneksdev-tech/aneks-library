@@ -18,7 +18,7 @@ export const WATERMARK = {
 
   rotation: 55,
 
-  opacity: 0.15,
+  opacity: 0.05,
 
   horizontalOffset: 60,
 
