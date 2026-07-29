@@ -18,6 +18,12 @@ const pageRef =
 const [visible, setVisible] =
   useState(pageNumber <= 2);
 
+const renderScale =
+  window.innerWidth < 768 ||
+  window.devicePixelRatio > 2
+    ? 1.5
+    : 2;
+
 useEffect(() => {
   if (!pageRef.current || visible)
     return;
@@ -49,12 +55,8 @@ useEffect(() => {
         <Page
           pageNumber={pageNumber}
           width={width}
-          devicePixelRatio={
-            Math.min(
-            window.devicePixelRatio || 1,
-            2,
-          )
-        }
+          scale={renderScale}
+          devicePixelRatio={1}
           renderTextLayer={false}
           renderAnnotationLayer={false}
           className="relative z-10"
