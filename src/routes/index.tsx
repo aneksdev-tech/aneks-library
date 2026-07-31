@@ -28,7 +28,7 @@ import {
   } from "lucide-react";
   
 import { useState } from "react";
-import heroImg from "@/assets/hero7.jpeg";
+import heroImg from "@/assets/hero6.jpg";
 import logo from "@/assets/Logo__Circle (2).png";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -332,13 +332,13 @@ function LandingPage() {
       {/* HERO — split screen */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-18 sm:px-6 lg:grid-cols-2 lg:py-35">
           <div className="flex flex-col justify-center">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft">
               <Sparkles className="h-3.5 w-3.5 text-gold" />
-              Designed for MOUAU Students • Expanding to More Universities
+              Designed for MOUAU Students
             </div>
-            <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-5xl">
             <span className="text-gold">Smart Digital Library,</span> built for Academic Excellence
             </h1>
             
@@ -355,40 +355,48 @@ function LandingPage() {
               <Link to="/pricing">Premium Plans</Link>
               </Button> */}
             </div>
-            <dl className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <dl className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4">
               {stats.map((s) => (
                 <div key={s.label} className="rounded-xl border border-border/60 bg-card/60 p-4 shadow-soft">
-                  <dt className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</dt>
-                  <dd className="mt-1 font-display text-2xl font-semibold">{s.value}</dd>
+                  <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground">{s.label}</dt>
+                  <dd className="mt-1 break-words font-display text-2xl font-semibold">{s.value}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
-            <div className="overflow-hidden rounded-3xl border border-border shadow-elegant">
-              <img
-                src={heroImg}
-                alt="Illustration of an academic library reading room"
-                width={1280}
-                height={1024}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            
-            <div className="absolute -bottom-0 -left-0 hidden max-w-[220px] rounded-2xl border border-border bg-card p-4 shadow-elegant sm:block">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                <Users className="h-3.5 w-3.5 text-primary" /> Helped Students
-              </div>
-              <div className="mt-1 font-display text-2xl font-semibold">10k+</div>
-            </div>
-          </div>
-        </div>
+          <div className="relative flex h-full">
+  {/* Glow */}
+  <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
+
+  {/* Image */}
+  <div className="w-full overflow-hidden rounded-3xl border border-border shadow-elegant">
+    <img
+      src={heroImg}
+      alt="Illustration of an academic library reading room"
+      width={1280}
+      height={1024}
+      className="h-full w-full object-cover"
+    />
+  </div>
+
+  {/* Floating Card */}
+  <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-2xl border border-border bg-card p-4 shadow-elegant sm:block">
+    <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+      <Users className="h-3.5 w-3.5 text-primary" />
+      Helped Students
+    </div>
+
+    <div className="mt-1 font-display text-2xl font-semibold">
+      10k+
+    </div>
+  </div>
+</div>
+</div>
       </section>
       <section id="about" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-          <div className="mb-14 max-w-7xl">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
+          <div className="mb-1 max-w-7xl">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">ABOUT</p>
 
       <p className="mt-8 text-lg leading-8 text-muted-foreground">
@@ -396,13 +404,9 @@ function LandingPage() {
         developed specifically for Michael Okpara University of Agriculture,
         Umudike (MOUAU). It centralizes lecture notes, past questions,
         seminar papers, research materials, projects and other academic
-        resources into one secure, well-organized digital library.
-      </p>
-
-      <p className="mt-6 text-lg leading-8 text-muted-foreground">
-        Designed with students, lecturers and researchers in mind, the
+        resources into one secure, well-organized digital library. The
         platform eliminates the difficulty of finding quality academic
-        materials by providing structured resources for every college and
+        materials, by providing structured resources for every college and
         department within the university.
       </p>
 
@@ -417,7 +421,7 @@ function LandingPage() {
 </section>
       {/* FEATURES */}
       <section id="features" className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-14 max-w-2xl">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">Features</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
@@ -443,7 +447,7 @@ function LandingPage() {
 
       {/* CATEGORIES */}
       <section id="categories" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-14 flex items-end justify-between gap-6">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.2em] text-gold">Categories</p>
@@ -478,7 +482,7 @@ function LandingPage() {
 
       {/* HOW IT WORKS */}
       <section id="how" className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-14 max-w-2xl">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">How it works</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
@@ -504,7 +508,7 @@ function LandingPage() {
 
       {/* TESTIMONIALS */}
       <section className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-14 max-w-2xl">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">Voices</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
@@ -532,7 +536,7 @@ function LandingPage() {
 
       {/* FAQ */}
       <section id="faq" className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-10 text-left">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">FAQ</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Common questions.</h2>
@@ -550,7 +554,7 @@ function LandingPage() {
 
       {/* CONTACT */}
       <section id="contact" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-20 text-left sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 text-left sm:px-6">
           <p className="text-xs uppercase tracking-[0.2em] text-gold">Contact</p>
           <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Need Help? We're always ready to assist MOUAU students with their academic journey.</h2>
           <p className="mt-3 text-muted-foreground">
@@ -577,7 +581,7 @@ function LandingPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto grid max-w-8xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
+        <div className="mx-auto grid max-w-8xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
@@ -590,6 +594,14 @@ function LandingPage() {
             </p>
           </div>
           <div>
+            <div className="mb-3 text-sm font-medium">Company</div>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><a href="#" className="hover:text-foreground">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-foreground">Terms of Service</a></li>
+              <li><a href="mailto:hello@anekslibrary.com" className="hover:text-foreground">Contact</a></li>
+            </ul>
+          </div>
+          <div>
             <div className="mb-3 text-sm font-medium">Product</div>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/library" className="hover:text-foreground">Library</Link></li>
@@ -600,30 +612,26 @@ function LandingPage() {
             </ul>
           </div>
           <div>
-            <div className="mb-3 text-sm font-medium">Company</div>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-foreground">Terms of Service</a></li>
-              <li><a href="mailto:hello@anekslibrary.com" className="hover:text-foreground">Contact</a></li>
-            </ul>
-          </div>
-          <div>
             <div className="mb-3 text-sm font-medium">Newsletter</div>
             <p className="text-sm text-muted-foreground">Occasional updates on new categories and improvements.</p>
             <form
-              className="mt-3 flex gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <input
-                type="email"
-                required
-                placeholder="you@university.edu"
-                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              />
-              <Button type="submit" className="bg-gradient-emerald text-primary-foreground">Join</Button>
-            </form>
+  className="mt-3 flex flex-col gap-2 xl:flex-row"
+  onSubmit={(e) => e.preventDefault()}
+>
+  <input
+    type="email"
+    required
+    placeholder="you@university.edu"
+    className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+  />
+
+  <Button
+    type="submit"
+    className="w-full shrink-0 bg-gradient-emerald text-primary-foreground xl:w-auto"
+  >
+    Join
+  </Button>
+</form>
           </div>
         </div>
         <div className="border-t border-border/60">

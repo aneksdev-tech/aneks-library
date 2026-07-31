@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
-import heroImg from "@/assets/hero4.jpg";
+import heroImg from "@/assets/hero7.jpeg";
 import logo from "@/assets/Logo__Circle.png";
 import { colleges, levels, getDepartments, } from "@/lib/academicData";
 
@@ -84,7 +84,7 @@ function AuthPage() {
         <div className="relative flex h-full flex-col justify-end p-12 text-primary-foreground">
           <p className="text-xs uppercase tracking-[0.2em] text-gold">EMBRACE KNOWLEDGE AND EMPOWER MINDS</p>
           <h2 className="mt-3 max-w-md font-display text-4xl font-semibold leading-tight">
-            Develop a passion for learning. If you do, you will never cease to grow
+            Develop a passion for learning. You'll never cease to grow.
           </h2>
           <p className="mt-3 max-w-md text-sm text-primary-foreground/80">
             Access verified academic resources, contribute valuable materials, and learn with a growing community of students and lecturers, all in one trusted library.
