@@ -17,13 +17,32 @@ function VerifyEmail() {
   const [busy, setBusy] = useState(false);
 
   const resend = async () => {
-    if (!email) return toast.error("No email on file — go back to sign up.");
-    setBusy(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: `${window.location.origin}/verify-email` } });
+  if (!email) {
+    toast.error("No email available.");
+    return;
+  }
+
+  setBusy(true);
+
+  try {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth`,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("A new verification email has been sent.");
+  } finally {
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Verification email sent again.");
-  };
+  }
+};
 
   return (
     <div className="grid min-h-dvh place-items-center bg-background p-6">
@@ -37,7 +56,7 @@ function VerifyEmail() {
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <Button onClick={resend} disabled={busy} className="bg-gradient-emerald text-primary-foreground">
-            Resend verification email
+          {busy ? "Sending..." : "Resend verification email"}
           </Button>
           <Button asChild variant="outline">
             <Link to="/auth" search={{ mode: "login" }}>

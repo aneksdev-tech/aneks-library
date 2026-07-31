@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Eye, EyeOff, GraduationCap, Loader2, Mail, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/lib/auth";
 import heroImg from "@/assets/hero4.jpg";
 import logo from "@/assets/Logo__Circle.png";
+import { colleges, levels, getDepartments, } from "@/lib/academicData";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "register", "forgot"]).catch("login"),
@@ -21,8 +22,8 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in | Aneks Library" },
-      { name: "description", content: "Sign in or create an Aneks Library account." },
+      { title: "Sign In | Aneks Library" },
+      { name: "description", content: "Sign In or create an Aneks Library account." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -32,7 +33,9 @@ export const Route = createFileRoute("/auth")({
 const ROLES = [
   { value: "student", label: "Student" },
   { value: "lecturer", label: "Lecturer" },
+  { value: "staff", label: "Staff" },
   { value: "researcher", label: "Researcher" },
+  { value: "guest", label: "Guest" },
 ] as const;
 
 function AuthPage() {
@@ -51,7 +54,7 @@ function AuthPage() {
       {/* Left — form */}
       <div className="relative flex flex-col p-6 sm:p-10">
 
-  <Link to="/" className="flex items-center gap-2">
+  {/* <Link to="/" className="flex items-center gap-2">
     <img
       src={logo}
       alt="Aneks Library"
@@ -61,7 +64,7 @@ function AuthPage() {
     <span className="hidden md:block font-display text-lg font-semibold tracking-tight">
       <span className="text-gold">Aneks</span>Library
     </span>
-  </Link>
+  </Link> */}
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
           {mode === "login" && <LoginForm />}
@@ -121,13 +124,19 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password, });
     setBusy(false);
+
     if (error) {
-      toast.error(error.message);
-      return;
-    }
+  toast.error(error.message);
+  return;
+  }
+
     if (!remember) sessionStorage.setItem("aneks-remember", "0");
     toast.success("Welcome back.");
     navigate({ to: "/dashboard" });
@@ -161,7 +170,7 @@ function LoginForm() {
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
             <Link to="/auth" search={{ mode: "forgot" }} className="text-xs text-primary hover:underline">
-              Forgot?
+              Forgot Password?
             </Link>
           </div>
           <div className="relative mt-1.5">
@@ -181,14 +190,17 @@ function LoginForm() {
           Remember me on this device
         </label>
         <Button type="submit" disabled={busy} className="w-full bg-gradient-emerald text-primary-foreground shadow-soft">
-          {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Sign in
+          {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Log In
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don't have an account?{" "}
+        Don't have an account? &nbsp; {" "}
         <Link to="/auth" search={{ mode: "register" }} className="font-medium text-primary hover:underline">
-          Create one
+          Create account&nbsp;
+        </Link> | &nbsp;
+        <Link to="/" className="font-medium text-primary hover:underline">
+           Home
         </Link>
       </p>
     </div>
@@ -198,7 +210,7 @@ function LoginForm() {
 function RegisterForm() {
   const [showPass, setShowPass] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [role, setRole] = useState<"student" | "lecturer" | "researcher">("student");
+  const [role, setRole] = useState("");
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -210,8 +222,40 @@ function RegisterForm() {
   });
   const navigate = useNavigate();
 
-  const isStudent = role === "student";
+  const needsCollege =
+  role === "student" ||
+  role === "lecturer" ||
+  role === "staff";
+
+  const needsLevel =
+  role === "student";
+
+  const departments = getDepartments(form.college);
   const setField = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const emailValid =
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+
+  const nameValid =
+  /^[A-Za-z\s'-]{3,}$/.test(form.full_name.trim());
+
+  const canSubmit =
+  nameValid &&
+  emailValid &&
+  form.password.trim() !== "" &&
+  form.confirm.trim() !== "" &&
+  role !== "" &&
+  (
+  !needsCollege ||
+  (
+    form.college !== "" &&
+    form.department !== "" &&
+    (
+      !needsLevel ||
+      form.level !== ""
+    )
+  )
+);
 
   const handleGoogle = async () => {
   setBusy(true);
@@ -233,34 +277,110 @@ function RegisterForm() {
 };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (form.password.length < 8) return toast.error("Password must be at least 8 characters.");
-    if (form.password !== form.confirm) return toast.error("Passwords don't match.");
-    setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
-        data: {
-          full_name: form.full_name,
-          role,
-          college: isStudent ? form.college : null,
-          department: isStudent ? form.department : null,
-          level: isStudent ? form.level : null,
-        },
+  e.preventDefault();
+
+  const normalizedEmail = form.email.trim().toLowerCase();
+
+  // Validate locally first
+  if (form.password.length < 8) {
+    toast.error("Password must be at least 8 characters.");
+    return;
+  }
+
+  if (form.password !== form.confirm) {
+    toast.error("Passwords don't match.");
+    return;
+  }
+
+  if (form.full_name.trim().length < 3) {
+  toast.error("Full name must be at least 3 characters.");
+  return;
+  }
+
+  if (!nameValid) {
+  toast.error(
+    "Full name must be at least 3 letters and contain only letters."
+  );
+  return;
+}
+
+setBusy(true);
+
+try {
+  const { data: emailCheck, error: functionError } =
+    await supabase.functions.invoke("check-email", {
+      body: {
+        email: normalizedEmail,
       },
     });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Check your email to verify your account.");
-    navigate({ to: "/verify-email", search: { email: form.email } });
-  };
+
+  if (functionError) {
+    toast.error("Unable to verify email. Please try again.");
+    return;
+  }
+
+  if (emailCheck?.exists) {
+  if (emailCheck.confirmed) {
+    toast.error("Email already exists. Please log in.");
+    return;
+  }
+
+  toast.info("Your email hasn't been verified yet.");
+
+  navigate({
+    to: "/verify-email",
+    search: {
+      email: normalizedEmail,
+    },
+  });
+
+  return;
+}
+  
+  const { error } = await supabase.auth.signUp({
+    email: normalizedEmail,
+    password: form.password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth`,
+      data: {
+        full_name: form.full_name,
+        role,
+        college: needsCollege ? form.college : null,
+        department: needsCollege ? form.department : null,
+        level: needsLevel ? form.level : null,
+      },
+    },
+  });
+
+  if (error) {
+    const message = error.message.toLowerCase();
+
+    if (
+      message.includes("already") ||
+      message.includes("registered") ||
+      message.includes("exists")
+    ) {
+      toast.error("Email already exists. Please log in.");
+    } else {
+      toast.error(error.message);
+    }
+
+    return;
+  }
+
+  toast.success("Check your email to verify your account.");
+  navigate({
+    to: "/verify-email",
+    search: { email: normalizedEmail },
+  });
+} finally {
+  setBusy(false);
+}};
 
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold">Create your account</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Join Aneks Library — free</p>
+      <p className="mt-2 text-sm text-muted-foreground">Join Aneks Library</p>
 
       <Button type="button" variant="outline" className="mt-6 w-full" onClick={handleGoogle} disabled={busy}>
         <GoogleIcon /> Continue with Google
@@ -273,6 +393,9 @@ function RegisterForm() {
         <div>
           <Label htmlFor="name">Full name</Label>
           <Input id="name" required value={form.full_name} onChange={(e) => setField("full_name", e.target.value)} className="mt-1.5" />
+          {form.full_name && !/^[A-Za-z\s'-]{3,}$/.test(form.full_name.trim()) && (
+          <p className="mt-1 text-xs text-destructive">Full name must be at least 3 letters and contain only letters.</p>
+      )}
         </div>
         <div>
           <Label htmlFor="email">Email</Label>
@@ -289,49 +412,175 @@ function RegisterForm() {
             </div>
           </div>
           <div>
-            <Label htmlFor="confirm">Confirm</Label>
+            <Label htmlFor="confirm">Confirm Password</Label>
+            <div className="relative mt-1.5">
             <Input id="confirm" type={showPass ? "text" : "password"} required value={form.confirm} onChange={(e) => setField("confirm", e.target.value)} className="mt-1.5" />
+            <button type="button" onClick={() => setShowPass((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
+                {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+            </div>
           </div>
         </div>
         <div>
-          <Label>Role</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-            <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          {!isStudent && (
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {role === "lecturer" ? "Lecturer" : "Researcher"} accounts require admin approval before dashboard access.
-            </p>
-          )}
-        </div>
+          <Select
+  value={role}
+  onValueChange={(v) => {
+    setRole(v);
 
-        <div className={`grid grid-cols-3 gap-3 transition-opacity ${isStudent ? "opacity-100" : "pointer-events-none opacity-50"}`}>
-          <div className="col-span-3 sm:col-span-1">
-            <Label htmlFor="college">College</Label>
-            <Input id="college" disabled={!isStudent} value={form.college} onChange={(e) => setField("college", e.target.value)} className="mt-1.5" />
-          </div>
-          <div className="col-span-3 sm:col-span-1">
-            <Label htmlFor="dept">Department</Label>
-            <Input id="dept" disabled={!isStudent} value={form.department} onChange={(e) => setField("department", e.target.value)} className="mt-1.5" />
-          </div>
-          <div className="col-span-3 sm:col-span-1">
-            <Label htmlFor="level">Level</Label>
-            <Input id="level" disabled={!isStudent} placeholder="e.g. 300" value={form.level} onChange={(e) => setField("level", e.target.value)} className="mt-1.5" />
-          </div>
-        </div>
+    setForm((prev) => ({
+      ...prev,
+      college:
+        v === "student" ||
+        v === "lecturer" ||
+        v === "staff"
+          ? prev.college
+          : "",
+      department:
+        v === "student" ||
+        v === "lecturer" ||
+        v === "staff"
+          ? prev.department
+          : "",
+      level: v === "student" ? prev.level : "",
+    }));
+  }}
+>
+  
+  <SelectTrigger className="mt-1.5">
+    <SelectValue placeholder="Select Role" />
+  </SelectTrigger>
 
-        <Button type="submit" disabled={busy} className="w-full bg-gradient-emerald text-primary-foreground shadow-soft">
-          {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create account
+  <SelectContent>
+    {ROLES.map((r) => (
+      <SelectItem
+        key={r.value}
+        value={r.value}
+      >
+        {r.label}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+      {role !== "" && role !== "student" && (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+          {ROLES.find((r) => r.value === role)?.label} accounts require admin approval before dashboard access.
+          </p>
+      )}
+          </div>
+
+  <div
+  className={`overflow-hidden transition-all duration-300 ${
+    needsCollege
+      ? "max-h-96 opacity-100 mt-4"
+      : "max-h-0 opacity-0"
+  }`}
+>
+  <div className="flex flex-col gap-3">
+  {/* College */}
+  <div className="w-full">
+    <Label>College</Label>
+
+    <Select
+      value={form.college}
+      onValueChange={(value) => {
+        setForm((prev) => ({
+          ...prev,
+          college: value,
+          department: "",
+        }));
+      }}
+    >
+      <SelectTrigger className="mt-1.5">
+        <SelectValue placeholder="Select College" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {colleges.map((college) => (
+          <SelectItem
+            key={college.id}
+            value={college.id}
+        >
+            <span className="sm:hidden">{college.id}</span>
+            <span className="hidden sm:inline">{college.name}</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+
+  {/* Department */}
+  <div className="w-full">
+    <Label>Department</Label>
+
+    <Select
+      value={form.department}
+      onValueChange={(value) =>
+        setField("department", value)
+      }
+    >
+      <SelectTrigger className="mt-1.5">
+        <SelectValue placeholder="Select Department" />
+      </SelectTrigger>
+
+      <SelectContent>
+  {!form.college ? (
+    <div className="px-3 py-2 text-sm text-muted-foreground">
+      Select College first
+    </div>
+  ) : (
+    departments.map((department) => (
+      <SelectItem
+        key={department}
+        value={department}
+      >
+        {department}
+      </SelectItem>
+    ))
+  )}
+</SelectContent>
+    </Select>
+  </div>
+
+  {needsLevel && (
+  <div className="w-full">
+    <Label>Level</Label>
+
+    <Select
+      value={form.level}
+      onValueChange={(value) => setField("level", value)}
+    >
+      <SelectTrigger className="mt-1.5">
+        <SelectValue placeholder="Select Level" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {levels.map((level) => (
+          <SelectItem
+            key={level}
+            value={level}
+          >
+            {level}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+)}
+  </div>
+</div>
+
+        <Button type="submit" disabled={busy || !canSubmit} className="w-full bg-gradient-emerald text-primary-foreground shadow-soft">
+        {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create account
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already registered?{" "}
+        Already have an account? &nbsp; {" "}
         <Link to="/auth" search={{ mode: "login" }} className="font-medium text-primary hover:underline">
-          Sign in
+           Login&nbsp;
+        </Link> | &nbsp;
+        <Link to="/" className="font-medium text-primary hover:underline">
+           Home
         </Link>
       </p>
     </div>
@@ -343,12 +592,16 @@ function ForgotForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+  e.preventDefault();
+  setBusy(true);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+
     setBusy(false);
     if (error) return toast.error(error.message);
     setSent(true);
@@ -368,7 +621,7 @@ function ForgotForm() {
           <Mail className="mx-auto h-8 w-8 text-primary" />
           <p className="mt-3 font-medium">Check your inbox</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            We sent a reset link to <span className="text-foreground">{email}</span>.
+            We sent a reset link to <span className="text-foreground">{normalizedEmail}</span>.
           </p>
         </div>
       ) : (

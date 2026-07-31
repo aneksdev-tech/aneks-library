@@ -46,7 +46,6 @@ function MyUploads() {
           <p className="text-xs uppercase tracking-[0.2em] text-gold">My uploads</p>
           <h1 className="mt-1 font-display text-3xl font-semibold">Manage your contributions</h1>
         </div>
-        <Button asChild className="bg-gradient-emerald text-primary-foreground"><Link to="/upload"><Upload className="mr-2 h-4 w-4" /> New upload</Link></Button>
       </div>
       <div className="rounded-2xl border border-border bg-card shadow-soft">
         {isLoading ? (

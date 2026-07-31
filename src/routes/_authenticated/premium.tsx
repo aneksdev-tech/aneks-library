@@ -25,16 +25,15 @@ function PremiumPage() {
 }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-4">
 
-      <div className="rounded-3xl border bg-card p-8 shadow-soft">
+      <div className="rounded-3xl border bg-card p-6 shadow-soft">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-yellow-500/15 p-3">
+        <div>
+        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
             <Crown className="h-8 w-8 text-yellow-500" />
           </div>
-
-          <div>
-            <h1 className="font-display text-3xl font-bold">
+            <h1 className="font-display text-2xl font-bold">
               Aneks Library Premium
             </h1>
 

@@ -25,27 +25,27 @@ export function UpgradeDialog({
 }: UpgradeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-sm">
 
         <DialogHeader>
 
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Crown className="h-8 w-8 text-primary" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Crown className="h-8 w-8 text-yellow-500" />
           </div>
 
-          <DialogTitle className="text-center text-2xl">
+          <DialogTitle className="text-left text-2xl">
             Unlock Unlimited Academic Resources
           </DialogTitle>
 
-          <DialogDescription className="mx-auto max-w-sm text-center">
-            Continue to securely upgrade your account and enjoy unlimited
+          <DialogDescription className="mx-auto max-w-sm text-left">
+          Continue to securely upgrade your account and enjoy unlimited
             downloads, premium academic resources, an ad-free experience,
             priority support, and early access to new features.
           </DialogDescription>
 
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-2 py-2">
 
           <Feature text="Unlimited downloads" />
 
@@ -61,15 +61,14 @@ export function UpgradeDialog({
 
         </div>
 
-        <div className="rounded-xl border bg-primary/5 p-5 text-center">
+        <div className="rounded-xl border bg-primary/5 p-5 text-left">
 
-          <div className="text-3xl font-bold">
+          <p className="mt-2 text-4xl font-bold">
             ₦3,000
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            per month
-          </div>
+            <span className="text-lg font-normal">
+              /month
+            </span>
+          </p>
 
         </div>
 
