@@ -29,7 +29,7 @@ export function UpgradeDialog({
 
         <DialogHeader>
 
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <div className="mb-2 flex h-13 w-13 items-center justify-center rounded-full bg-primary/10">
             <Crown className="h-8 w-8 text-yellow-500" />
           </div>
 
@@ -61,9 +61,9 @@ export function UpgradeDialog({
 
         </div>
 
-        <div className="rounded-xl border bg-primary/5 p-5 text-left">
+        <div className="rounded-xl border bg-primary/5 p-4 text-left">
 
-          <p className="mt-2 text-4xl font-bold">
+          <p className="text-3xl font-bold">
             ₦3,000
             <span className="text-lg font-normal">
               /month

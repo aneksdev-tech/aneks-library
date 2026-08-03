@@ -165,7 +165,7 @@ function Header() {
           className="h-10 w-10 rounded-lg object-contain"
         />
 
-        <span className="font-display text-lg font-semibold tracking-tight hidden sm:block">
+        <span className="font-display text-lg font-semibold tracking-tight hidden lg:block">
         <span className="text-gold">Aneks</span>Library
         </span>
 </Link>
@@ -332,7 +332,7 @@ function LandingPage() {
       {/* HERO — split screen */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-18 sm:px-6 lg:grid-cols-2 lg:py-35">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-5 sm:px-6 lg:grid-cols-2 lg:py-10 xl:py-25">
           <div className="flex flex-col justify-center">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft">
               <Sparkles className="h-3.5 w-3.5 text-gold" />
@@ -355,11 +355,11 @@ function LandingPage() {
               <Link to="/pricing">Premium Plans</Link>
               </Button> */}
             </div>
-            <dl className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <dl className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-2">
               {stats.map((s) => (
                 <div key={s.label} className="rounded-xl border border-border/60 bg-card/60 p-4 shadow-soft">
                   <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground">{s.label}</dt>
-                  <dd className="mt-1 break-words font-display text-2xl font-semibold">{s.value}</dd>
+                  <dd className="mt-1 break-words font-display text-xl font-semibold">{s.value}</dd>
                 </div>
               ))}
             </dl>
@@ -370,7 +370,7 @@ function LandingPage() {
   <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
 
   {/* Image */}
-  <div className="w-full overflow-hidden rounded-3xl border border-border shadow-elegant">
+  <div className="w-full overflow-hidden rounded-xl border border-border shadow-elegant">
     <img
       src={heroImg}
       alt="Illustration of an academic library reading room"
@@ -381,7 +381,7 @@ function LandingPage() {
   </div>
 
   {/* Floating Card */}
-  <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-2xl border border-border bg-card p-4 shadow-elegant sm:block">
+  <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block">
     <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
       <Users className="h-3.5 w-3.5 text-primary" />
       Helped Students
@@ -395,9 +395,12 @@ function LandingPage() {
 </div>
       </section>
       <section id="about" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
-          <div className="mb-1 max-w-7xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">ABOUT</p>
+      <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
+      <div className="mb-1 max-w-7xl">
+      <p className="text-sm uppercase tracking-[0.2em] text-gold">ABOUT</p>
+      <h2 className="mt-3 mw-xs font-display text-3xl font-semibold sm:text-4xl">
+      Centralizing Academic Resources for MOUAU
+      </h2>
 
       <p className="mt-8 text-lg leading-8 text-muted-foreground">
         Aneks Library is a modern academic knowledge management platform
@@ -422,10 +425,10 @@ function LandingPage() {
       {/* FEATURES */}
       <section id="features" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
-          <div className="mb-14 max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">Features</p>
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Everything a serious academic community needs.
+          <div className="mb-14 max-w-1xl">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold">Features</p>
+            <h2 className="mt-3 mw-xs font-display text-3xl font-semibold sm:text-4xl">
+              Built to Make Academic Resources Fast, Safe, and Accessible
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -449,10 +452,10 @@ function LandingPage() {
       <section id="categories" className="border-t border-border/60">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-14 flex items-end justify-between gap-6">
-            <div className="max-w-2xl">
-              <p className="text-xs uppercase tracking-[0.2em] text-gold">Categories</p>
+            <div className="max-w-1xl">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold">Categories</p>
               <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-                Everything You Need to Excel Academically.
+                Everything You Need to Excel Academically
               </h2>
             </div>
             <Button asChild variant="ghost" className="hidden sm:inline-flex">
@@ -483,10 +486,10 @@ function LandingPage() {
       {/* HOW IT WORKS */}
       <section id="how" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
-          <div className="mb-14 max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">How it works</p>
+          <div className="mb-14 max-w-1xl">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold">How it works</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              From upload to download, in four steps.
+              Get Started in Minutes, Learn Without Limits
             </h2>
           </div>
           <ol className="grid gap-4 md:grid-cols-4">
@@ -509,10 +512,10 @@ function LandingPage() {
       {/* TESTIMONIALS */}
       <section className="border-t border-border/60">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
-          <div className="mb-14 max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">Voices</p>
+          <div className="mb-14 max-w-1xl">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold">Voices</p>
             <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Trusted by students, lecturers and researchers.
+              Trusted by students, lecturers and researchers
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -538,8 +541,8 @@ function LandingPage() {
       <section id="faq" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
           <div className="mb-10 text-left">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">FAQ</p>
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Common questions.</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-gold">FAQ</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Quich Answers to Common questions</h2>
           </div>
           <Accordion type="single" collapsible className="rounded-2xl border border-border/60 bg-card px-4 shadow-soft">
             {faqs.map((f, i) => (
@@ -555,8 +558,8 @@ function LandingPage() {
       {/* CONTACT */}
       <section id="contact" className="border-t border-border/60">
         <div className="mx-auto max-w-7xl px-4 py-18 text-left sm:px-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">Contact</p>
-          <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Need Help? We're always ready to assist MOUAU students with their academic journey.</h2>
+          <p className="text-sm uppercase tracking-[0.2em] text-gold">Contact</p>
+          <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Questions, Feedback, or Support? Talk to Us</h2>
           <p className="mt-3 text-muted-foreground">
             Reach out on email or WhatsApp — we usually respond within a few hours.
           </p>
@@ -581,7 +584,7 @@ function LandingPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto grid max-w-8xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl gap-10 px-1 py-14 sm:px-6 md:grid-cols-2 xl:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">

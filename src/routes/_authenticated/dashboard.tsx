@@ -67,12 +67,12 @@ function DashboardPage() {
             {roles.includes("admin") ? "Admin" : roles[0] ?? "Member"}
           </p>
           <h1 className="mt-1 font-display text-3xl font-semibold">
-            Welcome back, {profile?.full_name?.split(" ")[0] || "there"}.
+            Welcome back, {profile?.full_name?.split(" ")[0] || "there"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">Here's what's happening in your library.</p>
         </div>
         <Button asChild className="bg-gradient-emerald text-primary-foreground shadow-soft">
-          <Link to="/upload"><Upload className="mr-2 h-4 w-4" /> New upload</Link>
+          <Link to="/upload"><Upload className="h-4 w-4" />New upload</Link>
         </Button>
       </div>
 

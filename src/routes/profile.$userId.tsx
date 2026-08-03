@@ -95,7 +95,7 @@ const totalDownloads =
   }
 
   return (
-    <div className="mx-auto mt-10 max-w-3xl space-y-8">
+    <div className="mx-auto mt-5 max-w-2xl space-y-5">
       <Button
       type="button"
       variant="ghost"
@@ -104,14 +104,14 @@ const totalDownloads =
       ← Back
       </Button>
 
-      <div className="rounded-3xl border bg-card p-10 shadow-xl">
+      <div className="rounded-2xl border bg-card p-10 shadow-xl">
         <div className="flex flex-col items-center gap-4">
 
           {profile.avatar_url ? (
             <img
             src={profile.avatar_url}
             alt={profile.full_name}
-            className="h-64 w-64 rounded-3xl border-2 border-primary object-cover shadow-xl"
+            className="h-64 w-64 rounded-2xl border-2 border-primary object-cover shadow-xl"
             />
           ) : (
             <div className="flex h-40 w-40 items-center justify-center rounded-full border-4 border-primary bg-muted text-6xl font-semibold shadow-lg">
@@ -122,7 +122,7 @@ const totalDownloads =
           )}
 
           <div className="space-y-2 text-center">
-            <h1 className="flex items-center justify-center gap-2 text-3xl font-semibold">
+            <h1 className="flex items-center justify-center gap-2 text-2xl font-semibold">
             {profile.full_name}
             </h1>
 
@@ -135,7 +135,7 @@ const totalDownloads =
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             {profile.primary_role === "student" && "🟢 Verified Student"}
 
             {profile.primary_role === "lecturer" && "🎓 Verified Lecturer"}
@@ -145,22 +145,22 @@ const totalDownloads =
             {profile.primary_role === "admin" && "🛡️ Administrator"}
             </span>
 
-            <span className="rounded-full bg-gold/10 px-3 py-1 text-sm font-medium text-gold">
+            <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-medium text-gold">
             {contributor.emoji} {contributor.name}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
             Member since {joinedDate}
             </p>
-<div className="mt-8 border-t pt-8">
-<div className="grid grid-cols-1 gap-4 sm:grid-cols-3 text-center">
+<div className="mt-2 border-t pt-6">
+<div className="flex grid-cols-3 gap-2 sm:grid-cols-3 text-center">
 
   <div className="rounded-xl border p-4 min-w-0">
     <div className="text-2xl font-semibold">
       {resources?.length ?? 0}
     </div>
 
-    <div className="text-xs sm:text-sm text-muted-foreground break-words">
+    <div className="text-xs sm:text-sm text-muted-foreground break-word">
       Resources
     </div>
   </div>
@@ -188,15 +188,15 @@ const totalDownloads =
 </div>
 </div>
 
-<div className="rounded-2xl border bg-card p-6 shadow-soft">
+<div className="p-6">
 
-  <h2 className="mb-5 text-xl font-semibold">
+  <h2 className="text-center mb-5 text-md font-semibold">
     Uploaded Resources
   </h2>
 
   {resources && resources.length > 0 ? (
 
-    <div className="space-y-3">
+    <div className="space-y-3 text-center">
 
       {resources.map((resource) => (
 
@@ -206,7 +206,7 @@ const totalDownloads =
           params={{
             resourceId: resource.id,
           }}
-          className="block rounded-xl border p-4 transition hover:bg-muted/40"
+          className="block rounded-1xl border p-4 transition hover:bg-muted/40"
         >
 
           <div className="font-medium">

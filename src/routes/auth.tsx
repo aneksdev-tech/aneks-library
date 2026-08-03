@@ -70,11 +70,10 @@ function AuthPage() {
           {mode === "login" && <LoginForm />}
           {mode === "register" && <RegisterForm />}
           {mode === "forgot" && <ForgotForm />}
-        </div>
-
-        <p className="mt-8 text-center text-xs text-muted-foreground">
+        <p className="mt-8 text-left text-xs text-muted-foreground">
           By continuing you agree to our Terms & Privacy Policy.
         </p>
+        </div>
       </div>
 
       {/* Right — visual */}
@@ -144,7 +143,7 @@ function LoginForm() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold">Welcome back</h1>
+      <h1 className="font-display text-2xl font-semibold">Welcome back</h1>
       <p className="mt-2 text-sm text-muted-foreground">Login to your Aneks Library account.</p>
 
       <Button
@@ -194,10 +193,10 @@ function LoginForm() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-left text-sm text-muted-foreground">
         Don't have an account? &nbsp; {" "}
         <Link to="/auth" search={{ mode: "register" }} className="font-medium text-primary hover:underline">
-          Create account&nbsp;
+          Create &nbsp;
         </Link> | &nbsp;
         <Link to="/" className="font-medium text-primary hover:underline">
            Home
@@ -379,7 +378,7 @@ try {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold">Create your account</h1>
+      <h1 className="font-display text-2xl font-semibold">Create your account</h1>
       <p className="mt-2 text-sm text-muted-foreground">Join Aneks Library</p>
 
       <Button type="button" variant="outline" className="mt-6 w-full" onClick={handleGoogle} disabled={busy}>
@@ -574,7 +573,7 @@ try {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-left text-sm text-muted-foreground">
         Already have an account? &nbsp; {" "}
         <Link to="/auth" search={{ mode: "login" }} className="font-medium text-primary hover:underline">
            Login&nbsp;
