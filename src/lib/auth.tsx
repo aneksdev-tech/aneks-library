@@ -2,7 +2,15 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "student" | "lecturer" | "researcher";
+export type AppRole =
+  | "admin"
+  | "co-admin"
+  | "staff"
+  | "student"
+  | "lecturer"
+  | "researcher"
+  | "guest";
+
 export type AccountStatus = "active" | "pending" | "rejected" | "suspended" | "inactive";
 
 export interface Profile {
@@ -30,8 +38,13 @@ interface AuthState {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+
   roles: AppRole[];
+
   isAdmin: boolean;
+  isCoAdmin: boolean;
+  isStaff: boolean;
+
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -42,7 +55,11 @@ const AuthCtx = createContext<AuthState>({
   user: null,
   profile: null,
   roles: [],
+
   isAdmin: false,
+  isCoAdmin: false,
+  isStaff: false,
+
   refresh: async () => {},
   signOut: async () => {},
 });
@@ -106,12 +123,23 @@ setRoles(
         profile,
         roles,
         isAdmin: roles.includes("admin"),
-        refresh: async () => {
-          if (session?.user) await loadProfile(session.user.id);
-        },
+
+        isCoAdmin: roles.includes("co-admin"),
+
+        isStaff:
+        roles.includes("staff") ||
+        roles.includes("lecturer") ||
+        roles.includes("co-admin") ||
+        roles.includes("admin"),
+          refresh: async () => {
+            if (session?.user) await loadProfile(session.user.id);
+            },
+  
         signOut: async () => {
-          await supabase.auth.signOut();
-        },
+        await supabase.auth.signOut();
+
+        window.location.href = "/auth?mode=login";
+      },
       }}
     >
       {children}

@@ -172,7 +172,7 @@ const fileName =
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-gold">Profile</p>
-        <h1 className="mt-1 font-display text-3xl font-semibold">Your account</h1>
+        <h1 className="mt-1 font-display text-2xl font-semibold">Your account</h1>
         <p className="mt-1 text-sm text-muted-foreground">Update your details and academic information.</p>
       </div>
       <form onSubmit={save} className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-soft">
@@ -184,7 +184,7 @@ const fileName =
     <img
       src={avatarUrl}
       alt={profile?.full_name ?? "Avatar"}
-      className="h-72 w-56 rounded-3xl border-2 border-primary object-cover shadow-xl"
+      className="h-72 w-56 rounded-2xl border-2 border-primary object-cover shadow-xl"
     />
   ) : (
     <div className="flex h-72 w-56 items-center justify-center rounded-2xl border-2 border-primary bg-muted text-6xl font-bold shadow-lg">
@@ -250,16 +250,12 @@ const fileName =
       />
     </div>
 
-    <p className="text-center text-xs text-muted-foreground">
+    <p className="text-left text-xs text-muted-foreground">
       {nextLevel
         ? `${nextLevel.pointsNeeded} pts until ${nextLevel.emoji} ${nextLevel.name}`
         : "Highest contributor level reached 👑"}
     </p>
   </div>
-
-  <p className="text-sm text-muted-foreground">
-    Click the camera icon to change your profile photo.
-  </p>
 
   <div className="mt-2 w-full max-w-sm rounded-xl border bg-muted/30 p-4">
   <div className="mb-2 flex items-center justify-between">
@@ -304,7 +300,7 @@ const fileName =
 </div>
 </div>
 
-<div className="mx-auto w-full max-w-sm rounded-xl border bg-card p-5 text-center">
+<div className="mx-auto w-full max-w-sm rounded-xl border bg-card p-5 text-left">
   <h3 className="mb-5 text-base font-semibold">
     Account
   </h3>

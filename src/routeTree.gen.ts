@@ -10,8 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as SuspendedRouteImport } from './routes/suspended'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RejectedRouteImport } from './routes/rejected'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PendingRouteImport } from './routes/pending'
+import { Route as InactiveRouteImport } from './routes/inactive'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -37,14 +41,34 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuspendedRoute = SuspendedRouteImport.update({
+  id: '/suspended',
+  path: '/suspended',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RejectedRoute = RejectedRouteImport.update({
+  id: '/rejected',
+  path: '/rejected',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingRoute = PendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InactiveRoute = InactiveRouteImport.update({
+  id: '/inactive',
+  path: '/inactive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -149,8 +173,12 @@ const AuthenticatedAdminApprovalsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inactive': typeof InactiveRoute
+  '/pending': typeof PendingRoute
   '/pricing': typeof PricingRoute
+  '/rejected': typeof RejectedRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/suspended': typeof SuspendedRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookmarks': typeof AuthenticatedBookmarksRoute
@@ -172,8 +200,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inactive': typeof InactiveRoute
+  '/pending': typeof PendingRoute
   '/pricing': typeof PricingRoute
+  '/rejected': typeof RejectedRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/suspended': typeof SuspendedRoute
   '/verify-email': typeof VerifyEmailRoute
   '/bookmarks': typeof AuthenticatedBookmarksRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -196,8 +228,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/inactive': typeof InactiveRoute
+  '/pending': typeof PendingRoute
   '/pricing': typeof PricingRoute
+  '/rejected': typeof RejectedRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/suspended': typeof SuspendedRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookmarks': typeof AuthenticatedBookmarksRoute
@@ -221,8 +257,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/inactive'
+    | '/pending'
     | '/pricing'
+    | '/rejected'
     | '/reset-password'
+    | '/suspended'
     | '/verify-email'
     | '/admin'
     | '/bookmarks'
@@ -244,8 +284,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/inactive'
+    | '/pending'
     | '/pricing'
+    | '/rejected'
     | '/reset-password'
+    | '/suspended'
     | '/verify-email'
     | '/bookmarks'
     | '/dashboard'
@@ -267,8 +311,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/inactive'
+    | '/pending'
     | '/pricing'
+    | '/rejected'
     | '/reset-password'
+    | '/suspended'
     | '/verify-email'
     | '/_authenticated/admin'
     | '/_authenticated/bookmarks'
@@ -292,8 +340,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  InactiveRoute: typeof InactiveRoute
+  PendingRoute: typeof PendingRoute
   PricingRoute: typeof PricingRoute
+  RejectedRoute: typeof RejectedRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SuspendedRoute: typeof SuspendedRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
 }
@@ -307,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/suspended': {
+      id: '/suspended'
+      path: '/suspended'
+      fullPath: '/suspended'
+      preLoaderRoute: typeof SuspendedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -314,11 +373,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rejected': {
+      id: '/rejected'
+      path: '/rejected'
+      fullPath: '/rejected'
+      preLoaderRoute: typeof RejectedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending': {
+      id: '/pending'
+      path: '/pending'
+      fullPath: '/pending'
+      preLoaderRoute: typeof PendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inactive': {
+      id: '/inactive'
+      path: '/inactive'
+      fullPath: '/inactive'
+      preLoaderRoute: typeof InactiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -509,8 +589,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  InactiveRoute: InactiveRoute,
+  PendingRoute: PendingRoute,
   PricingRoute: PricingRoute,
+  RejectedRoute: RejectedRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SuspendedRoute: SuspendedRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,
 }

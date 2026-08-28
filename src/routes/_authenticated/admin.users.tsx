@@ -6,9 +6,35 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { AccountStatus, AppRole } from "@/lib/auth";
 import { Shield } from "lucide-react";
+import { redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
-  head: () => ({ meta: [{ title: "Users | Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  beforeLoad: async () => {
+    const { data: u } = await supabase.auth.getUser();
+
+    if (!u.user) {
+      throw redirect({
+        to: "/auth",
+        search: { mode: "login" },
+      });
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("primary_role")
+      .eq("id", u.user.id)
+      .single();
+
+    if (
+      !profile ||
+      !["admin", "co-admin"].includes(profile.primary_role)
+    ) {
+      throw redirect({
+        to: "/admin",
+      });
+    }
+  },
+
   component: UsersPage,
 });
 
@@ -40,8 +66,14 @@ function UsersPage() {
 
   const promote = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("user_roles").insert({ user_id: id, role: "admin" as AppRole });
-      if (error) throw error;
+      const { error } = await supabase
+  .from("profiles")
+  .update({
+    primary_role: "admin",
+  })
+  .eq("id", id);
+
+if (error) throw error;
     },
     onSuccess: () => toast.success("Promoted to admin"),
     onError: (e: Error) => toast.error(e.message),

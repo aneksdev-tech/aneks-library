@@ -6,13 +6,39 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
+import { redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/admin/categories")({
-  head: () => ({ meta: [{ title: "Categories | Aneks Library" }, { name: "robots", content: "noindex" }] }),
-  component: CategoriesAdmin,
+  beforeLoad: async () => {
+    const { data: u } = await supabase.auth.getUser();
+
+    if (!u.user) {
+      throw redirect({
+        to: "/auth",
+        search: { mode: "login" },
+      });
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("primary_role")
+      .eq("id", u.user.id)
+      .single();
+
+    if (
+      !profile ||
+      !["admin", "co-admin"].includes(profile.primary_role)
+    ) {
+      throw redirect({
+        to: "/admin",
+      });
+    }
+  },
+
+  component: CategoriesPage,
 });
 
-function CategoriesAdmin() {
+function CategoriesPage() {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
