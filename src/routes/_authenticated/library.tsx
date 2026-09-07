@@ -2,17 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAccess } from "@/hooks/useAccess";
-import { downloadResource } from "@/lib/download";
 import { supabase } from "@/integrations/supabase/client";
 import { colleges, levels, semesters, getDepartments, ALL_OPTION, } from "@/lib/academicData";
 import { useAuth } from "@/lib/auth";
-import { BookMarked, Download, Search, Filter, Eye, Star, Loader2,} from "lucide-react";
+import { BookMarked, Bookmark, Download, Search, Filter, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
-import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { ResourceTypeBadge } from "@/components/ResourceTypeBadge";
 
 export const Route = createFileRoute("/_authenticated/library")({
@@ -42,7 +40,7 @@ const departments =
     ? []
     : getDepartments(college);
 
-  const { isPremium, isAdmin } = useAccess();
+  const { canDownload } = useAccess();
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -61,10 +59,27 @@ const departments =
   sort,
   ],
     queryFn: async () => {
-      let query = supabase
-        .from("resources")
-        .select("id, title, description, course_code, college, department, level, semester, year, tags, file_path, download_count, bookmark_count, created_at, category:categories(name, slug)")
-        .eq("status", "approved");
+    let query = supabase
+  .from("public_resources")
+  .select(`
+    id,
+    title,
+    description,
+    course_code,
+    college,
+    department,
+    level,
+    semester,
+    year,
+    tags,
+    category_id,
+    download_count,
+    bookmark_count,
+    created_at,
+    file_type,
+    category_name,
+    category_slug
+  `);
       if (category !== ALL_OPTION) query = query.eq("category_id", category);
       if (college !== ALL_OPTION) {
   query = query.eq(
@@ -326,7 +341,13 @@ if (semester !== ALL_OPTION) {
         </div>
       ) : data && data.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((r) => <ResourceCard key={r.id} r={r as unknown as ResourceRow} isPremium={isPremium} isAdmin={isAdmin} />)}
+          {data.map((r) => (
+  <ResourceCard
+    key={r.id}
+    r={r as unknown as ResourceRow}
+    canDownload={canDownload}
+  />
+))}
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-card">
@@ -341,36 +362,34 @@ export type ResourceRow = {
   id: string;
   title: string;
   description: string | null;
-  course_code: string |null;
+  course_code: string | null;
   college: string | null;
   department: string | null;
   level: string | null;
   semester: string | null;
   year: number | null;
   tags: string[];
-  file_path: string;
+  category_id: string | null;
   download_count: number;
   bookmark_count: number;
   created_at: string;
-  category: { name: string | null; slug: string | null } | null;
+  file_type: string | null;
+  category_name: string | null;
+  category_slug: string | null;
 };
 
 export function ResourceCard({
   r,
-  isPremium,
-  isAdmin,
+  canDownload,
 }: {
   r: ResourceRow;
-  isPremium: boolean;
-  isAdmin: boolean;
+  canDownload: boolean;
 }) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const [previewing, setPreviewing] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-
+  
   const collegeShort =
   r.college?.match(/\((.*?)\)/)?.[1] ?? r.college;
 
@@ -398,45 +417,16 @@ export function ResourceCard({
     },
   });
 
-  const download = async () => {
-  if (downloading) return;
-
-  if (!user) {
-    toast.error("Sign in to download");
-    return;
-  }
-
-  // Admins and Premium users can download immediately
-  if (!isAdmin && !isPremium) {
-    setUpgradeOpen(true);
-    return;
-  }
-
-  setDownloading(true);
-
-  try {
-    await downloadResource(r.id);
-
-    qc.invalidateQueries({
-      queryKey: ["library"],
-    });
-  } catch (err: any) {
-    toast.error(err.message);
-  } finally {
-    setDownloading(false);
-  }
-};
-
   return (
   <>
     <article className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-          {r.category?.name ?? "General"}
+          {r.category_name ?? "General"}
         </span>
 
         <ResourceTypeBadge
-  filePath={r.file_path}
+  filePath={r.file_type ? `.${r.file_type}` : ""}
 />
       </div>
 
@@ -492,7 +482,7 @@ export function ResourceCard({
     </span>
 
     <span className="inline-flex items-center gap-1">
-      <Star className="h-3 w-3" />
+      <Bookmark className="h-3 w-3" />
       {r.bookmark_count}
     </span>
   </span>
@@ -540,7 +530,7 @@ export function ResourceCard({
   onClick={() => toggleBookmark.mutate()}
   aria-label="Bookmark"
 >
-  <Star
+  <Bookmark
     className={`h-3.5 w-3.5 ${
       bookmarked
         ? "text-yellow-500"
@@ -552,11 +542,6 @@ export function ResourceCard({
 </div>
 
 </article>
-
-<UpgradeDialog
-  open={upgradeOpen}
-  onOpenChange={setUpgradeOpen}
-/>
   </>
 );
 }

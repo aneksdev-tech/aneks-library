@@ -1,98 +1,199 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+} from "@tanstack/react-router";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
+
   beforeLoad: async ({ location }) => {
-  const { data } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
 
-  if (!data.user) {
-    throw redirect({
-      to: "/auth",
-      search: {
-        mode: "login",
-        next: location.pathname,
-      },
-    });
-  }
+    if (!data.user) {
+      throw redirect({
+        to: "/auth",
+        search: {
+          mode: "login",
+          next: location.pathname,
+        },
+      });
+    }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("status")
-    .eq("id", data.user.id)
-    .single();
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", data.user.id)
+      .single();
 
-  const currentPath = location.pathname;
+    if (profileError) {
+      console.error(
+        "Failed to load account status:",
+        profileError,
+      );
 
-  const isPendingPage = currentPath === "/pending";
-  const isSuspendedPage = currentPath === "/suspended";
-  const isRejectedPage = currentPath === "/rejected";
-  const isInactivePage = currentPath === "/inactive";
+      throw redirect({
+        to: "/pending",
+        replace: true,
+      });
+    }
 
-  switch (profile?.status) {
-    case "pending":
-      if (!isPendingPage) {
+    const currentPath = location.pathname;
+
+    const isPendingPage =
+      currentPath === "/pending";
+
+    const isSuspendedPage =
+      currentPath === "/suspended";
+
+    const isRejectedPage =
+      currentPath === "/rejected";
+
+    const isInactivePage =
+      currentPath === "/inactive";
+
+    switch (profile?.status) {
+      case "pending":
+        if (!isPendingPage) {
+          throw redirect({
+            to: "/pending",
+            replace: true,
+          });
+        }
+        break;
+
+      case "suspended":
+        if (!isSuspendedPage) {
+          throw redirect({
+            to: "/suspended",
+            replace: true,
+          });
+        }
+        break;
+
+      case "rejected":
+        if (!isRejectedPage) {
+          throw redirect({
+            to: "/rejected",
+            replace: true,
+          });
+        }
+        break;
+
+      case "inactive":
+        if (!isInactivePage) {
+          throw redirect({
+            to: "/inactive",
+            replace: true,
+          });
+        }
+        break;
+
+      case "active":
+        if (
+          isPendingPage ||
+          isSuspendedPage ||
+          isRejectedPage ||
+          isInactivePage
+        ) {
+          throw redirect({
+            to: "/dashboard",
+            replace: true,
+          });
+        }
+        break;
+
+      default:
         throw redirect({
           to: "/pending",
+          replace: true,
         });
-      }
-      break;
+    }
 
-    case "suspended":
-      if (!isSuspendedPage) {
-        throw redirect({
-          to: "/suspended",
-        });
-      }
-      break;
+    return {
+      user: data.user,
+      profile,
+    };
+  },
 
-    case "rejected":
-      if (!isRejectedPage) {
-        throw redirect({
-          to: "/rejected",
-        });
-      }
-      break;
+  component: AuthenticatedLayout,
+});
 
-    case "inactive":
-      if (!isInactivePage) {
-        throw redirect({
-          to: "/inactive",
-        });
-      }
-      break;
+function AuthenticatedLayout() {
+  const { profile, loading } = useAuth();
 
-    case "active":
+  useEffect(() => {
+    if (loading || !profile) {
+      return;
+    }
+
+    console.log("[AUTH STATUS CHECK]", {
+  status: profile.status,
+  path: window.location.pathname,
+});
+
+    const currentPath =
+      window.location.pathname;
+
+    if (profile.status === "active") {
       if (
-        isPendingPage ||
-        isSuspendedPage ||
-        isRejectedPage ||
-        isInactivePage
+        currentPath === "/pending" ||
+        currentPath === "/suspended" ||
+        currentPath === "/rejected" ||
+        currentPath === "/inactive"
       ) {
-        throw redirect({
-          to: "/dashboard",
-        });
+        console.log(
+  "[AUTH STATUS CHECK] ACTIVE → DASHBOARD",
+);
+        window.location.replace("/dashboard");
       }
-      break;
 
-    default:
-      if (!isPendingPage) {
-        throw redirect({
-          to: "/pending",
-        });
-      }
-  }
+      return;
+    }
 
-  return {
-    user: data.user,
-    profile,
-  };
-},
+    switch (profile.status) {
+      case "pending":
+        if (currentPath !== "/pending") {
+          window.location.replace("/pending");
+        }
+        break;
 
-  component: () => (
+      case "suspended":
+        if (currentPath !== "/suspended") {
+          window.location.replace("/suspended");
+        }
+        break;
+
+      case "rejected":
+        if (currentPath !== "/rejected") {
+          window.location.replace("/rejected");
+        }
+        break;
+
+      case "inactive":
+        if (currentPath !== "/inactive") {
+          window.location.replace("/inactive");
+        }
+        break;
+
+      default:
+        if (currentPath !== "/pending") {
+          window.location.replace("/pending");
+        }
+        break;
+    }
+  }, [profile?.status, loading]);
+
+  return (
     <AppShell>
       <Outlet />
     </AppShell>
-  ),
-});
+  );
+}

@@ -15,7 +15,7 @@ import {
   Sparkles,
   Upload,
   Users,
-  Star,
+  Bookmark,
   BarChart3,
   UserCog,
   Mail,
@@ -69,7 +69,7 @@ const features = [
   { icon: UserCog, title: "Role-Based Access", desc: "Distinct experiences for students, lecturers, researchers and admins." },
   { icon: Shield, title: "Admin Moderation", desc: "Every upload is reviewed before it goes public. Quality guaranteed." },
   { icon: BarChart3, title: "Learning Insights", desc: "Track uploads, downloads and community engagement over time." },
-  { icon: Star, title: "Bookmarks", desc: "Save the resources you love and sync them across all your devices." },
+  { icon: Bookmark, title: "Bookmarks", desc: "Save the resources you love and sync them across all your devices." },
 ];
 
 const categories = [

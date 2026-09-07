@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useRef, useState, useCallback, } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Document, pdfjs } from "react-pdf";
 import { PDFPage } from "./PDFPage";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -8,34 +14,39 @@ pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface PDFViewerProps {
   url: string;
+  scrollRoot?: HTMLDivElement | null;
 }
 
-export function PDFViewer({ url }: PDFViewerProps) {
+export function PDFViewer({
+  url,
+  scrollRoot = null,
+}: PDFViewerProps) {
   const [numPages, setNumPages] = useState(0);
   const [pageWidth, setPageWidth] = useState(900);
-  const [visiblePages, setVisiblePages] =
-  useState(3);
+  const [visiblePages, setVisiblePages] = useState(3);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   const loadMorePages = useCallback(() => {
-  setVisiblePages((prev) =>
-    Math.min(prev + 3, numPages),
-  );
-}, [numPages]);
-
-  const containerRef = 
-    useRef<HTMLDivElement>(null);
-  
-  const loaderRef =
-    useRef<HTMLDivElement>(null);
+    setVisiblePages((prev) =>
+      Math.min(prev + 3, numPages),
+    );
+  }, [numPages]);
 
   const pdfOptions = useMemo(
-  () => ({
-    wasmUrl: "/wasm/",
-    cMapUrl: "/cmaps/",
-    cMapPacked: true,
-  }),
-  [],
-);
+    () => ({
+      wasmUrl: "/wasm/",
+      cMapUrl: "/cmaps/",
+      cMapPacked: true,
+    }),
+    [],
+  );
+
+  useEffect(() => {
+    setVisiblePages(3);
+    setNumPages(0);
+  }, [url]);
 
   useEffect(() => {
     function updateWidth() {
@@ -48,13 +59,12 @@ export function PDFViewer({ url }: PDFViewerProps) {
 
     updateWidth();
 
-    const resizeObserver =
-      new ResizeObserver(updateWidth);
+    const resizeObserver = new ResizeObserver(
+      updateWidth,
+    );
 
     if (containerRef.current) {
-      resizeObserver.observe(
-        containerRef.current,
-      );
+      resizeObserver.observe(containerRef.current);
     }
 
     window.addEventListener(
@@ -64,7 +74,6 @@ export function PDFViewer({ url }: PDFViewerProps) {
 
     return () => {
       resizeObserver.disconnect();
-
       window.removeEventListener(
         "resize",
         updateWidth,
@@ -72,30 +81,43 @@ export function PDFViewer({ url }: PDFViewerProps) {
     };
   }, []);
 
-
   useEffect(() => {
-  if (!loaderRef.current) return;
+    if (
+      !loaderRef.current ||
+      !numPages ||
+      visiblePages >= numPages
+    ) {
+      return;
+    }
 
-  const observer =
-    new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
+        const entry = entries[0];
+
         if (
-          entries[0].isIntersecting &&
+          entry?.isIntersecting &&
           visiblePages < numPages
         ) {
           loadMorePages();
         }
       },
       {
-        rootMargin: "300px",
+        root: scrollRoot ?? null,
+        rootMargin: "600px 0px",
       },
     );
 
-  observer.observe(loaderRef.current);
+    observer.observe(loaderRef.current);
 
-  return () => observer.disconnect();
-}, [visiblePages, numPages]);
-
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    scrollRoot,
+    visiblePages,
+    numPages,
+    loadMorePages,
+  ]);
 
   return (
     <div
@@ -107,6 +129,9 @@ export function PDFViewer({ url }: PDFViewerProps) {
         options={pdfOptions}
         onLoadSuccess={({ numPages }) => {
           setNumPages(numPages);
+          setVisiblePages(
+            Math.min(3, numPages),
+          );
         }}
         onLoadError={(error) => {
           console.error(
@@ -126,27 +151,28 @@ export function PDFViewer({ url }: PDFViewerProps) {
         }
       >
         {Array.from(
-         {
-          length: Math.min(
-            visiblePages,
-            numPages,
-          ),
-         },
+          {
+            length: Math.min(
+              visiblePages,
+              numPages,
+            ),
+          },
           (_, i) => (
-          <PDFPage
-          key={i}
-          pageNumber={i + 1}
-          width={pageWidth}
-        />
-      ),
-    )}
+            <PDFPage
+              key={i}
+              pageNumber={i + 1}
+              width={pageWidth}
+            />
+          ),
+        )}
 
-    {visiblePages < numPages && (
-  <div
-    ref={loaderRef}
-    className="h-10"
-  />
-  )}
+        {visiblePages < numPages && (
+          <div
+            ref={loaderRef}
+            className="h-10"
+            aria-hidden="true"
+          />
+        )}
       </Document>
     </div>
   );

@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:types": "supabase gen types typescript --linked > src/integrations/supabase/types.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.2.8",

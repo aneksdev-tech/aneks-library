@@ -16,7 +16,6 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-
     const resourceId = url.searchParams.get("resourceId");
 
     if (!resourceId) {
@@ -31,17 +30,38 @@ Deno.serve(async (req) => {
       );
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    /*
+     * User-scoped client.
+     *
+     * Used for authentication, profile authorization, and resource metadata.
+     * The user's JWT remains the authorization boundary.
+     */
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         global: {
           headers: {
-            Authorization:
-              req.headers.get("Authorization") ?? "",
+            Authorization: req.headers.get("Authorization") ?? "",
           },
         },
       },
+    );
+
+    /*
+     * Service-role client.
+     *
+     * Used ONLY after authorization has succeeded to read the private
+     * Storage object. This prevents the resources bucket from becoming
+     * publicly readable.
+     */
+    const serviceSupabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
     );
 
     const {
@@ -61,12 +81,47 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: resource, error: resourceError } =
-      await supabase
-        .from("resources")
-        .select("file_path")
-        .eq("id", resourceId)
-        .single();
+    /*
+     * Load the user's current profile so pending-resource preview
+     * follows the same active-role authority used by approvals.
+     */
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("primary_role, status")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error(profileError);
+
+      return Response.json(
+        {
+          error: "Unable to verify account authorization.",
+        },
+        {
+          status: 403,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    if (profile.status !== "active") {
+      return Response.json(
+        {
+          error: "Your account is not active.",
+        },
+        {
+          status: 403,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    const { data: resource, error: resourceError } = await supabase
+      .from("resources")
+      .select("id, file_path, status, deleted_at")
+      .eq("id", resourceId)
+      .single();
 
     if (resourceError || !resource) {
       console.error(resourceError);
@@ -82,8 +137,60 @@ Deno.serve(async (req) => {
       );
     }
 
+    /*
+     * Preview authorization:
+     *
+     * APPROVED
+     *   Any authenticated active user may preview.
+     *
+     * PENDING
+     *   Only active platform/content authorities may preview:
+     *   Admin, Co-admin, Lecturer, Staff.
+     *
+     * DRAFT / REJECTED / DELETED
+     *   Cannot be previewed.
+     */
+    if (resource.status === "pending") {
+      const canPreviewPending =
+        profile.primary_role === "admin" ||
+        profile.primary_role === "co-admin" ||
+        profile.primary_role === "lecturer" ||
+        profile.primary_role === "staff";
+
+      if (!canPreviewPending) {
+        return Response.json(
+          {
+            error: "You are not authorized to preview this resource.",
+          },
+          {
+            status: 403,
+            headers: corsHeaders,
+          },
+        );
+      }
+    } else if (
+      resource.status !== "approved" ||
+      resource.deleted_at !== null
+    ) {
+      return Response.json(
+        {
+          error: "This resource is not available for preview.",
+        },
+        {
+          status: 403,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    /*
+     * The resources bucket remains private.
+     *
+     * Only the service-role client reads the Storage object, and only
+     * after the user's authorization has been established above.
+     */
     const { data: file, error: fileError } =
-      await supabase.storage
+      await serviceSupabase.storage
         .from("resources")
         .download(resource.file_path);
 
@@ -104,14 +211,10 @@ Deno.serve(async (req) => {
     return new Response(file.stream(), {
       headers: {
         ...corsHeaders,
-        "Content-Type":
-          file.type || "application/octet-stream",
-        "Content-Disposition":
-          'inline; filename="preview"',
-        "Cache-Control":
-          "private, no-store",
-        "X-Content-Type-Options":
-          "nosniff",
+        "Content-Type": file.type || "application/octet-stream",
+        "Content-Disposition": 'inline; filename="preview"',
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (err) {
@@ -119,10 +222,7 @@ Deno.serve(async (req) => {
 
     return Response.json(
       {
-        error:
-          err instanceof Error
-            ? err.message
-            : String(err),
+        error: err instanceof Error ? err.message : String(err),
       },
       {
         status: 500,

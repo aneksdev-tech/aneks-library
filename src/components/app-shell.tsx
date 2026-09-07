@@ -1,29 +1,26 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Bell,
-  Star,
+  Bookmark,
   Crown,
   Home,
   Library,
   LogOut,
   Menu,
   Moon,
-  Search,
   Settings,
-  Shield,
   Sun,
   Upload,
   User,
   GraduationCap,
   FileCheck2,
-  UsersRound,
+  Shield,
   X,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -48,12 +45,11 @@ const NAV: NavItem[] = [
   { to: "/library", icon: Library, label: "Library" },
   { to: "/upload", icon: Upload, label: "Upload" },
   { to: "/my-uploads", icon: FileCheck2, label: "My Uploads" },
-  { to: "/bookmarks", icon: Star, label: "Bookmarks" },
+  { to: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
   { to: "/premium", icon: Crown, label: "Premium" },
   { to: "/notifications", icon: Bell, label: "Notifications" },
   { to: "/profile", icon: User, label: "Profile" },
   { to: "/admin", icon: Shield, label: "Admin", admin: true },
-  { to: "/admin/users", icon: UsersRound, label: "Users", admin: true },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -62,9 +58,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Block pending accounts from the dashboard
-  const pending = profile?.status && profile.status !== "active";
 
   const items = NAV.filter((n) => (n.admin ? isAdmin : true));
 
@@ -116,10 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Menu className="h-4 w-4" />
           </button>
-          <div className="relative hidden max-w-md flex-1 sm:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search resources, courses, authors…" className="pl-9" />
-          </div>
+
           <div className="ml-auto flex items-center gap-2">
             <NotificationBell />
             <button
@@ -159,11 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-          {pending ? (
-            <PendingBanner status={profile?.status ?? "pending"} />
-          ) : (
-            children
-          )}
+          {children}
         </main>
       </div>
     </div>
@@ -204,14 +190,25 @@ function SidebarNav({
 }
 
 function NotificationBell() {
+  const { user } = useAuth();
+
   const { data } = useQuery({
-    queryKey: ["notif-count"],
+    queryKey: ["notif-count", user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      const { count } = await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("read", false);
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .eq("read", false);
+
+      if (error) throw error;
+
       return count ?? 0;
     },
     refetchInterval: 30000,
   });
+
   return (
     <Link to="/notifications" className="relative rounded-md border border-border p-2 text-muted-foreground hover:text-foreground" aria-label="Notifications">
       <Bell className="h-4 w-4" />
@@ -221,25 +218,5 @@ function NotificationBell() {
         </span>
       ) : null}
     </Link>
-  );
-}
-
-function PendingBanner({ status }: { status: string }) {
-  const labels: Record<string, { title: string; body: string }> = {
-    pending: {
-      title: "Your account is awaiting approval",
-      body: "An administrator will review your account shortly. You'll get an email once you're approved.",
-    },
-    rejected: { title: "Account rejected", body: "Your account has been rejected. Contact support for details." },
-    suspended: { title: "Account suspended", body: "Your account is temporarily suspended. Contact support to restore access." },
-    inactive: { title: "Account inactive", body: "Your account is inactive. Please contact support." },
-  };
-  const info = labels[status] ?? labels.pending;
-  return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-10 text-center shadow-soft">
-      <Shield className="mx-auto h-8 w-8 text-gold" />
-      <h1 className="mt-4 font-display text-2xl font-semibold">{info.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">{info.body}</p>
-    </div>
   );
 }

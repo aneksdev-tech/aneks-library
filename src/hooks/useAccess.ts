@@ -29,7 +29,10 @@ export function useAccess() {
         .single();
 
       if (!error && data) {
-        setIsAdmin(data.primary_role === "admin");
+        setIsAdmin(
+          data.primary_role === "admin" ||
+          data.primary_role === "co-admin",
+        );
         setIsPremium(data.subscription_plan === "premium");
       }
 

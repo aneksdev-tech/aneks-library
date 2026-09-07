@@ -54,6 +54,36 @@ app.use(
   }),
 );
 
+const WATERMARK_SERVER_SECRET =
+  process.env.WATERMARK_SERVER_SECRET;
+
+if (!WATERMARK_SERVER_SECRET) {
+  throw new Error(
+    "WATERMARK_SERVER_SECRET is missing",
+  );
+}
+
+function requireWatermarkSecret(
+  req,
+  res,
+  next,
+) {
+  const suppliedSecret =
+    req.headers["x-watermark-secret"];
+
+  if (
+    typeof suppliedSecret !== "string" ||
+    suppliedSecret !==
+      WATERMARK_SERVER_SECRET
+  ) {
+    return res.status(401).json({
+      error: "Unauthorized.",
+    });
+  }
+
+  next();
+}
+
 // -------------------------------------------------
 // DOCX → PDF Converter
 // -------------------------------------------------
@@ -239,7 +269,10 @@ app.get("/", (req, res) => {
   });
 });
 
-app.post("/watermark", async (req, res) => {
+app.post(
+  "/watermark",
+  requireWatermarkSecret,
+  async (req, res) => {
   console.log("===== VERSION 2 =====");
   try {
     const { image } = req.body;
@@ -432,7 +465,10 @@ const composites = [
 
 });
 
-app.post("/watermark-pdf", async (req, res) => {
+app.post(
+  "/watermark-pdf",
+  requireWatermarkSecret,
+  async (req, res) => {
   try {
 
     const {
@@ -508,7 +544,10 @@ app.post("/watermark-pdf", async (req, res) => {
   }
 });
 
-app.post("/watermark-docx", async (req, res) => {
+app.post(
+  "/watermark-docx",
+  requireWatermarkSecret,
+  async (req, res) => {
 
   try {
 

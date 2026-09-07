@@ -9,6 +9,7 @@ interface DocumentPreviewProps {
   token: string;
   filePath: string;
   title?: string;
+  scrollRoot?: HTMLDivElement | null;
 }
 
 export function DocumentPreview({
@@ -16,6 +17,7 @@ export function DocumentPreview({
   token,
   filePath,
   title,
+  scrollRoot = null,
 }: DocumentPreviewProps) {
   const [blob, setBlob] = useState<Blob>();
   const [blobUrl, setBlobUrl] = useState<string>();
@@ -60,8 +62,6 @@ export function DocumentPreview({
 
   const ext = filePath.split(".").pop()?.toLowerCase();
 
-  const today = new Date().toLocaleDateString();
-
   if (!blob || !blobUrl) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
@@ -75,9 +75,11 @@ export function DocumentPreview({
       onContextMenu={disableContextMenu}
       className="relative select-none"
     >
-
       {ext === "pdf" ? (
-        <PDFViewer url={blobUrl} />
+        <PDFViewer
+          url={blobUrl}
+          scrollRoot={scrollRoot}
+        />
       ) : ext === "docx" ? (
         <DocxViewer blob={blob} />
       ) : ["jpg", "jpeg", "png", "gif", "webp"].includes(ext ?? "") ? (

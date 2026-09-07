@@ -30,11 +30,18 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookmarksRouteImport } from './routes/_authenticated/bookmarks'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedUploadIndexRouteImport } from './routes/_authenticated/upload.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedUploadDraftIdRouteImport } from './routes/_authenticated/upload.$draftId'
 import { Route as AuthenticatedPreviewResourceIdRouteImport } from './routes/_authenticated/preview.$resourceId'
+import { Route as AuthenticatedAnnouncementsAnnouncementIdRouteImport } from './routes/_authenticated/announcements.$announcementId'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin.resources'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminApprovalsRouteImport } from './routes/_authenticated/admin.approvals'
+import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin.users.index'
+import { Route as AuthenticatedAdminUsersUserIdRouteImport } from './routes/_authenticated/admin.users.$userId'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -141,15 +148,33 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUploadIndexRoute =
+  AuthenticatedUploadIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedUploadRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedUploadDraftIdRoute =
+  AuthenticatedUploadDraftIdRouteImport.update({
+    id: '/$draftId',
+    path: '/$draftId',
+    getParentRoute: () => AuthenticatedUploadRoute,
+  } as any)
 const AuthenticatedPreviewResourceIdRoute =
   AuthenticatedPreviewResourceIdRouteImport.update({
     id: '/preview/$resourceId',
     path: '/preview/$resourceId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAnnouncementsAnnouncementIdRoute =
+  AuthenticatedAnnouncementsAnnouncementIdRouteImport.update({
+    id: '/announcements/$announcementId',
+    path: '/announcements/$announcementId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
@@ -157,6 +182,12 @@ const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminResourcesRoute =
+  AuthenticatedAdminResourcesRouteImport.update({
+    id: '/resources',
+    path: '/resources',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCategoriesRoute =
   AuthenticatedAdminCategoriesRouteImport.update({
     id: '/categories',
@@ -168,6 +199,24 @@ const AuthenticatedAdminApprovalsRoute =
     id: '/approvals',
     path: '/approvals',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAnnouncementsRoute =
+  AuthenticatedAdminAnnouncementsRouteImport.update({
+    id: '/announcements',
+    path: '/announcements',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminUsersRoute,
+  } as any)
+const AuthenticatedAdminUsersUserIdRoute =
+  AuthenticatedAdminUsersUserIdRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => AuthenticatedAdminUsersRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -189,13 +238,20 @@ export interface FileRoutesByFullPath {
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/upload': typeof AuthenticatedUploadRoute
+  '/upload': typeof AuthenticatedUploadRouteWithChildren
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
-  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
+  '/announcements/$announcementId': typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   '/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
+  '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/upload/': typeof AuthenticatedUploadIndexRoute
+  '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
+  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -215,13 +271,18 @@ export interface FileRoutesByTo {
   '/premium': typeof AuthenticatedPremiumRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/upload': typeof AuthenticatedUploadRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
-  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/announcements/$announcementId': typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   '/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
+  '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/upload': typeof AuthenticatedUploadIndexRoute
+  '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
+  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -244,13 +305,20 @@ export interface FileRoutesById {
   '/_authenticated/premium': typeof AuthenticatedPremiumRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_authenticated/upload': typeof AuthenticatedUploadRoute
+  '/_authenticated/upload': typeof AuthenticatedUploadRouteWithChildren
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
-  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
+  '/_authenticated/announcements/$announcementId': typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   '/_authenticated/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
+  '/_authenticated/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/upload/': typeof AuthenticatedUploadIndexRoute
+  '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
+  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -275,11 +343,18 @@ export interface FileRouteTypes {
     | '/settings'
     | '/upload'
     | '/profile/$userId'
+    | '/admin/announcements'
     | '/admin/approvals'
     | '/admin/categories'
+    | '/admin/resources'
     | '/admin/users'
+    | '/announcements/$announcementId'
     | '/preview/$resourceId'
+    | '/upload/$draftId'
     | '/admin/'
+    | '/upload/'
+    | '/admin/users/$userId'
+    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -299,13 +374,18 @@ export interface FileRouteTypes {
     | '/premium'
     | '/profile'
     | '/settings'
-    | '/upload'
     | '/profile/$userId'
+    | '/admin/announcements'
     | '/admin/approvals'
     | '/admin/categories'
-    | '/admin/users'
+    | '/admin/resources'
+    | '/announcements/$announcementId'
     | '/preview/$resourceId'
+    | '/upload/$draftId'
     | '/admin'
+    | '/upload'
+    | '/admin/users/$userId'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
@@ -329,11 +409,18 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/upload'
     | '/profile/$userId'
+    | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/approvals'
     | '/_authenticated/admin/categories'
+    | '/_authenticated/admin/resources'
     | '/_authenticated/admin/users'
+    | '/_authenticated/announcements/$announcementId'
     | '/_authenticated/preview/$resourceId'
+    | '/_authenticated/upload/$draftId'
     | '/_authenticated/admin/'
+    | '/_authenticated/upload/'
+    | '/_authenticated/admin/users/$userId'
+    | '/_authenticated/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -499,12 +586,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/upload/': {
+      id: '/_authenticated/upload/'
+      path: '/'
+      fullPath: '/upload/'
+      preLoaderRoute: typeof AuthenticatedUploadIndexRouteImport
+      parentRoute: typeof AuthenticatedUploadRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/upload/$draftId': {
+      id: '/_authenticated/upload/$draftId'
+      path: '/$draftId'
+      fullPath: '/upload/$draftId'
+      preLoaderRoute: typeof AuthenticatedUploadDraftIdRouteImport
+      parentRoute: typeof AuthenticatedUploadRoute
     }
     '/_authenticated/preview/$resourceId': {
       id: '/_authenticated/preview/$resourceId'
@@ -513,11 +614,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPreviewResourceIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/announcements/$announcementId': {
+      id: '/_authenticated/announcements/$announcementId'
+      path: '/announcements/$announcementId'
+      fullPath: '/announcements/$announcementId'
+      preLoaderRoute: typeof AuthenticatedAnnouncementsAnnouncementIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/resources': {
+      id: '/_authenticated/admin/resources'
+      path: '/resources'
+      fullPath: '/admin/resources'
+      preLoaderRoute: typeof AuthenticatedAdminResourcesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/categories': {
@@ -534,25 +649,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminApprovalsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/announcements': {
+      id: '/_authenticated/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AuthenticatedAdminAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/users/': {
+      id: '/_authenticated/admin/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminUsersRoute
+    }
+    '/_authenticated/admin/users/$userId': {
+      id: '/_authenticated/admin/users/$userId'
+      path: '/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AuthenticatedAdminUsersUserIdRouteImport
+      parentRoute: typeof AuthenticatedAdminUsersRoute
+    }
   }
 }
 
+interface AuthenticatedAdminUsersRouteChildren {
+  AuthenticatedAdminUsersUserIdRoute: typeof AuthenticatedAdminUsersUserIdRoute
+  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
+}
+
+const AuthenticatedAdminUsersRouteChildren: AuthenticatedAdminUsersRouteChildren =
+  {
+    AuthenticatedAdminUsersUserIdRoute: AuthenticatedAdminUsersUserIdRoute,
+    AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
+  }
+
+const AuthenticatedAdminUsersRouteWithChildren =
+  AuthenticatedAdminUsersRoute._addFileChildren(
+    AuthenticatedAdminUsersRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAnnouncementsRoute: typeof AuthenticatedAdminAnnouncementsRoute
   AuthenticatedAdminApprovalsRoute: typeof AuthenticatedAdminApprovalsRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
-  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedAdminResourcesRoute: typeof AuthenticatedAdminResourcesRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAnnouncementsRoute: AuthenticatedAdminAnnouncementsRoute,
   AuthenticatedAdminApprovalsRoute: AuthenticatedAdminApprovalsRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
-  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+  AuthenticatedAdminResourcesRoute: AuthenticatedAdminResourcesRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedUploadRouteChildren {
+  AuthenticatedUploadDraftIdRoute: typeof AuthenticatedUploadDraftIdRoute
+  AuthenticatedUploadIndexRoute: typeof AuthenticatedUploadIndexRoute
+}
+
+const AuthenticatedUploadRouteChildren: AuthenticatedUploadRouteChildren = {
+  AuthenticatedUploadDraftIdRoute: AuthenticatedUploadDraftIdRoute,
+  AuthenticatedUploadIndexRoute: AuthenticatedUploadIndexRoute,
+}
+
+const AuthenticatedUploadRouteWithChildren =
+  AuthenticatedUploadRoute._addFileChildren(AuthenticatedUploadRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
@@ -564,7 +733,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPremiumRoute: typeof AuthenticatedPremiumRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedUploadRoute: typeof AuthenticatedUploadRoute
+  AuthenticatedUploadRoute: typeof AuthenticatedUploadRouteWithChildren
+  AuthenticatedAnnouncementsAnnouncementIdRoute: typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   AuthenticatedPreviewResourceIdRoute: typeof AuthenticatedPreviewResourceIdRoute
 }
 
@@ -578,7 +748,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPremiumRoute: AuthenticatedPremiumRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedUploadRoute: AuthenticatedUploadRoute,
+  AuthenticatedUploadRoute: AuthenticatedUploadRouteWithChildren,
+  AuthenticatedAnnouncementsAnnouncementIdRoute:
+    AuthenticatedAnnouncementsAnnouncementIdRoute,
   AuthenticatedPreviewResourceIdRoute: AuthenticatedPreviewResourceIdRoute,
 }
 

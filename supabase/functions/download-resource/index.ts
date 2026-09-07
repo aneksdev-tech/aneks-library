@@ -7,26 +7,17 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-  async function downloadStorageFile(
-  supabase: ReturnType<typeof createClient>,
-  filePath: string,
+function jsonResponse(
+  body: Record<string, unknown>,
+  status = 200,
 ) {
-  const { data, error } =
-    await supabase.storage
-      .from("resources")
-      .download(filePath);
-
-  if (error || !data) {
-    throw new Error(
-      "Unable to download original image.",
-    );
-  }
-
-  return data;
+  return Response.json(body, {
+    status,
+    headers: corsHeaders,
+  });
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: corsHeaders,
@@ -34,128 +25,216 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Create Supabase client using the user's JWT
-    const supabase = createClient(
+    if (req.method !== "POST") {
+      return jsonResponse(
+        { error: "Method not allowed." },
+        405,
+      );
+    }
+
+    const authorization =
+      req.headers.get("Authorization") ?? "";
+
+    if (!authorization.startsWith("Bearer ")) {
+      return jsonResponse(
+        { error: "Unauthorized." },
+        401,
+      );
+    }
+
+    // -------------------------------------------------
+    // User-scoped client
+    // Used only to validate the caller's JWT.
+    // -------------------------------------------------
+
+    const userSupabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       {
         global: {
           headers: {
-            Authorization: req.headers.get("Authorization") ?? "",
+            Authorization: authorization,
           },
         },
-      }
+      },
     );
 
-    // Get logged-in user
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await userSupabase.auth.getUser();
 
     if (authError || !user) {
-      return Response.json(
+      return jsonResponse(
         { error: "Unauthorized." },
-        {
-          status: 401,
-          headers: corsHeaders,
-        }
+        401,
       );
     }
 
+    // -------------------------------------------------
+    // Privileged server client
+    //
+    // IMPORTANT:
+    // This client is only used AFTER the caller has
+    // successfully authenticated and passed the
+    // application-level authorization checks below.
+    // -------------------------------------------------
+
+    const serviceRoleKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!serviceRoleKey) {
+      console.error(
+        "SUPABASE_SERVICE_ROLE_KEY is not configured.",
+      );
+
+      return jsonResponse(
+        {
+          error:
+            "Download service is not configured.",
+        },
+        500,
+      );
+    }
+
+    const adminSupabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      serviceRoleKey,
+    );
+
+    // -------------------------------------------------
     // Read request body
-    const { resourceId } = await req.json();
+    // -------------------------------------------------
+
+    let body: { resourceId?: string };
+
+    try {
+      body = await req.json();
+    } catch {
+      return jsonResponse(
+        { error: "Invalid request body." },
+        400,
+      );
+    }
+
+    const resourceId =
+      typeof body.resourceId === "string"
+        ? body.resourceId.trim()
+        : "";
 
     if (!resourceId) {
-      return Response.json(
+      return jsonResponse(
         { error: "Missing resourceId." },
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
+        400,
       );
     }
 
-    // Check user's access
-const premiumResult = await supabase.rpc("is_premium", {
-  _user: user.id,
-});
+    // -------------------------------------------------
+    // Load caller profile
+    // -------------------------------------------------
 
-console.log(
-  "Premium:",
-  premiumResult.data,
-);
+    const {
+      data: profile,
+      error: profileError,
+    } = await adminSupabase
+      .from("profiles")
+      .select(
+        "primary_role, subscription_plan, status",
+      )
+      .eq("id", user.id)
+      .single();
 
-const adminResult = await supabase.rpc("is_admin", {
-  _user_id: user.id,
-});
+    if (profileError || !profile) {
+      console.error(
+        "Failed to load user profile:",
+        profileError,
+      );
 
-console.log(
-  "Admin:",
-  adminResult.data,
-);
-
-if (premiumResult.error) {
-  return Response.json(
-    {
-      error: premiumResult.error.message,
-    },
-    {
-      status: 500,
-      headers: corsHeaders,
-    }
-  );
-}
-
-if (adminResult.error) {
-  return Response.json(
-    {
-      error: adminResult.error.message,
-    },
-    {
-      status: 500,
-      headers: corsHeaders,
-    }
-  );
-}
-
-const premium = Boolean(premiumResult.data);
-const admin = Boolean(adminResult.data);
-
-    // Only Premium or Admin can download
-    if (!premium && !admin) {
-      return Response.json(
+      return jsonResponse(
         {
-          error: "Premium subscription required.",
+          error:
+            "Unable to verify account access.",
         },
-        {
-          status: 403,
-          headers: corsHeaders,
-        }
+        500,
       );
     }
 
-    // Find the resource
-    const { data: resource, error: resourceError } = await supabase
+    if (profile.status !== "active") {
+      return jsonResponse(
+        {
+          error:
+            "Your account is not active.",
+        },
+        403,
+      );
+    }
+
+    const isAdmin =
+      profile.primary_role === "admin" ||
+      profile.primary_role === "co-admin";
+
+    const isPremium =
+      profile.subscription_plan === "premium";
+
+    // -------------------------------------------------
+    // Download authorization
+    //
+    // Preserve current business rule:
+    // Admin + Co-admin + Premium
+    // -------------------------------------------------
+
+    if (!isAdmin && !isPremium) {
+      return jsonResponse(
+        {
+          error:
+            "Premium subscription required.",
+        },
+        403,
+      );
+    }
+
+    // -------------------------------------------------
+    // Find ONLY an active approved resource
+    // -------------------------------------------------
+
+    const {
+      data: resource,
+      error: resourceError,
+    } = await adminSupabase
       .from("resources")
-      .select("id, file_path")
+      .select(
+        "id, file_path, file_name, mime_type",
+      )
       .eq("id", resourceId)
+      .eq(
+        "status",
+        "approved",
+      )
+      .is("deleted_at", null)
       .single();
 
     if (resourceError || !resource) {
-      return Response.json(
+      console.error(
+        "Resource lookup failed:",
+        resourceError,
+      );
+
+      return jsonResponse(
         {
-          error: "Resource not found.",
+          error:
+            "Resource not found or is not available for download.",
         },
-        {
-          status: 404,
-          headers: corsHeaders,
-        }
+        404,
       );
     }
 
-    // Log the download
-    const { error: downloadError } = await supabase
+    // -------------------------------------------------
+    // Record download
+    // -------------------------------------------------
+
+    const {
+      error: downloadError,
+    } = await adminSupabase
       .from("downloads")
       .insert({
         user_id: user.id,
@@ -163,390 +242,404 @@ const admin = Boolean(adminResult.data);
       });
 
     if (downloadError) {
-      console.error(downloadError);
+      console.error(
+        "Failed to record download:",
+        downloadError,
+      );
 
-      return Response.json(
+      return jsonResponse(
         {
-          error: "Unable to record download.",
+          error:
+            "Unable to record download.",
         },
-        {
-          status: 500,
-          headers: corsHeaders,
-        }
+        500,
       );
     }
 
-// ---------------------------------------
-// Image Detection
-// ---------------------------------------
+    // -------------------------------------------------
+    // File type detection
+    // -------------------------------------------------
 
-const extension =
-  resource.file_path
-    .split(".")
-    .pop()
-    ?.toLowerCase() ?? "";
+    const extension =
+      resource.file_path
+        .split(".")
+        .pop()
+        ?.toLowerCase() ?? "";
 
-const imageExtensions = new Set([
-  "jpg",
-  "jpeg",
-  "png",
-  "webp",
-]);
+    const imageExtensions =
+      new Set([
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+      ]);
 
-const isImage =
-  imageExtensions.has(extension);
+    const isImage =
+      imageExtensions.has(extension);
 
-const isPdf =
-  extension === "pdf";
+    const isPdf =
+      extension === "pdf";
 
-const isDocx =
-  extension === "docx";
+    const isDocx =
+      extension === "docx";
 
-if (isImage) {
-  const originalBlob =
-    await downloadStorageFile(
-      supabase,
-      resource.file_path,
-    );
+    // -------------------------------------------------
+    // Watermark server configuration
+    // -------------------------------------------------
 
-  const bytes = new Uint8Array(
-    await originalBlob.arrayBuffer(),
-  );
+    const watermarkServer =
+      Deno.env.get("WATERMARK_SERVER");
 
-  const base64 = btoa(
-  Array.from(bytes)
-    .map((b) => String.fromCharCode(b))
-    .join("")
-);
+    const watermarkSecret =
+      Deno.env.get(
+        "WATERMARK_SERVER_SECRET",
+      );
 
-  console.log(
-    "Sending image to watermark server...",
-  );
+    // -------------------------------------------------
+    // Images
+    //
+    // Retrieve the private Storage object with the
+    // service-role client, then send it to the
+    // authenticated watermark server.
+    // -------------------------------------------------
 
-  const watermarkServer =
-  Deno.env.get("WATERMARK_SERVER");
+    if (isImage) {
+      if (!watermarkServer) {
+        throw new Error(
+          "WATERMARK_SERVER secret is not configured.",
+        );
+      }
 
-if (!watermarkServer) {
-  throw new Error(
-    "WATERMARK_SERVER secret is not configured.",
-  );
-}
+      if (!watermarkSecret) {
+        throw new Error(
+          "WATERMARK_SERVER_SECRET is not configured.",
+        );
+      }
 
-const response = await fetch(
-  `${watermarkServer}/watermark`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type":
-        "application/json",
-    },
-    body: JSON.stringify({
-      image: base64,
-    }),
-  },
-);
+      const {
+        data: originalBlob,
+        error: storageError,
+      } = await adminSupabase.storage
+        .from("resources")
+        .download(resource.file_path);
 
-if (!response.ok) {
+      if (
+        storageError ||
+        !originalBlob
+      ) {
+        console.error(
+          "Image Storage download failed:",
+          storageError,
+        );
 
-  let message =
-    "Watermark server failed.";
+        return jsonResponse(
+          {
+            error:
+              "Unable to retrieve resource.",
+          },
+          500,
+        );
+      }
 
-  try {
+      const bytes =
+        new Uint8Array(
+          await originalBlob.arrayBuffer(),
+        );
 
-    const body =
-      await response.json();
+      let binary = "";
+
+      const chunkSize = 0x8000;
+
+      for (
+        let i = 0;
+        i < bytes.length;
+        i += chunkSize
+      ) {
+        binary += String.fromCharCode(
+          ...bytes.subarray(
+            i,
+            Math.min(
+              i + chunkSize,
+              bytes.length,
+            ),
+          ),
+        );
+      }
+
+      const base64 =
+        btoa(binary);
+
+      const response =
+        await fetch(
+          `${watermarkServer}/watermark`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              "X-Watermark-Secret":
+                watermarkSecret,
+            },
+            body: JSON.stringify({
+              image: base64,
+            }),
+          },
+        );
+
+      if (!response.ok) {
+        let message =
+          "Watermark server failed.";
+
+        try {
+          const result =
+            await response.json();
+
+          if (
+            result &&
+            typeof result.error ===
+              "string"
+          ) {
+            message = result.error;
+          }
+        } catch {
+          // Ignore invalid JSON.
+        }
+
+        throw new Error(message);
+      }
+
+      const watermarkedImage =
+        await response.arrayBuffer();
+
+      return new Response(
+        watermarkedImage,
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "image/jpeg",
+            "Content-Disposition":
+              `inline; filename="${resource.file_name ?? resource.file_path.split("/").pop() ?? "resource.jpg"}"`,
+            "Cache-Control":
+              "private, max-age=60",
+          },
+        },
+      );
+    }
+
+    // -------------------------------------------------
+    // PDF
+    // -------------------------------------------------
+
+    if (isPdf) {
+      if (!watermarkServer) {
+        throw new Error(
+          "WATERMARK_SERVER is not configured.",
+        );
+      }
+
+      if (!watermarkSecret) {
+        throw new Error(
+          "WATERMARK_SERVER_SECRET is not configured.",
+        );
+      }
+
+      const response =
+        await fetch(
+          `${watermarkServer}/watermark-pdf`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              "X-Watermark-Secret":
+                watermarkSecret,
+            },
+            body: JSON.stringify({
+              filePath:
+                resource.file_path,
+              email:
+                user.email,
+            }),
+          },
+        );
+
+      if (!response.ok) {
+        let message =
+          "PDF watermark server failed.";
+
+        try {
+          const result =
+            await response.json();
+
+          if (
+            result &&
+            typeof result.error ===
+              "string"
+          ) {
+            message = result.error;
+          }
+        } catch {
+          // Ignore invalid JSON.
+        }
+
+        throw new Error(message);
+      }
+
+      const watermarkedPdf =
+        await response.arrayBuffer();
+
+      return new Response(
+        watermarkedPdf,
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/pdf",
+            "Content-Disposition":
+              `inline; filename="${resource.file_name ?? resource.file_path.split("/").pop() ?? "resource.pdf"}"`,
+            "Cache-Control":
+              "private, max-age=60",
+          },
+        },
+      );
+    }
+
+    // -------------------------------------------------
+    // DOCX
+    // -------------------------------------------------
+
+    if (isDocx) {
+      if (!watermarkServer) {
+        throw new Error(
+          "WATERMARK_SERVER is not configured.",
+        );
+      }
+
+      if (!watermarkSecret) {
+        throw new Error(
+          "WATERMARK_SERVER_SECRET is not configured.",
+        );
+      }
+
+      const response =
+        await fetch(
+          `${watermarkServer}/watermark-docx`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              "X-Watermark-Secret":
+                watermarkSecret,
+            },
+            body: JSON.stringify({
+              filePath:
+                resource.file_path,
+              email:
+                user.email,
+            }),
+          },
+        );
+
+      if (!response.ok) {
+        let message =
+          "DOCX watermark server failed.";
+
+        try {
+          const result =
+            await response.json();
+
+          if (
+            result &&
+            typeof result.error ===
+              "string"
+          ) {
+            message = result.error;
+          }
+        } catch {
+          // Ignore invalid JSON.
+        }
+
+        throw new Error(message);
+      }
+
+      const watermarkedPdf =
+        await response.arrayBuffer();
+
+      return new Response(
+        watermarkedPdf,
+        {
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/pdf",
+            "Content-Disposition":
+              `inline; filename="${resource.file_name?.replace(/\.docx$/i, ".pdf") ?? resource.file_path.replace(/\.docx$/i, ".pdf").split("/").pop() ?? "resource.pdf"}"`,
+            "Cache-Control":
+              "private, max-age=60",
+          },
+        },
+      );
+    }
+
+    // -------------------------------------------------
+    // Other files
+    //
+    // Generate a short-lived signed URL using
+    // the privileged client.
+    // -------------------------------------------------
+
+    const {
+      data: signed,
+      error: signedError,
+    } = await adminSupabase.storage
+      .from("resources")
+      .createSignedUrl(
+        resource.file_path,
+        60,
+      );
 
     if (
-      body &&
-      typeof body.error === "string"
+      signedError ||
+      !signed
     ) {
-      message = body.error;
-    }
-
-  } catch {
-    // Ignore invalid JSON
-  }
-
-  throw new Error(message);
-
-}
-
-const watermarkedImage =
-  await response.arrayBuffer();
-
-console.log(
-  "Watermark applied successfully.",
-);
-
-return new Response(watermarkedImage, {
-  headers: {
-    ...corsHeaders,
-    "Content-Type": "image/jpeg",
-    "Content-Disposition": `inline; filename="${resource.file_path
-      .split("/")
-      .pop()}"`,
-    "Cache-Control": "private, max-age=60",
-  },
-});
-}
-
-// ---------------------------------------
-// PDF Watermark
-// ---------------------------------------
-
-if (isPdf) {
-
-  const watermarkServer =
-    Deno.env.get("WATERMARK_SERVER");
-
-  if (!watermarkServer) {
-    throw new Error(
-      "WATERMARK_SERVER secret is not configured.",
-    );
-  }
-
-  console.log(
-    "Requesting PDF watermark...",
-  );
-
-  const response =
-    await fetch(
-      `${watermarkServer}/watermark-pdf`,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-
-          filePath: resource.file_path,
-
-          email: user.email,
-
-        }),
-
-      },
-    );
-
-  if (!response.ok) {
-
-    let message =
-      "PDF watermark server failed.";
-
-    try {
-
-      const body =
-        await response.json();
-
-      if (
-        body &&
-        typeof body.error === "string"
-      ) {
-        message = body.error;
-      }
-
-    } catch {}
-
-    console.error(
-      "PDF watermark error:",
-      message,
-    );
-
-    throw new Error(message);
-
-  }
-
-  const watermarkedPdf =
-    await response.arrayBuffer();
-
-  console.log(
-    "PDF watermark applied successfully.",
-  );
-
-  return new Response(
-    watermarkedPdf,
-    {
-      headers: {
-
-        ...corsHeaders,
-
-        "Content-Type":
-          "application/pdf",
-
-        "Content-Disposition":
-          `inline; filename="${
-            resource.file_path
-              .split("/")
-              .pop()
-          }"`,
-
-        "Cache-Control":
-          "private, max-age=60",
-
-      },
-    },
-  );
-}
-
-// ---------------------------------------
-// DOCX Watermark
-// ---------------------------------------
-
-if (isDocx) {
-
-  const watermarkServer =
-    Deno.env.get("WATERMARK_SERVER");
-
-  if (!watermarkServer) {
-    throw new Error(
-      "WATERMARK_SERVER secret is not configured.",
-    );
-  }
-
-  console.log(
-    "Requesting DOCX watermark...",
-  );
-
-  const response =
-    await fetch(
-      `${watermarkServer}/watermark-docx`,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body: JSON.stringify({
-
-          filePath: resource.file_path,
-
-          email: user.email,
-
-        }),
-
-      },
-    );
-
-  if (!response.ok) {
-
-    let message =
-      "DOCX watermark server failed.";
-
-    try {
-
-      const body =
-        await response.json();
-
-      if (
-        body &&
-        typeof body.error === "string"
-      ) {
-        message = body.error;
-      }
-
-    } catch {}
-
-    console.error(
-      "DOCX watermark error:",
-      message,
-    );
-
-    throw new Error(message);
-
-  }
-
-  const pdf =
-    await response.arrayBuffer();
-
-  console.log(
-    "DOCX converted and watermarked.",
-  );
-
-  return new Response(
-    pdf,
-    {
-      headers: {
-
-        ...corsHeaders,
-
-        "Content-Type":
-          "application/pdf",
-
-        "Content-Disposition":
-          `inline; filename="${
-            resource.file_path
-              .replace(/\.docx$/i, ".pdf")
-              .split("/")
-              .pop()
-          }"`,
-
-        "Cache-Control":
-          "private, max-age=60",
-
-      },
-    },
-  );
-}
-
-    // Generate signed URL
-    const { data: signed, error: signedError } =
-      await supabase.storage
-        .from("resources")
-        .createSignedUrl(resource.file_path, 60);
-
-    if (signedError || !signed) {
-      console.error(signedError);
-
-      return Response.json(
+      console.error(
+        "Signed URL generation failed:",
+        signedError,
+      );
+
+      return jsonResponse(
         {
-          error: "Unable to generate download link.",
+          error:
+            "Unable to generate download link.",
         },
-        {
-          status: 500,
-          headers: corsHeaders,
-        }
+        500,
       );
     }
 
-    return Response.json(
-      {
-        url: signed.signedUrl,
-      },
-      {
-        headers: corsHeaders,
-      }
-    );
+    return jsonResponse({
+      url: signed.signedUrl,
+    });
   } catch (err) {
+    console.error(err);
 
-  console.dir(err, {
-  depth: null,
-});
+    const message =
+      err instanceof Error
+        ? err.message
+        : String(err);
 
-  const message =
-    err instanceof Error
-      ? err.message
-      : String(err);
+    const status =
+      message.includes("damaged") ||
+      message.includes("unsupported")
+        ? 400
+        : 500;
 
-  const status =
-    message.includes("damaged") ||
-    message.includes("unsupported")
-      ? 400
-      : 500;
-
-  return Response.json(
-    {
-      error: message,
-    },
-    {
+    return jsonResponse(
+      {
+        error: message,
+      },
       status,
-      headers: corsHeaders,
-    }
-  );
-
-}
-
+    );
+  }
 });
