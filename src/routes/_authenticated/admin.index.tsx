@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import {
   Users,
   FileCheck2,
@@ -47,13 +48,22 @@ function formatStorage(bytes: number) {
 }
 
 function AdminOverview() {
+  const { loading: authLoading, profile } = useAuth();
+
+  const role = profile?.primary_role;
+  const isAdminRole =
+    role === "admin" || role === "co-admin";
+  const isModeratorRole =
+    role === "staff" || role === "lecturer";
+
   const { data } = useQuery({
-    queryKey: ["admin-stats"],
+    queryKey: ["admin-stats", role],
+    enabled: !authLoading && isAdminRole,
     queryFn: async () => {
       const [users, resources, pending, downloads, bookmarks, storage] =
         await Promise.all([
           supabase
-            .from("profiles")
+            .from("private_profiles")
             .select("id", { count: "exact", head: true }),
 
           supabase
@@ -107,6 +117,85 @@ function AdminOverview() {
       };
     },
   });
+
+  const { data: moderatorData } = useQuery({
+    queryKey: ["moderator-overview", role],
+    enabled: !authLoading && isModeratorRole,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("resources")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        pending: count ?? 0,
+      };
+    },
+  });
+
+  if (authLoading || !role) {
+    return (
+      <section className="space-y-6">
+        <div className="rounded-lg border border-border bg-card p-6">
+          <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+          <div className="mt-3 h-4 w-64 animate-pulse rounded bg-muted" />
+        </div>
+      </section>
+    );
+  }
+
+  if (isModeratorRole) {
+    const pendingCount = moderatorData?.pending ?? 0;
+
+    return (
+      <section className="space-y-6">
+        {/* Moderation overview */}
+        <div
+          className={`flex items-center justify-between gap-4 rounded-lg border p-5 ${
+            pendingCount > 0
+              ? "border-gold/40 bg-gold/5"
+              : "border-border bg-card"
+          }`}
+        >
+          <div className="flex min-w-0 items-center gap-4">
+            <div
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
+                pendingCount > 0
+                  ? "border-gold/30 bg-gold/10 text-gold"
+                  : "border-border bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              <ShieldAlert className="h-4 w-4" />
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">
+                Pending Approval
+              </p>
+
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Resources currently awaiting administrative review.
+              </p>
+            </div>
+          </div>
+
+          <span
+            className={`shrink-0 font-display text-2xl font-semibold ${
+              pendingCount > 0
+                ? "text-gold"
+                : "text-foreground"
+            }`}
+          >
+            {pendingCount}
+          </span>
+        </div>
+      </section>
+    );
+  }
 
   const stats = [
     {

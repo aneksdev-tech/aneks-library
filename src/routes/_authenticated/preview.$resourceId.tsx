@@ -13,6 +13,7 @@ import { useAccess } from "@/hooks/useAccess";
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
 import { getCollege } from "@/lib/academicData";
 import {
+  ArrowUpRight,
   BookOpen,
   Building2,
   GraduationCap,
@@ -53,26 +54,40 @@ function PreviewPage() {
         .from("resources")
         .select(`
           *,
-          category:categories(name),
-          uploader:profiles!resources_uploader_id_fkey(
-            id,
-            full_name,
-            bio,
-            avatar_url
-          )
+          category:categories(name)
         `)
         .eq("id", resourceId)
         .single();
 
       if (error) {
-        console.error(error);
         throw error;
       }
 
-      console.log(
-        "Uploader:",
-        (data as any).uploader,
-      );
+      return data;
+    },
+  });
+
+  const { data: uploader } = useQuery({
+    queryKey: [
+      "preview-uploader",
+      resource?.uploader_id,
+    ],
+    enabled: !!resource?.uploader_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("public_profiles")
+        .select(`
+          id,
+          full_name,
+          bio,
+          avatar_url
+        `)
+        .eq("id", resource!.uploader_id)
+        .single();
+
+      if (error) {
+        throw error;
+      }
 
       return data;
     },
@@ -111,16 +126,6 @@ function PreviewPage() {
     );
   }
 
-  // Tell TypeScript about the joined uploader object
-  const uploader = (resource as typeof resource & {
-    uploader?: {
-      id: string;
-      full_name: string | null;
-      bio: string | null;
-      avatar_url: string | null;
-    } | null;
-  }).uploader;
-
   const college = getCollege(
     resource.college ?? "",
   );
@@ -156,6 +161,26 @@ function PreviewPage() {
       setDownloading(false);
     }
   };
+
+  const uploaderInitials = (() => {
+    const name = uploader?.full_name?.trim();
+
+    if (!name) {
+      return "?";
+    }
+
+    const parts = name.split(/\s+/);
+
+    if (parts.length === 1) {
+      return parts[0]
+        .slice(0, 2)
+        .toUpperCase();
+    }
+
+    return (
+      parts[0][0] + parts[1][0]
+    ).toUpperCase();
+  })();
 
   return (
     <>
@@ -232,58 +257,78 @@ function PreviewPage() {
                 Uploaded by
               </div>
 
-              <Link
-                to="/profile/$userId"
-                params={{
-                  userId: uploader?.id ?? "",
-                }}
-                className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-muted/40"
-              >
-                {uploader?.avatar_url ? (
-                  <img
-                    src={uploader.avatar_url}
-                    alt={
-                      uploader.full_name ??
-                      "Uploader"
-                    }
-                    className="h-12 w-12 rounded-full border object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
-                    {(() => {
-                      const parts = (
-                        uploader?.full_name ?? "?"
-                      )
-                        .trim()
-                        .split(/\s+/);
+              {uploader ? (
+                uploader.id ? (
+                  <Link
+                    to="/profile/$userId"
+                    params={{
+                      userId: uploader.id,
+                    }}
+                    className="group block rounded-xl border border-transparent p-3 transition-colors hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    aria-label={`View ${uploader.full_name ?? "uploader"}'s public profile`}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      {uploader.avatar_url ? (
+                        <img
+                          src={uploader.avatar_url}
+                          alt={
+                            uploader.full_name ??
+                            "Uploader"
+                          }
+                          className="h-12 w-12 shrink-0 rounded-full border object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+                          {uploaderInitials}
+                        </div>
+                      )}
 
-                      if (parts.length === 1) {
-                        return parts[0]
-                          .slice(0, 2)
-                          .toUpperCase();
-                      }
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">
+                          {uploader.full_name ??
+                            "Unknown user"}
+                        </div>
 
-                      return (
-                        parts[0][0] +
-                        parts[1][0]
-                      ).toUpperCase();
-                    })()}
-                  </div>
-                )}
+                        {uploader.bio && (
+                          <div className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                            {uploader.bio}
+                          </div>
+                        )}
 
-                <div>
-                  <div className="font-medium">
-                    {uploader?.full_name ??
-                      "Unknown user"}
-                  </div>
-
-                  {uploader?.bio && (
-                    <div className="text-sm text-muted-foreground">
-                      {uploader.bio}
+                        <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-80 transition-opacity group-hover:opacity-100">
+                          View profile
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 rounded-xl border border-transparent p-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+                      {uploaderInitials}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {uploader.full_name ??
+                          "Unknown user"}
+                      </div>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="flex items-center gap-3 rounded-xl border border-transparent p-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+                    ?
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="font-medium">
+                      Loading uploader...
+                    </div>
+                  </div>
                 </div>
-              </Link>
+              )}
 
               <div className="mt-4 text-sm text-muted-foreground">
                 Uploaded on{" "}

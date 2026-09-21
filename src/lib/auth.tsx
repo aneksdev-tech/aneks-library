@@ -103,22 +103,36 @@ export function AuthProvider({
       data: prof,
       error,
     } = await supabase
-      .from("profiles")
-      .select("*")
+      .from("private_profiles")
+      .select(
+        [
+          "id",
+          "full_name",
+          "email",
+          "avatar_url",
+          "bio",
+          "phone_number",
+          "college",
+          "department",
+          "level",
+          "status",
+          "primary_role",
+          "reputation",
+          "created_at",
+          "subscription_plan",
+          "subscription_started_at",
+          "subscription_expires_at",
+        ].join(", "),
+      )
       .eq("id", uid)
       .maybeSingle();
 
     if (error) {
-      console.error(
-        "Failed to load user profile:",
-        error,
-      );
-
       return false;
     }
 
     const nextProfile =
-      (prof as Profile) ?? null;
+      (prof as unknown as Profile) ?? null;
 
     setProfile(nextProfile);
 
@@ -157,31 +171,23 @@ export function AuthProvider({
       profileChannel?.unsubscribe();
 
       profileChannel = supabase
-        .channel(`profile-${uid}`)
+        .channel(`profile:${uid}`, {
+          config: {
+            private: true,
+          },
+        })
         .on(
-          "postgres_changes",
+          "broadcast",
           {
-            event: "UPDATE",
-            schema: "public",
-            table: "profiles",
-            filter: `id=eq.${uid}`,
+            event: "profile_access_changed",
           },
           (payload) => {
             const updatedProfile =
-              payload.new as Profile;
-
-            console.log(
-              "[Auth] PROFILE UPDATE RECEIVED:",
-              {
-                uid,
-                oldStatus:
-                  (payload.old as Partial<Profile>)
-                    ?.status,
-                newStatus:
-                  updatedProfile?.status,
-                newProfile: updatedProfile,
-              },
-            );
+              payload.payload as {
+                id?: string;
+                status?: AccountStatus;
+                primary_role?: AppRole;
+              };
 
             if (
               updatedProfile?.id !== uid
@@ -189,42 +195,34 @@ export function AuthProvider({
               return;
             }
 
-            console.log(
-              "[Auth] Applying Realtime profile:",
-              {
-                status:
-                  updatedProfile.status,
-                role:
-                  updatedProfile.primary_role,
-              },
-            );
-
-            /*
-             * The Realtime payload is the latest
-             * database row. Apply it directly.
-             *
-             * Do not immediately refetch here because
-             * that can race against the Realtime update.
-             */
             setProfile(
-              updatedProfile,
+              (currentProfile) =>
+                currentProfile
+                  ? {
+                      ...currentProfile,
+                      status:
+                        updatedProfile.status ??
+                        currentProfile.status,
+                      primary_role:
+                        updatedProfile.primary_role ??
+                        currentProfile.primary_role,
+                    }
+                  : currentProfile,
             );
 
-            setRoles(
+            if (
               updatedProfile.primary_role
-                ? [
-                    updatedProfile.primary_role,
-                  ]
-                : [],
-            );
+            ) {
+              setRoles([
+                updatedProfile.primary_role,
+              ]);
+            }
           },
         )
         .subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            console.log(
-              "[Auth] Profile Realtime subscribed:",
-              uid,
-            );
+          if (status === "CHANNEL_ERROR") {
+            profileChannel?.unsubscribe();
+            profileChannel = null;
           }
         });
     };
@@ -278,12 +276,12 @@ export function AuthProvider({
   }, []);
 
   /*
-   * Enforce account-status navigation directly from
-   * the authentication provider.
+   * Enforce account-status and admin-area access
+   * directly from the authentication provider.
    *
    * This runs whenever the authoritative profile
-   * status changes, including a Supabase Realtime
-   * UPDATE.
+   * status or primary role changes, including a
+   * Supabase Realtime Broadcast.
    *
    * This is intentionally independent of the
    * TanStack route beforeLoad lifecycle.
@@ -299,14 +297,32 @@ export function AuthProvider({
     const currentPath =
       window.location.pathname;
 
-    console.log(
-      "[Auth STATUS NAV]",
-      {
-        status: profile.status,
-        path: currentPath,
-      },
-    );
+    /*
+     * Users with roles that do not have admin-area
+     * access must be removed from /admin immediately
+     * when their role changes.
+     */
+    const canAccessAdminArea =
+      profile.primary_role === "admin" ||
+      profile.primary_role === "co-admin" ||
+      profile.primary_role === "lecturer" ||
+      profile.primary_role === "staff";
 
+    if (
+      currentPath.startsWith("/admin") &&
+      !canAccessAdminArea
+    ) {
+      window.location.replace(
+        "/dashboard",
+      );
+
+      return;
+    }
+
+    /*
+     * Active accounts should not remain on
+     * account-status restriction pages.
+     */
     if (
       profile.status === "active"
     ) {
@@ -316,10 +332,6 @@ export function AuthProvider({
         currentPath === "/rejected" ||
         currentPath === "/inactive"
       ) {
-        console.log(
-          "[Auth STATUS NAV] ACTIVE → DASHBOARD",
-        );
-
         window.location.replace(
           "/dashboard",
         );
@@ -342,20 +354,13 @@ export function AuthProvider({
     if (
       currentPath !== targetPath
     ) {
-      console.log(
-        "[Auth STATUS NAV] REDIRECT",
-        {
-          from: currentPath,
-          to: targetPath,
-        },
-      );
-
       window.location.replace(
         targetPath,
       );
     }
   }, [
     profile?.status,
+    profile?.primary_role,
     loading,
   ]);
 

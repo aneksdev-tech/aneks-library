@@ -229,34 +229,6 @@ Deno.serve(async (req) => {
     }
 
     // -------------------------------------------------
-    // Record download
-    // -------------------------------------------------
-
-    const {
-      error: downloadError,
-    } = await adminSupabase
-      .from("downloads")
-      .insert({
-        user_id: user.id,
-        resource_id: resource.id,
-      });
-
-    if (downloadError) {
-      console.error(
-        "Failed to record download:",
-        downloadError,
-      );
-
-      return jsonResponse(
-        {
-          error:
-            "Unable to record download.",
-        },
-        500,
-      );
-    }
-
-    // -------------------------------------------------
     // File type detection
     // -------------------------------------------------
 
@@ -411,6 +383,34 @@ Deno.serve(async (req) => {
       const watermarkedImage =
         await response.arrayBuffer();
 
+      // -------------------------------------------------
+      // Record successful download
+      // -------------------------------------------------
+
+      const {
+        error: downloadError,
+      } = await adminSupabase
+        .from("downloads")
+        .insert({
+          user_id: user.id,
+          resource_id: resource.id,
+        });
+
+      if (downloadError) {
+        console.error(
+          "Failed to record download:",
+          downloadError,
+        );
+
+        return jsonResponse(
+          {
+            error:
+              "Unable to record download.",
+          },
+          500,
+        );
+      }
+
       return new Response(
         watermarkedImage,
         {
@@ -456,10 +456,7 @@ Deno.serve(async (req) => {
                 watermarkSecret,
             },
             body: JSON.stringify({
-              filePath:
-                resource.file_path,
-              email:
-                user.email,
+              filePath: resource.file_path,
             }),
           },
         );
@@ -488,6 +485,34 @@ Deno.serve(async (req) => {
 
       const watermarkedPdf =
         await response.arrayBuffer();
+
+      // -------------------------------------------------
+      // Record successful download
+      // -------------------------------------------------
+
+      const {
+        error: downloadError,
+      } = await adminSupabase
+        .from("downloads")
+        .insert({
+          user_id: user.id,
+          resource_id: resource.id,
+        });
+
+      if (downloadError) {
+        console.error(
+          "Failed to record download:",
+          downloadError,
+        );
+
+        return jsonResponse(
+          {
+            error:
+              "Unable to record download.",
+          },
+          500,
+        );
+      }
 
       return new Response(
         watermarkedPdf,
@@ -534,10 +559,7 @@ Deno.serve(async (req) => {
                 watermarkSecret,
             },
             body: JSON.stringify({
-              filePath:
-                resource.file_path,
-              email:
-                user.email,
+              filePath: resource.file_path,
             }),
           },
         );
@@ -566,6 +588,34 @@ Deno.serve(async (req) => {
 
       const watermarkedPdf =
         await response.arrayBuffer();
+
+      // -------------------------------------------------
+      // Record successful download
+      // -------------------------------------------------
+
+      const {
+        error: downloadError,
+      } = await adminSupabase
+        .from("downloads")
+        .insert({
+          user_id: user.id,
+          resource_id: resource.id,
+        });
+
+      if (downloadError) {
+        console.error(
+          "Failed to record download:",
+          downloadError,
+        );
+
+        return jsonResponse(
+          {
+            error:
+              "Unable to record download.",
+          },
+          500,
+        );
+      }
 
       return new Response(
         watermarkedPdf,
@@ -613,6 +663,34 @@ Deno.serve(async (req) => {
         {
           error:
             "Unable to generate download link.",
+        },
+        500,
+      );
+    }
+
+    // -------------------------------------------------
+    // Record successful download
+    // -------------------------------------------------
+
+    const {
+      error: downloadError,
+    } = await adminSupabase
+      .from("downloads")
+      .insert({
+        user_id: user.id,
+        resource_id: resource.id,
+      });
+
+    if (downloadError) {
+      console.error(
+        "Failed to record download:",
+        downloadError,
+      );
+
+      return jsonResponse(
+        {
+          error:
+            "Unable to record download.",
         },
         500,
       );

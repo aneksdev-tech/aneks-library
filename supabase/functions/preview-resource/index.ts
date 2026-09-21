@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceRoleKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     /*
      * User-scoped client.
@@ -46,7 +47,8 @@ Deno.serve(async (req) => {
       {
         global: {
           headers: {
-            Authorization: req.headers.get("Authorization") ?? "",
+            Authorization:
+              req.headers.get("Authorization") ?? "",
           },
         },
       },
@@ -55,9 +57,10 @@ Deno.serve(async (req) => {
     /*
      * Service-role client.
      *
-     * Used ONLY after authorization has succeeded to read the private
-     * Storage object. This prevents the resources bucket from becoming
-     * publicly readable.
+     * Used only after authorization succeeds to generate a
+     * short-lived signed URL for the private Storage object.
+     *
+     * The file itself is NOT downloaded through this Edge Function.
      */
     const serviceSupabase = createClient(
       supabaseUrl,
@@ -82,11 +85,16 @@ Deno.serve(async (req) => {
     }
 
     /*
-     * Load the user's current profile so pending-resource preview
-     * follows the same active-role authority used by approvals.
+     * Load the user's current authorization profile through the
+     * controlled private profile projection.
+     *
+     * Direct SELECT access to public.profiles is intentionally revoked.
      */
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from("private_profiles")
       .select("primary_role, status")
       .eq("id", user.id)
       .single();
@@ -96,7 +104,8 @@ Deno.serve(async (req) => {
 
       return Response.json(
         {
-          error: "Unable to verify account authorization.",
+          error:
+            "Unable to verify account authorization.",
         },
         {
           status: 403,
@@ -117,9 +126,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: resource, error: resourceError } = await supabase
+    const {
+      data: resource,
+      error: resourceError,
+    } = await supabase
       .from("resources")
-      .select("id, file_path, status, deleted_at")
+      .select(
+        "id, file_path, status, deleted_at",
+      )
       .eq("id", resourceId)
       .single();
 
@@ -160,7 +174,8 @@ Deno.serve(async (req) => {
       if (!canPreviewPending) {
         return Response.json(
           {
-            error: "You are not authorized to preview this resource.",
+            error:
+              "You are not authorized to preview this resource.",
           },
           {
             status: 403,
@@ -174,7 +189,8 @@ Deno.serve(async (req) => {
     ) {
       return Response.json(
         {
-          error: "This resource is not available for preview.",
+          error:
+            "This resource is not available for preview.",
         },
         {
           status: 403,
@@ -184,22 +200,36 @@ Deno.serve(async (req) => {
     }
 
     /*
-     * The resources bucket remains private.
+     * Generate a short-lived signed URL for the private
+     * Storage object.
      *
-     * Only the service-role client reads the Storage object, and only
-     * after the user's authorization has been established above.
+     * The Edge Function performs authorization above, then
+     * delegates the actual file transfer directly to Supabase
+     * Storage instead of downloading and proxying the file.
+     *
+     * 60 seconds is sufficient for the browser to begin the
+     * preview request while keeping the URL short-lived.
      */
-    const { data: file, error: fileError } =
-      await serviceSupabase.storage
-        .from("resources")
-        .download(resource.file_path);
+    const {
+      data: signedUrl,
+      error: signedUrlError,
+    } = await serviceSupabase.storage
+      .from("resources")
+      .createSignedUrl(
+        resource.file_path,
+        60,
+      );
 
-    if (fileError || !file) {
-      console.error(fileError);
+    if (
+      signedUrlError ||
+      !signedUrl?.signedUrl
+    ) {
+      console.error(signedUrlError);
 
       return Response.json(
         {
-          error: "Unable to load preview.",
+          error:
+            "Unable to create preview access.",
         },
         {
           status: 500,
@@ -208,21 +238,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    return new Response(file.stream(), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": file.type || "application/octet-stream",
-        "Content-Disposition": 'inline; filename="preview"',
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
+    return Response.json(
+      {
+        url: signedUrl.signedUrl,
       },
-    });
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Cache-Control":
+            "private, no-store",
+        },
+      },
+    );
   } catch (err) {
     console.error(err);
 
     return Response.json(
       {
-        error: err instanceof Error ? err.message : String(err),
+        error:
+          err instanceof Error
+            ? err.message
+            : String(err),
       },
       {
         status: 500,

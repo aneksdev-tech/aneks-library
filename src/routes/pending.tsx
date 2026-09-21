@@ -22,7 +22,7 @@ function PendingPage() {
         </h1>
 
         <p className="mt-4 text-center leading-7 text-muted-foreground">
-          our registration has been received successfully. <br />
+          Your registration has been received successfully. <br />
         </p>
 
         <p className="mt-3 text-center leading-7 text-muted-foreground">

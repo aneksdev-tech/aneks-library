@@ -177,17 +177,12 @@ pageEl.appendChild(watermark);
           wrapperRef.current
         );
       }
-    } catch (err) {
-      console.error(err);
+      } catch {
+      setError(
+        "Unable to preview this Word document. Please try again later.",
+      );
+      } finally {
 
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(
-          "Unable to preview document."
-        );
-      }
-    } finally {
       if (!cancelled) {
         setLoading(false);
       }

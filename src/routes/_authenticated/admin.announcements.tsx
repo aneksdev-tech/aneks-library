@@ -43,6 +43,11 @@ export const Route = createFileRoute(
   component: AnnouncementsPage,
 });
 
+type AnnouncementProfile = {
+  full_name: string | null;
+  email: string | null;
+};
+
 type Announcement = {
   id: string;
   title: string;
@@ -56,18 +61,9 @@ type Announcement = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
-  creator?: {
-    full_name: string;
-    email: string;
-  } | null;
-  updater?: {
-    full_name: string;
-    email: string;
-  } | null;
-  deleter?: {
-    full_name: string;
-    email: string;
-  } | null;
+  creator?: AnnouncementProfile | null;
+  updater?: AnnouncementProfile | null;
+  deleter?: AnnouncementProfile | null;
 };
 
 function AnnouncementsPage() {
@@ -91,7 +87,7 @@ function AnnouncementsPage() {
       const { data: announcements, error } = await supabase
         .from("announcements")
         .select(
-        "id, title, body, content, link, is_active, created_by, updated_by, deleted_by, created_at, updated_at, deleted_at",
+          "id, title, body, content, link, is_active, created_by, updated_by, deleted_by, created_at, updated_at, deleted_at",
         )
         .order("created_at", { ascending: false });
 
@@ -121,35 +117,53 @@ function AnnouncementsPage() {
         return announcements;
       }
 
-      const { data: profiles, error: profilesError } =
-        await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", profileIds);
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await supabase
+        .from("private_profiles")
+        .select("id, full_name, email")
+        .in("id", profileIds);
 
       if (profilesError) {
         throw profilesError;
       }
 
-      const profileMap = new Map(
-        (profiles ?? []).map((profile) => [
-          profile.id,
-          profile,
-        ]),
-      );
+      const profileMap = new Map<
+  string,
+  AnnouncementProfile
+>(
+  (profiles ?? [])
+    .filter(
+      (
+        profile,
+      ): profile is typeof profile & {
+        id: string;
+      } => profile.id !== null,
+    )
+    .map((profile) => [
+      profile.id,
+      {
+        full_name: profile.full_name,
+        email: profile.email,
+      },
+    ]),
+);
 
-      return announcements.map((announcement) => ({
-        ...announcement,
-        creator: announcement.created_by
-          ? profileMap.get(announcement.created_by) ?? null
-          : null,
-        updater: announcement.updated_by
-          ? profileMap.get(announcement.updated_by) ?? null
-          : null,
-        deleter: announcement.deleted_by
-          ? profileMap.get(announcement.deleted_by) ?? null
-          : null,
-      }));
+      return announcements.map(
+        (announcement): Announcement => ({
+          ...announcement,
+          creator: announcement.created_by
+            ? profileMap.get(announcement.created_by) ?? null
+            : null,
+          updater: announcement.updated_by
+            ? profileMap.get(announcement.updated_by) ?? null
+            : null,
+          deleter: announcement.deleted_by
+            ? profileMap.get(announcement.deleted_by) ?? null
+            : null,
+        }),
+      );
     },
   });
 
@@ -173,6 +187,7 @@ function AnnouncementsPage() {
       if (!trimmedBody) {
         throw new Error("Announcement message is required.");
       }
+
       if (!trimmedContent) {
         throw new Error("Announcement content is required.");
       }
@@ -444,9 +459,9 @@ function AnnouncementsPage() {
             <label
               htmlFor="announcement-body"
               className="text-sm font-medium"
-              >
+            >
               Message / Summary
-              </label>
+            </label>
 
             <textarea
               id="announcement-body"
@@ -462,29 +477,29 @@ function AnnouncementsPage() {
           </div>
 
           <div className="space-y-2">
-  <label
-    htmlFor="announcement-content"
-    className="text-sm font-medium"
-  >
-    Full Content
-  </label>
+            <label
+              htmlFor="announcement-content"
+              className="text-sm font-medium"
+            >
+              Full Content
+            </label>
 
-  <textarea
-    id="announcement-content"
-    value={content}
-    onChange={(event) =>
-      setContent(event.target.value)
-    }
-    placeholder="Enter the complete announcement details..."
-    rows={10}
-    disabled={saveAnnouncement.isPending}
-    className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-  />
+            <textarea
+              id="announcement-content"
+              value={content}
+              onChange={(event) =>
+                setContent(event.target.value)
+              }
+              placeholder="Enter the complete announcement details..."
+              rows={10}
+              disabled={saveAnnouncement.isPending}
+              className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
 
-  <p className="text-xs text-muted-foreground">
-    This is the full content users will see when they open the announcement.
-  </p>
-</div>
+            <p className="text-xs text-muted-foreground">
+              This is the full content users will see when they open the announcement.
+            </p>
+          </div>
 
           <div className="space-y-2">
             <label

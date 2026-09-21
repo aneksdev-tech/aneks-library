@@ -19,10 +19,8 @@ import { Route as InactiveRouteImport } from './routes/inactive'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPremiumRouteImport } from './routes/_authenticated/premium'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMyUploadsRouteImport } from './routes/_authenticated/my-uploads'
@@ -31,8 +29,10 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBookmarksRouteImport } from './routes/_authenticated/bookmarks'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedUploadIndexRouteImport } from './routes/_authenticated/upload.index'
+import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedUploadDraftIdRouteImport } from './routes/_authenticated/upload.$draftId'
+import { Route as AuthenticatedProfileUserIdRouteImport } from './routes/_authenticated/profile.$userId'
 import { Route as AuthenticatedPreviewResourceIdRouteImport } from './routes/_authenticated/preview.$resourceId'
 import { Route as AuthenticatedAnnouncementsAnnouncementIdRouteImport } from './routes/_authenticated/announcements.$announcementId'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
@@ -92,11 +92,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileUserIdRoute = ProfileUserIdRouteImport.update({
-  id: '/profile/$userId',
-  path: '/profile/$userId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
   id: '/upload',
   path: '/upload',
@@ -105,11 +100,6 @@ const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPremiumRoute = AuthenticatedPremiumRouteImport.update({
@@ -154,6 +144,12 @@ const AuthenticatedUploadIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedUploadRoute,
   } as any)
+const AuthenticatedProfileIndexRoute =
+  AuthenticatedProfileIndexRouteImport.update({
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -164,6 +160,12 @@ const AuthenticatedUploadDraftIdRoute =
     id: '/$draftId',
     path: '/$draftId',
     getParentRoute: () => AuthenticatedUploadRoute,
+  } as any)
+const AuthenticatedProfileUserIdRoute =
+  AuthenticatedProfileUserIdRouteImport.update({
+    id: '/profile/$userId',
+    path: '/profile/$userId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPreviewResourceIdRoute =
   AuthenticatedPreviewResourceIdRouteImport.update({
@@ -236,10 +238,8 @@ export interface FileRoutesByFullPath {
   '/my-uploads': typeof AuthenticatedMyUploadsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/premium': typeof AuthenticatedPremiumRoute
-  '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/upload': typeof AuthenticatedUploadRouteWithChildren
-  '/profile/$userId': typeof ProfileUserIdRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -247,8 +247,10 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/announcements/$announcementId': typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   '/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
+  '/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/profile/': typeof AuthenticatedProfileIndexRoute
   '/upload/': typeof AuthenticatedUploadIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
@@ -269,17 +271,17 @@ export interface FileRoutesByTo {
   '/my-uploads': typeof AuthenticatedMyUploadsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/premium': typeof AuthenticatedPremiumRoute
-  '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/profile/$userId': typeof ProfileUserIdRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/announcements/$announcementId': typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   '/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
+  '/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/profile': typeof AuthenticatedProfileIndexRoute
   '/upload': typeof AuthenticatedUploadIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
@@ -303,10 +305,8 @@ export interface FileRoutesById {
   '/_authenticated/my-uploads': typeof AuthenticatedMyUploadsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/premium': typeof AuthenticatedPremiumRoute
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRouteWithChildren
-  '/profile/$userId': typeof ProfileUserIdRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -314,8 +314,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRouteWithChildren
   '/_authenticated/announcements/$announcementId': typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   '/_authenticated/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
+  '/_authenticated/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/_authenticated/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/upload/': typeof AuthenticatedUploadIndexRoute
   '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
   '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
@@ -339,10 +341,8 @@ export interface FileRouteTypes {
     | '/my-uploads'
     | '/notifications'
     | '/premium'
-    | '/profile'
     | '/settings'
     | '/upload'
-    | '/profile/$userId'
     | '/admin/announcements'
     | '/admin/approvals'
     | '/admin/categories'
@@ -350,8 +350,10 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/announcements/$announcementId'
     | '/preview/$resourceId'
+    | '/profile/$userId'
     | '/upload/$draftId'
     | '/admin/'
+    | '/profile/'
     | '/upload/'
     | '/admin/users/$userId'
     | '/admin/users/'
@@ -372,17 +374,17 @@ export interface FileRouteTypes {
     | '/my-uploads'
     | '/notifications'
     | '/premium'
-    | '/profile'
     | '/settings'
-    | '/profile/$userId'
     | '/admin/announcements'
     | '/admin/approvals'
     | '/admin/categories'
     | '/admin/resources'
     | '/announcements/$announcementId'
     | '/preview/$resourceId'
+    | '/profile/$userId'
     | '/upload/$draftId'
     | '/admin'
+    | '/profile'
     | '/upload'
     | '/admin/users/$userId'
     | '/admin/users'
@@ -405,10 +407,8 @@ export interface FileRouteTypes {
     | '/_authenticated/my-uploads'
     | '/_authenticated/notifications'
     | '/_authenticated/premium'
-    | '/_authenticated/profile'
     | '/_authenticated/settings'
     | '/_authenticated/upload'
-    | '/profile/$userId'
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/approvals'
     | '/_authenticated/admin/categories'
@@ -416,8 +416,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users'
     | '/_authenticated/announcements/$announcementId'
     | '/_authenticated/preview/$resourceId'
+    | '/_authenticated/profile/$userId'
     | '/_authenticated/upload/$draftId'
     | '/_authenticated/admin/'
+    | '/_authenticated/profile/'
     | '/_authenticated/upload/'
     | '/_authenticated/admin/users/$userId'
     | '/_authenticated/admin/users/'
@@ -434,7 +436,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SuspendedRoute: typeof SuspendedRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
-  ProfileUserIdRoute: typeof ProfileUserIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -509,13 +510,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/$userId': {
-      id: '/profile/$userId'
-      path: '/profile/$userId'
-      fullPath: '/profile/$userId'
-      preLoaderRoute: typeof ProfileUserIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/upload': {
       id: '/_authenticated/upload'
       path: '/upload'
@@ -528,13 +522,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/premium': {
@@ -593,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUploadIndexRouteImport
       parentRoute: typeof AuthenticatedUploadRoute
     }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof AuthenticatedProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -606,6 +600,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/upload/$draftId'
       preLoaderRoute: typeof AuthenticatedUploadDraftIdRouteImport
       parentRoute: typeof AuthenticatedUploadRoute
+    }
+    '/_authenticated/profile/$userId': {
+      id: '/_authenticated/profile/$userId'
+      path: '/profile/$userId'
+      fullPath: '/profile/$userId'
+      preLoaderRoute: typeof AuthenticatedProfileUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/preview/$resourceId': {
       id: '/_authenticated/preview/$resourceId'
@@ -731,11 +732,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyUploadsRoute: typeof AuthenticatedMyUploadsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPremiumRoute: typeof AuthenticatedPremiumRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedUploadRoute: typeof AuthenticatedUploadRouteWithChildren
   AuthenticatedAnnouncementsAnnouncementIdRoute: typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   AuthenticatedPreviewResourceIdRoute: typeof AuthenticatedPreviewResourceIdRoute
+  AuthenticatedProfileUserIdRoute: typeof AuthenticatedProfileUserIdRoute
+  AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -746,12 +748,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMyUploadsRoute: AuthenticatedMyUploadsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPremiumRoute: AuthenticatedPremiumRoute,
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedUploadRoute: AuthenticatedUploadRouteWithChildren,
   AuthenticatedAnnouncementsAnnouncementIdRoute:
     AuthenticatedAnnouncementsAnnouncementIdRoute,
   AuthenticatedPreviewResourceIdRoute: AuthenticatedPreviewResourceIdRoute,
+  AuthenticatedProfileUserIdRoute: AuthenticatedProfileUserIdRoute,
+  AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -768,7 +771,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SuspendedRoute: SuspendedRoute,
   VerifyEmailRoute: VerifyEmailRoute,
-  ProfileUserIdRoute: ProfileUserIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

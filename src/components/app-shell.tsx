@@ -53,13 +53,21 @@ const NAV: NavItem[] = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { profile, isAdmin, signOut, user } = useAuth();
+  const { profile, signOut, user } = useAuth();
   const { theme, toggle } = useTheme();
   const nav = useNavigate();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const items = NAV.filter((n) => (n.admin ? isAdmin : true));
+  const role = profile?.primary_role;
+
+  const canAccessAdmin =
+    role === "admin" ||
+    role === "co-admin" ||
+    role === "lecturer" ||
+    role === "staff";
+
+  const items = NAV.filter((n) => (n.admin ? canAccessAdmin : true));
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,7 +82,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
             <GraduationCap className="h-4 w-4" />
           </span>
-          <span className="font-display text-base font-semibold"><span className="text-gold">Aneks</span>Library</span>
+          <span className="font-display text-base font-semibold">
+            <span className="text-gold">Aneks</span>Library
+          </span>
         </Link>
         <SidebarNav items={items} pathname={pathname} />
       </aside>
@@ -82,20 +92,32 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
+          <div
+            className="absolute inset-0 bg-foreground/40"
+            onClick={() => setMobileOpen(false)}
+          />
           <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-sidebar text-sidebar-foreground shadow-elegant">
             <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
               <span className="flex items-center gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
                   <GraduationCap className="h-4 w-4" />
                 </span>
-                <span className="font-display text-base font-semibold"><span className="text-gold">Aneks</span>Library</span>
+                <span className="font-display text-base font-semibold">
+                  <span className="text-gold">Aneks</span>Library
+                </span>
               </span>
-              <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <SidebarNav items={items} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+            <SidebarNav
+              items={items}
+              pathname={pathname}
+              onNavigate={() => setMobileOpen(false)}
+            />
           </aside>
         </div>
       )}
@@ -117,30 +139,47 @@ export function AppShell({ children }: { children: ReactNode }) {
               aria-label="Toggle theme"
               className="rounded-md border border-border p-2 text-muted-foreground hover:text-foreground"
             >
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-md border border-border px-2 py-1.5 text-sm hover:bg-accent">
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="bg-gradient-emerald text-[10px] text-primary-foreground">
-                      {(profile?.full_name || user?.email || "?").slice(0, 1).toUpperCase()}
+                      {(profile?.full_name || user?.email || "?")
+                        .slice(0, 1)
+                        .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden max-w-[10rem] truncate sm:inline">{profile?.full_name || user?.email}</span>
+                  <span className="hidden max-w-[10rem] truncate sm:inline">
+                    {profile?.full_name || user?.email}
+                  </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
+                <DropdownMenuLabel className="truncate">
+                  {user?.email}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                  <Link to="/profile">
+                    <User className="mr-2 h-4 w-4" /> Profile
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/settings"><Settings className="mr-2 h-4 w-4" /> Settings</Link>
+                  <Link to="/settings">
+                    <Settings className="mr-2 h-4 w-4" /> Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive"
+                >
                   <LogOut className="mr-2 h-4 w-4" /> Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -168,7 +207,15 @@ function SidebarNav({
   return (
     <nav className="flex-1 space-y-1 overflow-y-auto p-3">
       {items.map((item) => {
-        const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+        const active =
+          pathname === item.to ||
+          (item.to !== "/dashboard" &&
+            pathname.startsWith(`${item.to}/`) &&
+            !(
+              item.to === "/profile" &&
+              pathname.startsWith("/profile/")
+            ));
+
         return (
           <Link
             key={item.to}
@@ -210,7 +257,11 @@ function NotificationBell() {
   });
 
   return (
-    <Link to="/notifications" className="relative rounded-md border border-border p-2 text-muted-foreground hover:text-foreground" aria-label="Notifications">
+    <Link
+      to="/notifications"
+      className="relative rounded-md border border-border p-2 text-muted-foreground hover:text-foreground"
+      aria-label="Notifications"
+    >
       <Bell className="h-4 w-4" />
       {data && data > 0 ? (
         <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[10px] font-semibold text-gold-foreground">

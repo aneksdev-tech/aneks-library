@@ -185,156 +185,50 @@ function ResourcesPage() {
             updated_at,
             college,
             semester,
-            category:categories(name),
-            uploader:profiles!resources_uploader_id_fkey(full_name,email),
-            approver:profiles!resources_approved_by_fkey(full_name,email)
+            category:categories(name)
           `,
         )
         .order("created_at", { ascending: false });
 
       if (error) {
-        /*
-         * The uploader relationship already exists in the verified schema.
-         * approved_by/deleted_by relationship metadata can vary depending
-         * on generated Supabase relationship metadata, so retry without
-         * the embedded approver relationship when necessary.
-         */
-        const fallback = await supabase
-          .from("resources")
-          .select(
-            `
-              id,
-              uploader_id,
-              category_id,
-              title,
-              description,
-              course_code,
-              department,
-              level,
-              author,
-              year,
-              tags,
-              file_path,
-              file_name,
-              file_size,
-              mime_type,
-              thumbnail_path,
-              status,
-              rejection_reason,
-              rejected_by,
-              rejected_at,
-              download_count,
-              bookmark_count,
-              approved_by,
-              approved_at,
-              deleted_by,
-              deleted_at,
-              deletion_reason,
-              created_at,
-              updated_at,
-              college,
-              semester,
-              category:categories(name),
-              uploader:profiles!resources_uploader_id_fkey(full_name,email)
-            `,
-          )
-          .order("created_at", { ascending: false });
-
-        if (fallback.error) {
-          throw fallback.error;
-        }
-
-const fallbackResources = (fallback.data ?? []) as unknown as Resource[];
-
-const approvedByIds = fallbackResources
-  .map((resource) => resource.approved_by)
-  .filter((id): id is string => Boolean(id));
-
-const deletedByIds = fallbackResources
-  .map((resource) => resource.deleted_by)
-  .filter((id): id is string => Boolean(id));
-
-const rejectedByIds = fallbackResources
-  .map((resource) => resource.rejected_by)
-  .filter((id): id is string => Boolean(id));
-
-const profileIds = [
-  ...new Set([
-    ...approvedByIds,
-    ...deletedByIds,
-    ...rejectedByIds,
-  ]),
-];
-
-if (profileIds.length === 0) {
-  return fallbackResources;
-}
-
-const { data: profiles, error: profilesError } =
-  await supabase
-    .from("profiles")
-    .select("id, full_name, email")
-    .in("id", profileIds);
-
-if (profilesError) {
-  throw profilesError;
-}
-
-const profileMap = new Map(
-  (profiles ?? []).map((profile) => [
-    profile.id,
-    {
-      full_name: profile.full_name,
-      email: profile.email,
-    },
-  ]),
-);
-
-return fallbackResources.map((resource) => ({
-  ...resource,
-  approver: resource.approved_by
-    ? profileMap.get(resource.approved_by) ?? null
-    : null,
-  deleter: resource.deleted_by
-    ? profileMap.get(resource.deleted_by) ?? null
-    : null,
-  rejecter: resource.rejected_by
-    ? profileMap.get(resource.rejected_by) ?? null
-    : null,
-}));
+        throw error;
       }
 
-      const primaryResources = (data ?? []) as unknown as Resource[];
-
-const approvedByIds = primaryResources
-  .map((resource) => resource.approved_by)
-  .filter((id): id is string => Boolean(id));
-
-const deletedByIds = primaryResources
-  .map((resource) => resource.deleted_by)
-  .filter((id): id is string => Boolean(id));
-
-const rejectedByIds = primaryResources
-  .map((resource) => resource.rejected_by)
-  .filter((id): id is string => Boolean(id));
+      const primaryResources =
+        (data ?? []) as unknown as Resource[];
 
       const profileIds = [
-        ...new Set([
-          ...approvedByIds,
-          ...deletedByIds,
-          ...rejectedByIds,
-        ]),
+        ...new Set(
+          [
+            ...primaryResources.map(
+              (resource) => resource.uploader_id,
+            ),
+            ...primaryResources.map(
+              (resource) => resource.approved_by,
+            ),
+            ...primaryResources.map(
+              (resource) => resource.deleted_by,
+            ),
+            ...primaryResources.map(
+              (resource) => resource.rejected_by,
+            ),
+          ].filter(
+            (id): id is string => Boolean(id),
+          ),
+        ),
       ];
 
       if (profileIds.length === 0) {
         return primaryResources;
       }
 
-      const { data: profiles, error: profilesError } =
-        await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", profileIds);
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await supabase
+        .from("private_profiles")
+        .select("id, full_name, email")
+        .in("id", profileIds);
 
       if (profilesError) {
         throw profilesError;
@@ -352,14 +246,20 @@ const rejectedByIds = primaryResources
 
       return primaryResources.map((resource) => ({
         ...resource,
+        uploader:
+          profileMap.get(resource.uploader_id) ??
+          null,
         approver: resource.approved_by
-          ? profileMap.get(resource.approved_by) ?? null
+          ? profileMap.get(resource.approved_by) ??
+            null
           : null,
         deleter: resource.deleted_by
-          ? profileMap.get(resource.deleted_by) ?? null
+          ? profileMap.get(resource.deleted_by) ??
+            null
           : null,
         rejecter: resource.rejected_by
-          ? profileMap.get(resource.rejected_by) ?? null
+          ? profileMap.get(resource.rejected_by) ??
+            null
           : null,
       }));
     },
@@ -949,86 +849,98 @@ const rejectedByIds = primaryResources
                     </div>
 
                     {/* Audit information */}
-<div className="grid gap-4 text-xs sm:grid-cols-2 xl:grid-cols-3">
-  <AuditItem
-    label="Uploader"
-    value={getPersonName(
-      resource.uploader,
-      resource.uploader_id,
-    )}
-    detail={formatDateTime(resource.created_at)}
-  />
+                    <div className="grid gap-4 text-xs sm:grid-cols-2 xl:grid-cols-3">
+                      <AuditItem
+                        label="Uploader"
+                        value={getPersonName(
+                          resource.uploader,
+                          resource.uploader_id,
+                        )}
+                        detail={formatDateTime(
+                          resource.created_at,
+                        )}
+                      />
 
-  {resource.status === "rejected" ? (
-    <>
-      <AuditItem
-        label="Rejected by"
-        value={
-          resource.rejected_by
-            ? getPersonName(
-                resource.rejecter,
-                resource.rejected_by,
-              )
-            : "Unknown"
-        }
-        detail={
-          resource.rejected_at
-            ? formatDateTime(resource.rejected_at)
-            : undefined
-        }
-      />
+                      {resource.status === "rejected" ? (
+                        <>
+                          <AuditItem
+                            label="Rejected by"
+                            value={
+                              resource.rejected_by
+                                ? getPersonName(
+                                    resource.rejecter,
+                                    resource.rejected_by,
+                                  )
+                                : "Unknown"
+                            }
+                            detail={
+                              resource.rejected_at
+                                ? formatDateTime(
+                                    resource.rejected_at,
+                                  )
+                                : undefined
+                            }
+                          />
 
-      {resource.rejection_reason && (
-        <AuditItem
-          label="Rejection reason"
-          value={resource.rejection_reason}
-        />
-      )}
-    </>
-  ) : (
-    <AuditItem
-      label="Approved by"
-      value={
-        resource.approved_by
-          ? getPersonName(
-              resource.approver,
-              resource.approved_by,
-            )
-          : "Not approved"
-      }
-      detail={
-        resource.approved_at
-          ? formatDateTime(resource.approved_at)
-          : undefined
-      }
-    />
-  )}
+                          {resource.rejection_reason && (
+                            <AuditItem
+                              label="Rejection reason"
+                              value={
+                                resource.rejection_reason
+                              }
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <AuditItem
+                          label="Approved by"
+                          value={
+                            resource.approved_by
+                              ? getPersonName(
+                                  resource.approver,
+                                  resource.approved_by,
+                                )
+                              : "Not approved"
+                          }
+                          detail={
+                            resource.approved_at
+                              ? formatDateTime(
+                                  resource.approved_at,
+                                )
+                              : undefined
+                          }
+                        />
+                      )}
 
-  <AuditItem
-    label="Deleted by"
-    value={
-      resource.deleted_by
-        ? getPersonName(
-            resource.deleter,
-            resource.deleted_by,
-          )
-        : "Not deleted"
-    }
-    detail={
-      resource.deleted_at
-        ? formatDateTime(resource.deleted_at)
-        : undefined
-    }
-  />
+                      <AuditItem
+                        label="Deleted by"
+                        value={
+                          resource.deleted_by
+                            ? getPersonName(
+                                resource.deleter,
+                                resource.deleted_by,
+                              )
+                            : "Not deleted"
+                        }
+                        detail={
+                          resource.deleted_at
+                            ? formatDateTime(
+                                resource.deleted_at,
+                              )
+                            : undefined
+                        }
+                      />
 
-  {resource.status === "deleted" &&
-    resource.deletion_reason && (
-      <AuditItem
-        label="Deletion reason"
-        value={resource.deletion_reason}
-      />
-    )}
-</div>
+                      {resource.status === "deleted" &&
+                        resource.deletion_reason && (
+                          <AuditItem
+                            label="Deletion reason"
+                            value={
+                              resource.deletion_reason
+                            }
+                          />
+                        )}
+                    </div>
 
                     {/* Responsive actions */}
                     <div className="flex flex-wrap items-center gap-2 lg:hidden">
@@ -1409,9 +1321,9 @@ function PreviewModal({
         </div>
 
         <div
-            ref={scrollRootRef}
-            className="min-h-0 flex-1 overflow-auto p-4"
-          >
+          ref={scrollRootRef}
+          className="min-h-0 flex-1 overflow-auto p-4"
+        >
           {isLoading || !previewUrl ? (
             <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
               Preparing preview…

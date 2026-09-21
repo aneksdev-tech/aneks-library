@@ -35,7 +35,7 @@ import {
   getDepartments,
 } from "@/lib/academicData";
 
-export const Route = createFileRoute("/_authenticated/profile")({
+export const Route = createFileRoute("/_authenticated/profile/")({
   head: () => ({
     meta: [
       { title: "Profile | Aneks Library" },
@@ -179,7 +179,7 @@ function ProfilePage() {
     (phoneDigits.length >= 13 &&
       phoneDigits.length <= 15);
 
-    /*
+  /*
    * Academic information completion is role-specific
    * and based ONLY on saved values.
    *
@@ -335,10 +335,19 @@ function ProfilePage() {
       };
 
       const { error } =
-        await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("id", user.id);
+        await supabase.rpc(
+          "update_my_profile",
+          {
+            _full_name: updateData.full_name,
+            _bio: updateData.bio,
+            _phone_number:
+              updateData.phone_number,
+            _college: updateData.college,
+            _department:
+              updateData.department,
+            _level: updateData.level,
+          },
+        );
 
       if (error) {
         toast.error(error.message);
@@ -407,7 +416,7 @@ function ProfilePage() {
           );
 
           const marker =
-            "/storage/v1/object/public/avatar/";
+            "/storage/v1/object/public/avatars/";
 
           const index =
             url.pathname.indexOf(marker);
@@ -421,7 +430,7 @@ function ProfilePage() {
               );
 
             await supabase.storage
-              .from("avatar")
+              .from("avatars")
               .remove([oldPath]);
           }
         } catch {
@@ -443,7 +452,7 @@ function ProfilePage() {
 
       const { error: uploadError } =
         await supabase.storage
-          .from("avatar")
+          .from("avatars")
           .upload(
             fileName,
             file,
@@ -459,17 +468,37 @@ function ProfilePage() {
 
       const { data } =
         supabase.storage
-          .from("avatar")
+          .from("avatars")
           .getPublicUrl(fileName);
 
+      /*
+       * Update only the avatar URL through the
+       * SECURITY DEFINER profile-update function.
+       *
+       * The current saved profile values are supplied
+       * unchanged so uploading an avatar does not
+       * modify unsaved form values.
+       */
       const { error: updateError } =
-        await supabase
-          .from("profiles")
-          .update({
-            avatar_url:
+        await supabase.rpc(
+          "update_my_profile",
+          {
+            _full_name:
+              profile?.full_name ?? "",
+            _bio:
+              profile?.bio ?? "",
+            _phone_number:
+              profile?.phone_number ?? "",
+            _college:
+              profile?.college ?? "",
+            _department:
+              profile?.department ?? "",
+            _level:
+              profile?.level ?? "",
+            _avatar_url:
               data.publicUrl,
-          })
-          .eq("id", user.id);
+          },
+        );
 
       if (updateError) {
         throw updateError;
@@ -618,7 +647,7 @@ function ProfilePage() {
                 />
               </div>
 
-                <div className="mt-5 space-y-2.5 text-xs">
+              <div className="mt-5 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
                     Profile photo

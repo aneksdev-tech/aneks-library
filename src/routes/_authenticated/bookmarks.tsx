@@ -18,23 +18,70 @@ export const Route = createFileRoute("/_authenticated/bookmarks")({
 
 function Bookmarks() {
   const { user } = useAuth();
-  const { isPremium, isAdmin } = useAccess();
+  const { canDownload } = useAccess();
 
   const { data } = useQuery({
     queryKey: ["bookmarks-list", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("bookmarks")
-        .select(
-          "resource:resources(id, title, description, course_code, department, year, tags, file_path, download_count, bookmark_count, created_at, category:categories(name, slug))"
-        )
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
+      const { data: bookmarks, error: bookmarksError } =
+        await supabase
+          .from("bookmarks")
+          .select("resource_id, created_at")
+          .eq("user_id", user!.id)
+          .order("created_at", { ascending: false });
 
-      return (data ?? [])
-        .map((b) => (b as { resource: ResourceRow }).resource)
-        .filter(Boolean);
+      if (bookmarksError) throw bookmarksError;
+
+      const resourceIds = (bookmarks ?? []).map(
+        (bookmark) => bookmark.resource_id,
+      );
+
+      if (!resourceIds.length) {
+        return [] as ResourceRow[];
+      }
+
+      const { data: resources, error: resourcesError } =
+        await supabase
+          .from("public_resources")
+          .select(
+            `
+              id,
+              title,
+              description,
+              course_code,
+              college,
+              department,
+              level,
+              semester,
+              year,
+              tags,
+              category_id,
+              download_count,
+              bookmark_count,
+              created_at,
+              file_type,
+              category_name,
+              category_slug
+            `,
+          )
+          .in("id", resourceIds);
+
+      if (resourcesError) throw resourcesError;
+
+      const resourceMap = new Map(
+        (resources ?? []).map((resource) => [
+          resource.id,
+          resource as unknown as ResourceRow,
+        ]),
+      );
+
+      return resourceIds
+        .map((resourceId) => resourceMap.get(resourceId))
+        .filter(
+          (resource): resource is ResourceRow =>
+            Boolean(resource),
+        );
     },
   });
 
@@ -55,8 +102,7 @@ function Bookmarks() {
             <ResourceCard
               key={r.id}
               r={r}
-              isPremium={isPremium}
-              isAdmin={isAdmin}
+              canDownload={canDownload}
             />
           ))}
         </div>

@@ -55,121 +55,64 @@ export const Route = createFileRoute(
   "/_authenticated/admin/users/$userId",
 )({
   beforeLoad: async () => {
-  console.log(
-    "[Admin User Details] BEFORELOAD START",
-  );
+    const { data: u, error: authError } =
+      await supabase.auth.getUser();
 
-  const { data: u, error: authError } =
-    await supabase.auth.getUser();
+    if (!u.user) {
+      throw redirect({
+        to: "/auth",
+        search: {
+          mode: "login",
+        },
+      });
+    }
 
-  console.log(
-    "[Admin User Details] AUTH RESULT:",
-    {
-      userId: u.user?.id,
-      authError,
-    },
-  );
-
-  if (!u.user) {
-    console.warn(
-      "[Admin User Details] NO AUTH USER → /auth",
-    );
-
-    throw redirect({
-      to: "/auth",
-      search: {
-        mode: "login",
-      },
-    });
-  }
-
-  const {
-    data: profile,
-    error: profileError,
-  } = await supabase
-    .from("profiles")
-    .select("primary_role, status")
-    .eq("id", u.user.id)
+    const {
+     data: profile,
+     error: profileError,
+    } = await supabase
+      .from("private_profiles")
+     .select("primary_role, status")
+     .eq("id", u.user.id)
     .single();
 
-  console.log(
-    "[Admin User Details] PROFILE RESULT:",
-    {
-      profile,
-      profileError,
-    },
-  );
+    if (profileError || !profile) {
+      throw redirect({
+        to: "/admin",
+        replace: true,
+      });
+    }
 
-  if (profileError || !profile) {
-    console.error(
-      "[Admin User Details] PROFILE QUERY FAILED → /admin",
-      {
-        profileError,
-      },
-    );
+    if (
+        !profile.primary_role ||
+        !["admin", "co-admin"].includes(
+          profile.primary_role,
+       )
+      ) {
+      throw redirect({
+        to: "/admin",
+        replace: true,
+      });
+    }
 
-    throw redirect({
-      to: "/admin",
-      replace: true,
-    });
-  }
+    if (profile.status !== "active") {
+      const targetPath =
+        profile.status === "pending"
+          ? "/pending"
+          : profile.status === "suspended"
+            ? "/suspended"
+            : profile.status === "rejected"
+              ? "/rejected"
+              : profile.status === "inactive"
+                ? "/inactive"
+                : "/pending";
 
-  console.log(
-    "[Admin User Details] AUTHORIZATION:",
-    {
-      role: profile.primary_role,
-      status: profile.status,
-    },
-  );
-
-  if (
-    !["admin", "co-admin"].includes(
-      profile.primary_role,
-    )
-  ) {
-    console.warn(
-      "[Admin User Details] INVALID ROLE → /admin",
-      {
-        role: profile.primary_role,
-      },
-    );
-
-    throw redirect({
-      to: "/admin",
-      replace: true,
-    });
-  }
-
-  if (profile.status !== "active") {
-    const targetPath =
-      profile.status === "pending"
-        ? "/pending"
-        : profile.status === "suspended"
-          ? "/suspended"
-          : profile.status === "rejected"
-            ? "/rejected"
-            : profile.status === "inactive"
-              ? "/inactive"
-              : "/pending";
-
-    console.warn(
-      "[Admin User Details] INACTIVE ACCOUNT → redirect",
-      {
-        status: profile.status,
-        targetPath,
-      },
-    );
-
-    throw redirect({
-      to: targetPath,
-      replace: true,
-    });
-  }
-
-  console.log(
-    "[Admin User Details] BEFORELOAD PASSED",
-  );
-},
+      throw redirect({
+        to: targetPath,
+        replace: true,
+      });
+    }
+  },
 
   component: UserDetailsPage,
 });
@@ -466,7 +409,7 @@ function UserDetailsPage() {
     queryFn: async () => {
       const { data, error } =
         await supabase
-          .from("profiles")
+          .from("private_profiles")
           .select(
             [
               "id",
@@ -540,8 +483,7 @@ function UserDetailsPage() {
         throw error;
       }
 
-      return (data ??
-        []) as unknown as ResourceRow[];
+      return (data ?? []) as unknown as ResourceRow[];
     },
   });
 

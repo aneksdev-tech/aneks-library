@@ -133,12 +133,7 @@ export function PDFViewer({
             Math.min(3, numPages),
           );
         }}
-        onLoadError={(error) => {
-          console.error(
-            "PDF load failed:",
-            error,
-          );
-        }}
+        onLoadError={() => {}}
         loading={
           <div className="flex h-64 items-center justify-center rounded-2xl border bg-muted/30">
             Loading PDF...

@@ -32,16 +32,17 @@ export const Route = createFileRoute("/_authenticated/admin/users/")({
     }
 
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("private_profiles")
       .select("primary_role")
       .eq("id", u.user.id)
       .single();
 
     if (
       !profile ||
-      !["admin", "co-admin"].includes(
-        profile.primary_role,
-      )
+     !profile.primary_role ||
+     !["admin", "co-admin"].includes(
+       profile.primary_role,
+     )
     ) {
       throw redirect({
         to: "/admin",
@@ -265,7 +266,7 @@ function UsersPage() {
 
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("private_profiles")
         .select(
           [
             "id",

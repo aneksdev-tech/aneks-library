@@ -63,7 +63,7 @@ export const Route = createFileRoute(
       data: profile,
       error,
     } = await supabase
-      .from("profiles")
+      .from("private_profiles")
       .select("primary_role, status")
       .eq("id", auth.user.id)
       .single();
@@ -128,6 +128,7 @@ type Resource = {
   year: number | null;
   created_at: string;
   status: ResourceStatus;
+  uploader_id: string;
   category?: {
     name?: string;
   } | null;
@@ -214,43 +215,98 @@ function Approvals() {
     queryKey: ["pending-resources"],
 
     queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from("resources")
-          .select(
-            `
-              id,
-              title,
-              description,
-              file_path,
-              file_name,
-              file_size,
-              course_code,
-              department,
-              level,
-              year,
-              created_at,
-              status,
-              category:categories(name),
-              uploader:profiles!resources_uploader_id_fkey(full_name,email)
-            `,
-          )
-          .eq(
-            "status",
-            "pending",
-          )
-          .order(
-            "created_at",
-            {
-              ascending: true,
-            },
-          );
+      const {
+        data: resources,
+        error,
+      } = await supabase
+        .from("resources")
+        .select(
+          `
+            id,
+            title,
+            description,
+            file_path,
+            file_name,
+            file_size,
+            course_code,
+            department,
+            level,
+            year,
+            created_at,
+            status,
+            uploader_id,
+            category:categories(name)
+          `,
+        )
+        .eq(
+          "status",
+          "pending",
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true,
+          },
+        );
 
       if (error) {
         throw error;
       }
 
-      return (data ?? []) as unknown as Resource[];
+      const rows =
+        (resources ?? []) as unknown as Resource[];
+
+      const uploaderIds = [
+        ...new Set(
+          rows
+            .map(
+              (resource) =>
+                resource.uploader_id,
+            )
+            .filter(Boolean),
+        ),
+      ];
+
+      if (uploaderIds.length === 0) {
+        return rows;
+      }
+
+      const {
+        data: uploaderProfiles,
+        error: uploaderError,
+      } = await supabase
+        .from("private_profiles")
+        .select("id, full_name, email")
+        .in("id", uploaderIds);
+
+      if (uploaderError) {
+        throw uploaderError;
+      }
+
+      const uploaderMap =
+        new Map(
+          (
+            uploaderProfiles ?? []
+          ).map((uploader) => [
+            uploader.id,
+            {
+              full_name:
+                uploader.full_name,
+              email:
+                uploader.email,
+            },
+          ]),
+        );
+
+      return rows.map(
+        (resource) => ({
+          ...resource,
+          uploader:
+            uploaderMap.get(
+              resource.uploader_id,
+            ) ?? null,
+        }),
+      );
     },
   });
 
@@ -1016,7 +1072,7 @@ function StatusPill({
       label: "Deleted",
       className:
         "border-destructive/20 bg-destructive/10 text-destructive",
-      icon: Trash2,
+      icon: XCircle,
     },
     draft: {
       label: "Draft",

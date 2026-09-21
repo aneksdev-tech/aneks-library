@@ -18,6 +18,23 @@ import { canManageUsers } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ location }) => {
+    const restrictedToAdmin = [
+      "/admin/resources",
+      "/admin/categories",
+      "/admin/users",
+    ].some(
+      (path) =>
+        location.pathname === path ||
+        location.pathname.startsWith(`${path}/`),
+    );
+
+    if (restrictedToAdmin) {
+      return requireRole(
+        ["admin", "co-admin"],
+        location.pathname,
+      );
+    }
+
     return requireRole(
       ["admin", "co-admin", "staff", "lecturer"],
       location.pathname,
@@ -35,6 +52,8 @@ function AdminLayout() {
   const auth = useAuth();
   const roles = auth.roles ?? [];
 
+  const canManagePlatform = canManageUsers(roles);
+
   const tabs = [
     {
       to: "/admin",
@@ -46,17 +65,21 @@ function AdminLayout() {
       label: "Approvals",
       icon: ClipboardCheck,
     },
-    {
-      to: "/admin/resources",
-      label: "Resources",
-      icon: Files,
-    },
+    ...(canManagePlatform
+      ? [
+          {
+            to: "/admin/resources",
+            label: "Resources",
+            icon: Files,
+          },
+        ]
+      : []),
     {
       to: "/admin/announcements",
       label: "Announcements",
       icon: Megaphone,
     },
-    ...(canManageUsers(roles)
+    ...(canManagePlatform
       ? [
           {
             to: "/admin/categories",
@@ -98,41 +121,41 @@ function AdminLayout() {
 
       {/* Admin Navigation */}
       <nav
-  aria-label="Administration navigation"
-  className="rounded-lg border border-border bg-card p-1 shadow-soft"
->
-  <div className="grid grid-cols-2 gap-1 sm:flex">
-    {tabs.map((tab) => {
-      const active =
-        tab.to === "/admin"
-          ? pathname === "/admin"
-          : pathname === tab.to ||
-            pathname.startsWith(`${tab.to}/`);
-    
-    const Icon = tab.icon;
+        aria-label="Administration navigation"
+        className="rounded-lg border border-border bg-card p-1 shadow-soft"
+      >
+        <div className="grid grid-cols-2 gap-1 sm:flex">
+          {tabs.map((tab) => {
+            const active =
+              tab.to === "/admin"
+                ? pathname === "/admin"
+                : pathname === tab.to ||
+                  pathname.startsWith(`${tab.to}/`);
 
-      return (
-        <Link
-          key={tab.to}
-          to={tab.to}
-          className={`group flex min-h-11 min-w-0 flex-1 items-center justify-start gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 sm:justify-center sm:px-4 ${
-            active
-              ? "bg-gradient-emerald text-primary-foreground shadow-soft"
-              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-          }`}
-        >
-          <Icon
-            className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
-              active ? "" : "group-hover:scale-105"
-            }`}
-          />
+            const Icon = tab.icon;
 
-          <span className="min-w-0 truncate">{tab.label}</span>
-        </Link>
-      );
-    })}
-  </div>
-</nav>
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className={`group flex min-h-11 min-w-0 flex-1 items-center justify-start gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 sm:justify-center sm:px-4 ${
+                  active
+                    ? "bg-gradient-emerald text-primary-foreground shadow-soft"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                    active ? "" : "group-hover:scale-105"
+                  }`}
+                />
+
+                <span className="min-w-0 truncate">{tab.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* Active Admin Page */}
       <div className="min-w-0">

@@ -23,10 +23,10 @@ export function useAccess() {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from("profiles")
+        .from("private_profiles")
         .select("primary_role, subscription_plan")
         .eq("id", user!.id)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setIsAdmin(
@@ -34,6 +34,9 @@ export function useAccess() {
           data.primary_role === "co-admin",
         );
         setIsPremium(data.subscription_plan === "premium");
+      } else {
+        setIsAdmin(false);
+        setIsPremium(false);
       }
 
       setLoading(false);

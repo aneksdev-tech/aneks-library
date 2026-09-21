@@ -12,6 +12,107 @@ interface DocumentPreviewProps {
   scrollRoot?: HTMLDivElement | null;
 }
 
+/*
+ * Cache the in-flight preview request so React development-mode
+ * effect re-runs do not download the same document twice.
+ *
+ * The Edge Function now returns a short-lived signed Storage URL,
+ * which is then used to retrieve the actual file.
+ */
+const previewRequests = new Map<
+  string,
+  Promise<Blob>
+>();
+
+function getPreviewBlob(
+  url: string,
+  token: string,
+): Promise<Blob> {
+  const cacheKey = `${url}|${token}`;
+
+  const existingRequest =
+    previewRequests.get(cacheKey);
+
+  if (existingRequest) {
+    return existingRequest;
+  }
+
+  const request = (async () => {
+    try {
+      /*
+       * First request:
+       * Authenticate and authorize through the preview
+       * Edge Function. It now returns JSON containing a
+       * short-lived signed Storage URL.
+       */
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey:
+            import.meta.env
+              .VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          "Unable to authorize preview.",
+        );
+      }
+
+      const data: {
+        url?: string;
+      } = await response.json();
+
+      if (!data.url) {
+        throw new Error(
+          "Preview access URL was not returned.",
+        );
+      }
+
+      /*
+       * Second request:
+       * Download the actual private resource directly
+       * from Supabase Storage using the short-lived
+       * signed URL.
+       */
+      const fileResponse =
+        await fetch(data.url);
+
+      if (!fileResponse.ok) {
+        throw new Error(
+          "Unable to load preview file.",
+        );
+      }
+
+      const previewBlob =
+        await fileResponse.blob();
+
+      if (previewBlob.size === 0) {
+        throw new Error(
+          "The preview file is empty.",
+        );
+      }
+
+      return previewBlob;
+    } catch (error) {
+      /*
+       * Do not keep failed requests in the cache.
+       * This allows a later retry to make a fresh request.
+       */
+      previewRequests.delete(cacheKey);
+      throw error;
+    }
+  })();
+
+  previewRequests.set(
+    cacheKey,
+    request,
+  );
+
+  return request;
+}
+
 export function DocumentPreview({
   url,
   token,
@@ -19,37 +120,66 @@ export function DocumentPreview({
   title,
   scrollRoot = null,
 }: DocumentPreviewProps) {
-  const [blob, setBlob] = useState<Blob>();
-  const [blobUrl, setBlobUrl] = useState<string>();
+  const [blob, setBlob] =
+    useState<Blob>();
+
+  const [blobUrl, setBlobUrl] =
+    useState<string>();
+
+  const [previewError, setPreviewError] =
+    useState(false);
 
   useEffect(() => {
-    let objectUrl: string | undefined;
+    let objectUrl:
+      | string
+      | undefined;
+
+    let cancelled = false;
 
     async function loadPreview() {
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-      });
+      setPreviewError(false);
+      setBlob(undefined);
+      setBlobUrl(undefined);
 
-      if (!response.ok) {
-        throw new Error("Unable to load preview.");
+      try {
+        const previewBlob =
+          await getPreviewBlob(
+            url,
+            token,
+          );
+
+        if (cancelled) {
+          return;
+        }
+
+        objectUrl =
+          URL.createObjectURL(
+            previewBlob,
+          );
+
+        setBlob(previewBlob);
+        setBlobUrl(objectUrl);
+      } catch (error) {
+        console.error(
+          "Document preview failed:",
+          error,
+        );
+
+        if (!cancelled) {
+          setPreviewError(true);
+        }
       }
-
-      const previewBlob = await response.blob();
-
-      objectUrl = URL.createObjectURL(previewBlob);
-
-      setBlob(previewBlob);
-      setBlobUrl(objectUrl);
     }
 
-    loadPreview().catch(console.error);
+    loadPreview();
 
     return () => {
+      cancelled = true;
+
       if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+        URL.revokeObjectURL(
+          objectUrl,
+        );
       }
     };
   }, [url, token]);
@@ -60,7 +190,30 @@ export function DocumentPreview({
     e.preventDefault();
   };
 
-  const ext = filePath.split(".").pop()?.toLowerCase();
+  const ext = filePath
+    .split(".")
+    .pop()
+    ?.toLowerCase();
+
+  if (previewError) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center p-6 text-center">
+        <div className="max-w-md">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <FileText className="h-8 w-8 text-muted-foreground" />
+          </div>
+
+          <h3 className="mt-4 text-lg font-semibold">
+            Unable to load preview
+          </h3>
+
+          <p className="mt-2 text-sm text-muted-foreground">
+            We couldn't load this file preview. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!blob || !blobUrl) {
     return (
@@ -82,7 +235,9 @@ export function DocumentPreview({
         />
       ) : ext === "docx" ? (
         <DocxViewer blob={blob} />
-      ) : ["jpg", "jpeg", "png", "gif", "webp"].includes(ext ?? "") ? (
+      ) : ["jpg", "jpeg", "png", "gif", "webp"].includes(
+          ext ?? "",
+        ) ? (
         <ImageViewer
           url={blobUrl}
           alt={title}

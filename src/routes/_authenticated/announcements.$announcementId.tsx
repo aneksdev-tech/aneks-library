@@ -10,9 +10,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
-type Profile = {
+type PublicProfile = {
   full_name: string | null;
-  email: string;
 };
 
 export const Route = createFileRoute(
@@ -71,21 +70,36 @@ function AnnouncementDetailsPage() {
         };
       }
 
-      const { data: profiles, error: profilesError } =
-        await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", profileIds);
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await supabase
+        .from("public_profiles")
+        .select("id, full_name")
+        .in("id", profileIds);
 
       if (profilesError) {
         throw profilesError;
       }
 
-      const profileMap = new Map(
-        (profiles ?? []).map((profile) => [
-          profile.id,
-          profile,
-        ]),
+      const profileMap = new Map<
+        string,
+        PublicProfile
+      >(
+        (profiles ?? [])
+          .filter(
+            (
+              profile,
+            ): profile is typeof profile & {
+              id: string;
+            } => profile.id !== null,
+          )
+          .map((profile) => [
+            profile.id,
+            {
+              full_name: profile.full_name,
+            },
+          ]),
       );
 
       return {
@@ -140,10 +154,10 @@ function AnnouncementDetailsPage() {
   const { announcement, creator, updater } = data;
 
   const creatorName =
-    creator?.full_name ?? creator?.email ?? "Unknown user";
+    creator?.full_name ?? "Unknown user";
 
   const updaterName =
-    updater?.full_name ?? updater?.email ?? "Unknown user";
+    updater?.full_name ?? "Unknown user";
 
   const hasBeenUpdated =
     announcement.updated_at !== announcement.created_at;
@@ -212,15 +226,6 @@ function AnnouncementDetailsPage() {
               </span>{" "}
               {creatorName}
             </p>
-
-            {creator?.full_name && creator.email && (
-              <p>
-                <span className="font-medium text-foreground">
-                  Email:
-                </span>{" "}
-                {creator.email}
-              </p>
-            )}
 
             <p>
               <span className="font-medium text-foreground">

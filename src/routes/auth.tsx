@@ -222,39 +222,39 @@ function RegisterForm() {
   const navigate = useNavigate();
 
   const needsCollege =
-  role === "student" ||
-  role === "lecturer" ||
-  role === "staff";
+    role === "student" ||
+    role === "lecturer" ||
+    role === "staff";
 
   const needsLevel =
-  role === "student";
+    role === "student";
 
   const departments = getDepartments(form.college);
   const setField = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const emailValid =
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
 
   const nameValid =
-  /^[A-Za-z\s'-]{3,}$/.test(form.full_name.trim());
+    /^[A-Za-z\s'-]{3,}$/.test(form.full_name.trim());
 
   const canSubmit =
-  nameValid &&
-  emailValid &&
-  form.password.trim() !== "" &&
-  form.confirm.trim() !== "" &&
-  role !== "" &&
-  (
-  !needsCollege ||
-  (
-    form.college !== "" &&
-    form.department !== "" &&
+    nameValid &&
+    emailValid &&
+    form.password.trim() !== "" &&
+    form.confirm.trim() !== "" &&
+    role !== "" &&
     (
-      !needsLevel ||
-      form.level !== ""
+    !needsCollege ||
+    (
+      form.college !== "" &&
+      form.department !== "" &&
+      (
+        !needsLevel ||
+        form.level !== ""
+      )
     )
-  )
-);
+  );
 
   const handleGoogle = async () => {
   setBusy(true);
@@ -306,36 +306,6 @@ function RegisterForm() {
 setBusy(true);
 
 try {
-  const { data: emailCheck, error: functionError } =
-    await supabase.functions.invoke("check-email", {
-      body: {
-        email: normalizedEmail,
-      },
-    });
-
-  if (functionError) {
-    toast.error("Unable to verify email. Please try again.");
-    return;
-  }
-
-  if (emailCheck?.exists) {
-  if (emailCheck.confirmed) {
-    toast.error("Email already exists. Please log in.");
-    return;
-  }
-
-  toast.info("Your email hasn't been verified yet.");
-
-  navigate({
-    to: "/verify-email",
-    search: {
-      email: normalizedEmail,
-    },
-  });
-
-  return;
-}
-  
   const { error } = await supabase.auth.signUp({
     email: normalizedEmail,
     password: form.password,
@@ -642,9 +612,9 @@ function GoogleIcon() {
   return (
     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"/>
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.67-2.26 1.06-3.71 1.06-2.85 0-5.27-1.92-6.13-4.5H2.18v2.83A11 11 0 0 0 12 23Z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99 0-2.26 1.06-3.71 1.06-2.85 0-5.27-1.92-6.13-4.5H2.18v2.83A11 11 0 0 0 12 23Z"/>
       <path fill="#FBBC05" d="M5.87 14.14a6.6 6.6 0 0 1 0-4.28V7.03H2.18a11 11 0 0 0 0 9.94l3.69-2.83Z"/>
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.03l3.69 2.83C6.73 7.3 9.15 5.38 12 5.38Z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.03l3.69 2.83C6.73 7.3 9.15 5.38 9.15 5.38Z"/>
     </svg>
   );
 }

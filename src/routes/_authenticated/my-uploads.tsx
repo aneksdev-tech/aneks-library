@@ -196,10 +196,11 @@ function MyUploads() {
       toast.success("Draft deleted successfully.");
       setPendingDelete(null);
     } catch (error) {
-      console.error(
-        "Failed to delete draft:",
-        error,
-      );
+  toast.error(
+    error instanceof Error
+      ? error.message
+      : "Failed to delete draft.",
+  );
 
       toast.error(
         error instanceof Error

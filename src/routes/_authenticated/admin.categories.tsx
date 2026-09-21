@@ -39,19 +39,20 @@ export const Route = createFileRoute("/_authenticated/admin/categories")({
     }
 
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("private_profiles")
       .select("primary_role")
       .eq("id", u.user.id)
-      .single();
+      .maybeSingle();
 
     if (
-  !   profile ||
-      !["admin", "co-admin"].includes(profile.primary_role)
-    ) {
-      throw redirect({
-        to: "/admin",
-      });
-    }
+  !profile ||
+  (profile.primary_role !== "admin" &&
+    profile.primary_role !== "co-admin")
+) {
+  throw redirect({
+    to: "/admin",
+  });
+}
   },
 
   component: CategoriesPage,
