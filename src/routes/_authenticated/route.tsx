@@ -28,17 +28,12 @@ export const Route = createFileRoute("/_authenticated")({
       data: profile,
       error: profileError,
     } = await supabase
-      .from("profiles")
+      .from("private_profiles")
       .select("status")
       .eq("id", data.user.id)
       .single();
 
     if (profileError) {
-      console.error(
-        "Failed to load account status:",
-        profileError,
-      );
-
       throw redirect({
         to: "/pending",
         replace: true,
@@ -134,11 +129,6 @@ function AuthenticatedLayout() {
       return;
     }
 
-    console.log("[AUTH STATUS CHECK]", {
-  status: profile.status,
-  path: window.location.pathname,
-});
-
     const currentPath =
       window.location.pathname;
 
@@ -149,9 +139,6 @@ function AuthenticatedLayout() {
         currentPath === "/rejected" ||
         currentPath === "/inactive"
       ) {
-        console.log(
-  "[AUTH STATUS CHECK] ACTIVE → DASHBOARD",
-);
         window.location.replace("/dashboard");
       }
 
