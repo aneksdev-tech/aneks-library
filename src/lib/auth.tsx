@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -132,9 +133,9 @@ export function AuthProvider({
     }
 
     const nextProfile =
-      (prof as unknown as Profile) ?? null;
+  (prof as unknown as Profile) ?? null;
 
-    setProfile(nextProfile);
+setProfile(nextProfile);
 
     setRoles(
       nextProfile?.primary_role
@@ -159,6 +160,35 @@ export function AuthProvider({
 
     setLoading(false);
   };
+
+  /*
+   * Synchronize the authentication provider with
+   * the current Supabase session.
+   *
+   * This is especially important after a Google OAuth
+   * popup completes, because the popup can update the
+   * shared Supabase auth storage without causing the
+   * main tab's React state to update immediately.
+   */
+  const refresh = useCallback(
+    async () => {
+      const { data } =
+        await supabase.auth.getSession();
+
+      setSession(data.session);
+
+      if (data.session?.user) {
+        await loadProfile(
+          data.session.user.id,
+        );
+      } else {
+        setProfile(null);
+        setRoles([]);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   useEffect(() => {
     let profileChannel:
@@ -240,6 +270,13 @@ export function AuthProvider({
             s.user.id,
           );
 
+          /*
+           * Do not synchronously query the profile
+           * inside Supabase's auth-state callback.
+           *
+           * This keeps the auth event handler free to
+           * finish before profile loading occurs.
+           */
           setTimeout(() => {
             void loadProfile(
               s.user.id,
@@ -279,12 +316,23 @@ export function AuthProvider({
    * Enforce account-status and admin-area access
    * directly from the authentication provider.
    *
-   * This runs whenever the authoritative profile
-   * status or primary role changes, including a
-   * Supabase Realtime Broadcast.
+   * IMPORTANT:
    *
-   * This is intentionally independent of the
-   * TanStack route beforeLoad lifecycle.
+   * Google authentication has a separate verification
+   * lifecycle handled by routes/auth.tsx.
+   *
+   * A Google session arriving on /auth must therefore
+   * be allowed to remain on /auth until auth.tsx has
+   * determined whether:
+   *
+   * 1. it is an authorized Google registration,
+   * 2. it is a completed Google account logging in, or
+   * 3. it is an unregistered Google login that must
+   *    be rejected and cleaned up.
+   *
+   * Without this exception, a pending Google profile
+   * can be redirected to /pending before auth.tsx gets
+   * the opportunity to complete that verification.
    */
   useEffect(() => {
     if (
@@ -296,6 +344,23 @@ export function AuthProvider({
 
     const currentPath =
       window.location.pathname;
+
+    const isGoogleSession =
+      session?.user.app_metadata?.provider ===
+      "google";
+
+    /*
+     * Keep Google sessions on /auth while the Google
+     * registration/login verification flow is running.
+     *
+     * routes/auth.tsx owns this process.
+     */
+    if (
+      isGoogleSession &&
+      currentPath === "/auth"
+    ) {
+      return;
+    }
 
     /*
      * Users with roles that do not have admin-area
@@ -362,6 +427,7 @@ export function AuthProvider({
     profile?.status,
     profile?.primary_role,
     loading,
+    session,
   ]);
 
   return (
@@ -386,13 +452,7 @@ export function AuthProvider({
           roles.includes("co-admin") ||
           roles.includes("admin"),
 
-        refresh: async () => {
-          if (session?.user) {
-            await loadProfile(
-              session.user.id,
-            );
-          }
-        },
+        refresh,
 
         signOut: async () => {
           await supabase.auth.signOut();

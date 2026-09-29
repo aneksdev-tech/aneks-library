@@ -51,37 +51,46 @@ function AdminOverview() {
   const { loading: authLoading, profile } = useAuth();
 
   const role = profile?.primary_role;
+
   const isAdminRole =
     role === "admin" || role === "co-admin";
-  const isModeratorRole =
-    role === "staff" || role === "lecturer";
+
+  const isStaffRole = role === "staff";
 
   const { data } = useQuery({
     queryKey: ["admin-stats", role],
     enabled: !authLoading && isAdminRole,
     queryFn: async () => {
-      const [users, resources, pending, downloads, bookmarks, storage] =
-        await Promise.all([
-          supabase
-            .from("private_profiles")
-            .select("id", { count: "exact", head: true }),
+      const [
+        users,
+        resources,
+        pending,
+        downloads,
+        bookmarks,
+        storage,
+      ] = await Promise.all([
+        supabase
+          .from("private_profiles")
+          .select("id", { count: "exact", head: true }),
 
-          supabase
-            .from("resources")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "approved"),
+        supabase
+          .from("resources")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "approved"),
 
-          supabase
-            .from("resources")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "pending"),
+        supabase
+          .from("resources")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
 
-          supabase.rpc("get_total_active_resource_downloads"),
+        supabase.rpc(
+          "get_total_active_resource_downloads",
+        ),
 
-          supabase.rpc("get_total_bookmarks"),
+        supabase.rpc("get_total_bookmarks"),
 
-          supabase.rpc("get_total_resource_storage"),
-        ]);
+        supabase.rpc("get_total_resource_storage"),
+      ]);
 
       if (users.error) {
         throw users.error;
@@ -118,13 +127,16 @@ function AdminOverview() {
     },
   });
 
-  const { data: moderatorData } = useQuery({
-    queryKey: ["moderator-overview", role],
-    enabled: !authLoading && isModeratorRole,
+  const { data: staffData } = useQuery({
+    queryKey: ["staff-overview", role],
+    enabled: !authLoading && isStaffRole,
     queryFn: async () => {
       const { count, error } = await supabase
         .from("resources")
-        .select("id", { count: "exact", head: true })
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
         .eq("status", "pending");
 
       if (error) {
@@ -148,12 +160,12 @@ function AdminOverview() {
     );
   }
 
-  if (isModeratorRole) {
-    const pendingCount = moderatorData?.pending ?? 0;
+  if (isStaffRole) {
+    const pendingCount = staffData?.pending ?? 0;
 
     return (
       <section className="space-y-6">
-        {/* Moderation overview */}
+        {/* Staff overview */}
         <div
           className={`flex items-center justify-between gap-4 rounded-lg border p-5 ${
             pendingCount > 0
@@ -285,7 +297,9 @@ function AdminOverview() {
           </div>
 
           <div className="min-w-0">
-            <p className="text-sm font-semibold">Pending Approval</p>
+            <p className="text-sm font-semibold">
+              Pending Approval
+            </p>
 
             <p className="mt-0.5 text-xs text-muted-foreground">
               Resources currently awaiting administrative review.
@@ -295,7 +309,9 @@ function AdminOverview() {
 
         <span
           className={`shrink-0 font-display text-2xl font-semibold ${
-            pendingCount > 0 ? "text-gold" : "text-foreground"
+            pendingCount > 0
+              ? "text-gold"
+              : "text-foreground"
           }`}
         >
           {pendingCount}

@@ -40,11 +40,23 @@ export function isAdminOrCoAdmin(roles: AppRole[]) {
 /* Admin workspace                                                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Access to the platform administration workspace.
+ *
+ * Admin/co-admin:
+ *   Full administration.
+ *
+ * Staff:
+ *   Operational administration.
+ *
+ * Lecturer:
+ *   No admin workspace access. Academic functions belong
+ *   in the separate Academic Workspace.
+ */
 export function canAccessAdmin(roles: AppRole[]) {
   return hasRole(roles, [
     "admin",
     "co-admin",
-    "lecturer",
     "staff",
   ]);
 }
@@ -69,8 +81,8 @@ export function canManageApprovals(
   return hasRole(roles, [
     "admin",
     "co-admin",
-    "lecturer",
     "staff",
+    "lecturer",
   ]);
 }
 
@@ -84,8 +96,6 @@ export function canManageResources(
   return hasRole(roles, [
     "admin",
     "co-admin",
-    "lecturer",
-    "staff",
   ]);
 }
 
@@ -99,16 +109,19 @@ export function canManageAnnouncements(
   return hasRole(roles, [
     "admin",
     "co-admin",
-    "lecturer",
     "staff",
   ]);
 }
 
 /**
- * Whether the role can manage an announcement created by another user.
+ * Whether the role has full announcement-management authority.
  *
- * Admin and co-admin have full announcement-management authority.
- * Lecturer and staff should normally manage their own announcements.
+ * Admin/co-admin:
+ *   Can manage any announcement.
+ *
+ * Staff:
+ *   Can manage announcements, but does not have the
+ *   platform-wide authority of admin/co-admin.
  */
 export function canManageAllAnnouncements(
   roles: AppRole[],
@@ -122,8 +135,14 @@ export function canManageAllAnnouncements(
 /**
  * Whether a user can edit/delete a particular announcement.
  *
- * Admin/co-admin: any announcement.
- * Lecturer/staff: only their own.
+ * Admin/co-admin:
+ *   Any announcement.
+ *
+ * Staff:
+ *   Their own announcements.
+ *
+ * Lecturer:
+ *   No announcement-management authority.
  */
 export function canManageAnnouncement(
   roles: AppRole[],
@@ -138,12 +157,7 @@ export function canManageAnnouncement(
     return true;
   }
 
-  if (
-    !hasRole(roles, [
-      "lecturer",
-      "staff",
-    ])
-  ) {
+  if (!isStaff(roles)) {
     return false;
   }
 
@@ -167,7 +181,7 @@ export function canManageCategories(
 }
 
 /* -------------------------------------------------------------------------- */
-/* Users                                                                       */
+/* Users                                                                      */
 /* -------------------------------------------------------------------------- */
 
 export function canManageUsers(
@@ -186,7 +200,7 @@ export function canViewUserDetails(
 }
 
 /* -------------------------------------------------------------------------- */
-/* User role/status administration                                             */
+/* User role/status administration                                            */
 /* -------------------------------------------------------------------------- */
 
 export function canManageUserRoles(
@@ -242,7 +256,7 @@ export function canModifyUser(
 }
 
 /* -------------------------------------------------------------------------- */
-/* System administration                                                       */
+/* System administration                                                      */
 /* -------------------------------------------------------------------------- */
 
 export function canManageSystem(

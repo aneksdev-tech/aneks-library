@@ -2,6 +2,7 @@ import {
   createFileRoute,
   Outlet,
   Link,
+  useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
 import {
@@ -11,10 +12,15 @@ import {
   Users,
   Tags,
   Megaphone,
+  Loader2,
 } from "lucide-react";
 import { requireRole } from "@/lib/route-guards";
 import { useAuth } from "@/lib/auth";
-import { canManageUsers } from "@/lib/permissions";
+import {
+  canManageAnnouncements,
+  canManageUsers,
+} from "@/lib/permissions";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ location }) => {
@@ -35,8 +41,19 @@ export const Route = createFileRoute("/_authenticated/admin")({
       );
     }
 
+    const announcementsPath =
+      location.pathname === "/admin/announcements" ||
+      location.pathname.startsWith("/admin/announcements/");
+
+    if (announcementsPath) {
+      return requireRole(
+        ["admin", "co-admin", "staff"],
+        location.pathname,
+      );
+    }
+
     return requireRole(
-      ["admin", "co-admin", "staff", "lecturer"],
+      ["admin", "co-admin", "staff"],
       location.pathname,
     );
   },
@@ -49,10 +66,31 @@ function AdminLayout() {
     select: (r) => r.location.pathname,
   });
 
+  const navigate = useNavigate();
+
   const auth = useAuth();
+  const user = auth.user;
   const roles = auth.roles ?? [];
 
   const canManagePlatform = canManageUsers(roles);
+  const canManageAnnouncementAccess =
+    canManageAnnouncements(roles);
+
+  const hasAdminWorkspaceAccess =
+    roles.includes("admin") ||
+    roles.includes("co-admin") ||
+    roles.includes("staff");
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (!hasAdminWorkspaceAccess) {
+      void navigate({
+        to: "/",
+        replace: true,
+      });
+    }
+  }, [user, hasAdminWorkspaceAccess, navigate]);
 
   const tabs = [
     {
@@ -74,11 +112,15 @@ function AdminLayout() {
           },
         ]
       : []),
-    {
-      to: "/admin/announcements",
-      label: "Announcements",
-      icon: Megaphone,
-    },
+    ...(canManageAnnouncementAccess
+      ? [
+          {
+            to: "/admin/announcements",
+            label: "Announcements",
+            icon: Megaphone,
+          },
+        ]
+      : []),
     ...(canManagePlatform
       ? [
           {
@@ -94,6 +136,17 @@ function AdminLayout() {
         ]
       : []),
   ];
+
+  if (user && !hasAdminWorkspaceAccess) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Redirecting...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -122,9 +175,9 @@ function AdminLayout() {
       {/* Admin Navigation */}
       <nav
         aria-label="Administration navigation"
-        className="rounded-lg border border-border bg-card p-1 shadow-soft"
+        className="rounded-lg border border-border bg-card p-1.5 shadow-soft"
       >
-        <div className="grid grid-cols-2 gap-1 sm:flex">
+        <div className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap">
           {tabs.map((tab) => {
             const active =
               tab.to === "/admin"
@@ -138,7 +191,7 @@ function AdminLayout() {
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`group flex min-h-11 min-w-0 flex-1 items-center justify-start gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 sm:justify-center sm:px-4 ${
+                className={`group flex min-h-11 min-w-0 items-center justify-start gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 sm:flex-1 sm:justify-center sm:px-4 ${
                   active
                     ? "bg-gradient-emerald text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -150,7 +203,9 @@ function AdminLayout() {
                   }`}
                 />
 
-                <span className="min-w-0 truncate">{tab.label}</span>
+                <span className="min-w-0 truncate">
+                  {tab.label}
+                </span>
               </Link>
             );
           })}

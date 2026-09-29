@@ -18,6 +18,7 @@ import {
   getNextContributorLevel,
 } from "@/lib/reputation";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import type { ReactNode } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -29,6 +30,19 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
+type RecentUpload = {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  download_count: number;
+  category?: {
+    name?: string | null;
+    slug?: string | null;
+    deleted_at?: string | null;
+  } | null;
+};
+
 function DashboardPage() {
   const { profile, user, roles } = useAuth();
 
@@ -36,29 +50,30 @@ function DashboardPage() {
     queryKey: ["dash-stats", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const [uploads, downloads, bookmarks, approved] = await Promise.all([
-        supabase
-          .from("resources")
-          .select("id", { count: "exact", head: true })
-          .eq("uploader_id", user!.id)
-          .neq("status", "deleted"),
+      const [uploads, downloads, bookmarks, approved] =
+        await Promise.all([
+          supabase
+            .from("resources")
+            .select("id", { count: "exact", head: true })
+            .eq("uploader_id", user!.id)
+            .neq("status", "deleted"),
 
-        supabase
-          .from("downloads")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user!.id),
+          supabase
+            .from("downloads")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user!.id),
 
-        supabase
-          .from("bookmarks")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user!.id),
+          supabase
+            .from("bookmarks")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", user!.id),
 
-        supabase
-          .from("resources")
-          .select("id", { count: "exact", head: true })
-          .eq("uploader_id", user!.id)
-          .eq("status", "approved"),
-      ]);
+          supabase
+            .from("resources")
+            .select("id", { count: "exact", head: true })
+            .eq("uploader_id", user!.id)
+            .eq("status", "approved"),
+        ]);
 
       return {
         uploads: uploads.count ?? 0,
@@ -73,22 +88,32 @@ function DashboardPage() {
     queryKey: ["recent-uploads", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("resources")
         .select(
-          "id, title, status, created_at, download_count, category:categories(name, slug)",
+          "id, title, status, created_at, download_count, category:categories(name, slug, deleted_at)",
         )
         .eq("uploader_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(5);
 
-      return data ?? [];
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as unknown as RecentUpload[];
     },
   });
 
-  const contributor = getContributorLevel(profile?.reputation ?? 0);
-  const progress = getLevelProgress(profile?.reputation ?? 0);
-  const nextLevel = getNextContributorLevel(profile?.reputation ?? 0);
+  const contributor = getContributorLevel(
+    profile?.reputation ?? 0,
+  );
+  const progress = getLevelProgress(
+    profile?.reputation ?? 0,
+  );
+  const nextLevel = getNextContributorLevel(
+    profile?.reputation ?? 0,
+  );
 
   const cards = [
     {
@@ -121,11 +146,14 @@ function DashboardPage() {
     <div className="space-y-8">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-gold">
-          {roles.includes("admin") ? "Admin" : roles[0] ?? "Member"}
+          {roles.includes("admin")
+            ? "Admin"
+            : roles[0] ?? "Member"}
         </p>
 
         <h1 className="mt-1 font-display text-3xl font-semibold">
-          Welcome back, {profile?.full_name?.split(" ")[0] || "there"}
+          Welcome back,{" "}
+          {profile?.full_name?.split(" ")[0] || "there"}
         </h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
@@ -201,7 +229,14 @@ function DashboardPage() {
           <ul className="divide-y divide-border">
             {recent.map((r) => {
               const needsStatusCheck =
-                r.status === "rejected" || r.status === "deleted";
+                r.status === "rejected" ||
+                r.status === "deleted";
+
+              const categoryName =
+                r.category?.deleted_at == null &&
+                r.category?.name?.trim()
+                  ? r.category.name.trim()
+                  : "Uncategorized";
 
               return (
                 <li
@@ -215,7 +250,9 @@ function DashboardPage() {
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div>
-                        <StatusPill status={r.status as string} />
+                        <StatusPill
+                          status={r.status}
+                        />
                       </div>
 
                       <p className="mt-2 truncate font-medium">
@@ -223,21 +260,19 @@ function DashboardPage() {
                       </p>
 
                       <div className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
-                        <span>
-                          {(r as {
-                            category?: {
-                              name?: string;
-                            };
-                          }).category?.name ?? "Uncategorized"}
-                        </span>
+                        <span>{categoryName}</span>
 
-                        <span className="hidden sm:inline">·</span>
+                        <span className="hidden sm:inline">
+                          ·
+                        </span>
 
                         <span>
                           {r.download_count} downloads
                         </span>
 
-                        <span className="hidden sm:inline">·</span>
+                        <span className="hidden sm:inline">
+                          ·
+                        </span>
 
                         <span>
                           {new Date(
@@ -274,7 +309,9 @@ function DashboardPage() {
                 asChild
                 className="bg-gradient-emerald text-primary-foreground"
               >
-                <Link to="/upload">Upload something</Link>
+                <Link to="/upload">
+                  Upload something
+                </Link>
               </Button>
             }
           />
@@ -284,7 +321,11 @@ function DashboardPage() {
   );
 }
 
-export function StatusPill({ status }: { status: string }) {
+export function StatusPill({
+  status,
+}: {
+  status: string;
+}) {
   const styles: Record<string, string> = {
     approved:
       "bg-emerald-500/15 text-emerald-500 border border-emerald-500/25",
@@ -332,7 +373,7 @@ export function EmptyState({
 }: {
   title: string;
   desc: string;
-  cta?: React.ReactNode;
+  cta?: ReactNode;
 }) {
   return (
     <div className="grid place-items-center p-12 text-center">
@@ -340,7 +381,9 @@ export function EmptyState({
 
       <p className="mt-3 font-medium">{title}</p>
 
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{desc}</p>
+      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+        {desc}
+      </p>
 
       {cta && <div className="mt-4">{cta}</div>}
     </div>

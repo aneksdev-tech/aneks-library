@@ -133,9 +133,12 @@ export function UploadPage({ draftId }: UploadPageProps) {
       const { data, error } = await supabase
         .from("categories")
         .select("id, name")
+        .is("deleted_at", null)
         .order("sort_order");
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return data ?? [];
     },
@@ -155,57 +158,60 @@ export function UploadPage({ draftId }: UploadPageProps) {
         .eq("status", "draft")
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return data;
     },
   });
 
   useEffect(() => {
-  if (!draftId) {
+    if (!draftId) {
+      setDraftLoaded(true);
+      return;
+    }
+
+    if (!user) {
+      return;
+    }
+
+    if (draftLoading) {
+      return;
+    }
+
+    if (!draft) {
+      toast.error("Draft not found.");
+      nav({ to: "/my-uploads" });
+      return;
+    }
+
+    const loadedForm: UploadForm = {
+      title: draft.title ?? "",
+      description: draft.description ?? "",
+      category_id: draft.category_id ?? "",
+      course_code: draft.course_code ?? "",
+      college: draft.college ?? "",
+      department: draft.department ?? "",
+      semester: draft.semester ?? "",
+      level: draft.level ?? "",
+      year:
+        draft.year !== null && draft.year !== undefined
+          ? String(draft.year)
+          : "",
+    };
+
+    setForm(loadedForm);
+    setInitialForm(loadedForm);
+    setExistingFileName(draft.file_name ?? "");
+    setExistingFilePath(draft.file_path ?? "");
     setDraftLoaded(true);
-    return;
-  }
-
-  if (!user) {
-    return;
-  }
-
-  if (draftLoading) {
-    return;
-  }
-
-  if (!draft) {
-    toast.error("Draft not found.");
-    nav({ to: "/my-uploads" });
-    return;
-  }
-
-  const loadedForm: UploadForm = {
-    title: draft.title ?? "",
-    description: draft.description ?? "",
-    category_id: draft.category_id ?? "",
-    course_code: draft.course_code ?? "",
-    college: draft.college ?? "",
-    department: draft.department ?? "",
-    semester: draft.semester ?? "",
-    level: draft.level ?? "",
-    year:
-      draft.year !== null && draft.year !== undefined
-        ? String(draft.year)
-        : "",
-  };
-
-  setForm(loadedForm);
-  setInitialForm(loadedForm);
-  setExistingFileName(draft.file_name ?? "");
-  setExistingFilePath(draft.file_path ?? "");
-  setDraftLoaded(true);
-}, [draft, draftId, draftLoading, nav, user]);
+  }, [draft, draftId, draftLoading, nav, user]);
 
   const isSGS = form.college === "SGS";
-  const departments = isSGS 
-    ? [] 
+
+  const departments = isSGS
+    ? []
     : getDepartments(form.college);
 
   const isFormChanged =
@@ -243,7 +249,9 @@ export function UploadPage({ draftId }: UploadPageProps) {
   };
 
   const onFile = (f: File | undefined) => {
-    if (!f) return;
+    if (!f) {
+      return;
+    }
 
     const error = validateFile(f);
 
@@ -316,109 +324,132 @@ export function UploadPage({ draftId }: UploadPageProps) {
       }
 
       let filePath = existingFilePath;
-let fileName = existingFileName;
-let fileSize: number | undefined;
-let mimeType: string | null = null;
-let newlyUploadedPath: string | null = null;
+      let fileName = existingFileName;
+      let fileSize: number | undefined;
+      let mimeType: string | null = null;
+      let newlyUploadedPath: string | null = null;
 
-if (file) {
-  const safeName = file.name.replace(
-    /[^a-zA-Z0-9.\-_]/g,
-    "_",
-  );
+      if (file) {
+        const safeName = file.name.replace(
+          /[^a-zA-Z0-9.\-_]/g,
+          "_",
+        );
 
-  newlyUploadedPath = `${user.id}/${crypto.randomUUID()}-${safeName}`;
-  filePath = newlyUploadedPath;
-  fileName = file.name;
-  fileSize = file.size;
-  mimeType = file.type;
+        newlyUploadedPath = `${user.id}/${crypto.randomUUID()}-${safeName}`;
+        filePath = newlyUploadedPath;
+        fileName = file.name;
+        fileSize = file.size;
+        mimeType = file.type;
 
-  setProgress(30);
+        setProgress(30);
 
-  const { error: uploadError } = await supabase.storage
-    .from("resources")
-    .upload(newlyUploadedPath, file, {
-      contentType: file.type,
-      upsert: false,
-    });
+        const { error: uploadError } =
+          await supabase.storage
+            .from("resources")
+            .upload(newlyUploadedPath, file, {
+              contentType: file.type,
+              upsert: false,
+            });
 
-  if (uploadError) {
-    throw uploadError;
-  }
+        if (uploadError) {
+          throw uploadError;
+        }
 
-  setProgress(70);
-} else if (draft) {
-  fileSize = draft.file_size;
-  mimeType = draft.mime_type;
-}
+        setProgress(70);
+      } else if (draft) {
+        fileSize = draft.file_size;
+        mimeType = draft.mime_type;
+      }
 
-let error;
+      let error: Error | null = null;
 
-if (draftId) {
-  const result = await supabase
-    .from("resources")
-    .update({
-      category_id: form.category_id || null,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      course_code: form.course_code.trim() || null,
-      college: form.college || null,
-      department: form.department || null,
-      semester: form.semester || null,
-      level: form.level || null,
-      year: form.year
-        ? parseInt(form.year, 10)
-        : null,
-      file_path: filePath,
-      file_name: fileName,
-      file_size: fileSize,
-      mime_type: mimeType,
-      status,
-      deleted_at: null,
-      deleted_by: null,
-    })
-    .eq("id", draftId)
-    .eq("uploader_id", user.id)
-    .eq("status", "draft");
+      if (draftId) {
+        const { data: updatedDraft, error: updateError } =
+          await supabase
+            .from("resources")
+            .update({
+              category_id: form.category_id || null,
+              title: form.title.trim(),
+              description:
+                form.description.trim() || null,
+              course_code:
+                form.course_code.trim() || null,
+              college: form.college || null,
+              department: form.department || null,
+              semester: form.semester || null,
+              level: form.level || null,
+              year: form.year
+                ? parseInt(form.year, 10)
+                : null,
+              file_path: filePath,
+              file_name: fileName,
+              file_size: fileSize,
+              mime_type: mimeType,
+              status,
+              deleted_at: null,
+              deleted_by: null,
+            })
+            .eq("id", draftId)
+            .eq("uploader_id", user.id)
+            .eq("status", "draft")
+            .select("id")
+            .maybeSingle();
 
-  error = result.error;
-} else {
-  const result = await supabase
-    .from("resources")
-    .insert({
-      uploader_id: user.id,
-      category_id: form.category_id || null,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      course_code: form.course_code.trim() || null,
-      college: form.college || null,
-      department: form.department || null,
-      semester: form.semester || null,
-      level: form.level || null,
-      year: form.year
-        ? parseInt(form.year, 10)
-        : null,
-      file_path: filePath,
-      file_name: fileName,
-      file_size: fileSize,
-      mime_type: mimeType,
-      status,
-      deleted_at: null,
-      deleted_by: null,
-    });
+        if (updateError) {
+          error = updateError;
+        } else if (!updatedDraft) {
+          error = new Error(
+            "Draft could not be updated. It may no longer exist or may have changed.",
+          );
+        }
+      } else {
+        const { data: createdResource, error: insertError } =
+          await supabase
+            .from("resources")
+            .insert({
+              uploader_id: user.id,
+              category_id: form.category_id || null,
+              title: form.title.trim(),
+              description:
+                form.description.trim() || null,
+              course_code:
+                form.course_code.trim() || null,
+              college: form.college || null,
+              department: form.department || null,
+              semester: form.semester || null,
+              level: form.level || null,
+              year: form.year
+                ? parseInt(form.year, 10)
+                : null,
+              file_path: filePath,
+              file_name: fileName,
+              file_size: fileSize,
+              mime_type: mimeType,
+              status,
+              deleted_at: null,
+              deleted_by: null,
+            })
+            .select("id")
+            .maybeSingle();
 
-  error = result.error;
-}
+        if (insertError) {
+          error = insertError;
+        } else if (!createdResource) {
+          error = new Error(
+            "Resource could not be created.",
+          );
+        }
+      }
 
-if (error) {
-  if (newlyUploadedPath) {
-    await supabase.storage
-      .from("resources")
-      .remove([newlyUploadedPath]);
-  }
+      if (error) {
+        if (newlyUploadedPath) {
+          await supabase.storage
+            .from("resources")
+            .remove([newlyUploadedPath]);
+        }
 
-  throw error;
-}
+        throw error;
+      }
 
       if (
         draftId &&
@@ -447,11 +478,7 @@ if (error) {
       setProgress(0);
       allowNavigationRef.current = true;
 
-      if (variables.status === "draft") {
-        nav({ to: "/my-uploads" });
-      } else {
-        nav({ to: "/my-uploads" });
-      }
+      nav({ to: "/my-uploads" });
 
       if (blocker.status === "blocked") {
         blocker.proceed();
@@ -484,7 +511,9 @@ if (error) {
     }
 
     if (!file && !existingFilePath) {
-      toast.error("Please select a file before saving a draft.");
+      toast.error(
+        "Please select a file before saving a draft.",
+      );
       return;
     }
 
@@ -508,18 +537,20 @@ if (error) {
   };
 
   const handleDiscard = () => {
-  allowNavigationRef.current = true;
+    allowNavigationRef.current = true;
 
-  if (blocker.status === "blocked") {
-    blocker.proceed();
-  }
-};
+    if (blocker.status === "blocked") {
+      blocker.proceed();
+    }
+  };
 
   const handleExitSave = () => {
     setExitAction("save");
 
     if (!file && !existingFilePath) {
-      toast.error("Please select a file before saving a draft.");
+      toast.error(
+        "Please select a file before saving a draft.",
+      );
       setExitAction("none");
       return;
     }
@@ -530,7 +561,10 @@ if (error) {
   };
 
   const title = useMemo(
-    () => (draftId ? "Continue your draft" : "Contribute a new resource"),
+    () =>
+      draftId
+        ? "Continue your draft"
+        : "Contribute a new resource",
     [draftId],
   );
 
@@ -572,12 +606,18 @@ if (error) {
             <Label>File</Label>
 
             <div
-              onDragOver={(event) => event.preventDefault()}
+              onDragOver={(event) =>
+                event.preventDefault()
+              }
               onDrop={(event) => {
                 event.preventDefault();
-                onFile(event.dataTransfer.files?.[0]);
+                onFile(
+                  event.dataTransfer.files?.[0],
+                );
               }}
-              onClick={() => inputRef.current?.click()}
+              onClick={() =>
+                inputRef.current?.click()
+              }
               className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/30 p-10 text-center transition-colors hover:border-primary/40 hover:bg-secondary/50"
             >
               {file ? (
@@ -590,7 +630,12 @@ if (error) {
                     </p>
 
                     <p className="text-xs text-muted-foreground">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                      {(
+                        file.size /
+                        1024 /
+                        1024
+                      ).toFixed(2)}{" "}
+                      MB
                     </p>
                   </div>
 
@@ -628,7 +673,8 @@ if (error) {
                   </p>
 
                   <p className="mt-1 text-xs text-muted-foreground">
-                    PDF, DOCX, PPTX, ZIP, PNG, JPG — up to 50MB
+                    PDF, DOCX, PPTX, ZIP, PNG, JPG — up to
+                    50MB
                   </p>
                 </>
               )}
@@ -639,7 +685,8 @@ if (error) {
                 hidden
                 onChange={(event) =>
                   onFile(
-                    event.target.files?.[0] ?? undefined,
+                    event.target.files?.[0] ??
+                      undefined,
                   )
                 }
               />
@@ -648,7 +695,9 @@ if (error) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">
+                Title *
+              </Label>
 
               <Input
                 id="title"
@@ -665,7 +714,9 @@ if (error) {
             </div>
 
             <div className="sm:col-span-2">
-              <Label htmlFor="desc">Description *</Label>
+              <Label htmlFor="desc">
+                Description *
+              </Label>
 
               <Textarea
                 id="desc"
@@ -674,7 +725,8 @@ if (error) {
                 onChange={(event) =>
                   setForm({
                     ...form,
-                    description: event.target.value,
+                    description:
+                      event.target.value,
                   })
                 }
                 className="mt-1.5"
@@ -722,7 +774,8 @@ if (error) {
                 onChange={(event) =>
                   setForm({
                     ...form,
-                    course_code: event.target.value,
+                    course_code:
+                      event.target.value,
                   })
                 }
                 className="mt-1.5"
@@ -768,42 +821,44 @@ if (error) {
             </div>
 
             {!isSGS && (
-  <div>
-    <Label>Department *</Label>
+              <div>
+                <Label>Department *</Label>
 
-    <Select
-      value={form.department}
-      onValueChange={(value) =>
-        setForm({
-          ...form,
-          department: value,
-        })
-      }
-      disabled={!form.college}
-    >
-      <SelectTrigger className="mt-1.5">
-        <SelectValue
-          placeholder={
-            form.college
-              ? "Choose Department"
-              : "Select College first"
-          }
-        />
-      </SelectTrigger>
+                <Select
+                  value={form.department}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      department: value,
+                    })
+                  }
+                  disabled={!form.college}
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue
+                      placeholder={
+                        form.college
+                          ? "Choose Department"
+                          : "Select College first"
+                      }
+                    />
+                  </SelectTrigger>
 
-      <SelectContent>
-        {departments.map((department) => (
-          <SelectItem
-            key={department}
-            value={department}
-          >
-            {department}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-)}
+                  <SelectContent>
+                    {departments.map(
+                      (department) => (
+                        <SelectItem
+                          key={department}
+                          value={department}
+                        >
+                          {department}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label>Level *</Label>
@@ -851,14 +906,16 @@ if (error) {
                 </SelectTrigger>
 
                 <SelectContent>
-                  {semesters.map((semester) => (
-                    <SelectItem
-                      key={semester}
-                      value={semester}
-                    >
-                      {semester}
-                    </SelectItem>
-                  ))}
+                  {semesters.map(
+                    (semester) => (
+                      <SelectItem
+                        key={semester}
+                        value={semester}
+                      >
+                        {semester}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1001,7 +1058,9 @@ if (error) {
               Continue editing
             </AlertDialogCancel>
 
-            <AlertDialogAction onClick={confirmSaveDraft}>
+            <AlertDialogAction
+              onClick={confirmSaveDraft}
+            >
               Save as draft
             </AlertDialogAction>
           </AlertDialogFooter>

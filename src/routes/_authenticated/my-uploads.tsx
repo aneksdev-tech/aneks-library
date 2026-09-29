@@ -82,18 +82,23 @@ function MyUploads() {
   const { data, isLoading } = useQuery({
     queryKey: ["my-uploads", user?.id],
     enabled: !!user,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("resources")
-          .select(
-            "id, title, status, download_count, created_at, category:categories(name)",
-          )
-          .eq("uploader_id", user!.id)
-          .order("created_at", {
-            ascending: false,
-          })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("resources")
+        .select(
+          "id, title, status, download_count, created_at, category:categories(name, deleted_at)",
+        )
+        .eq("uploader_id", user!.id)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      return data ?? [];
+    },
   });
 
   const filteredAndSortedData = useMemo(() => {
@@ -177,16 +182,24 @@ function MyUploads() {
         }
       }
 
-      const { error: deleteError } =
+      const { data: deletedDraft, error: deleteError } =
         await supabase
           .from("resources")
           .delete()
           .eq("id", draftId)
           .eq("uploader_id", user.id)
-          .eq("status", "draft");
+          .eq("status", "draft")
+          .select("id")
+          .maybeSingle();
 
       if (deleteError) {
         throw deleteError;
+      }
+
+      if (!deletedDraft) {
+        throw new Error(
+          "Draft could not be deleted. It may no longer exist or may have changed.",
+        );
       }
 
       await queryClient.invalidateQueries({
@@ -196,12 +209,6 @@ function MyUploads() {
       toast.success("Draft deleted successfully.");
       setPendingDelete(null);
     } catch (error) {
-  toast.error(
-    error instanceof Error
-      ? error.message
-      : "Failed to delete draft.",
-  );
-
       toast.error(
         error instanceof Error
           ? error.message
@@ -321,78 +328,81 @@ function MyUploads() {
           </div>
         ) : filteredAndSortedData.length ? (
           <ul className="divide-y divide-border">
-            {filteredAndSortedData.map((resource) => (
-              <li
-                key={resource.id}
-                className="p-5"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 space-y-2">
-                    <StatusPill
-                      status={
-                        resource.status as string
-                      }
-                    />
+            {filteredAndSortedData.map((resource) => {
+              const categoryName =
+                resource.category?.deleted_at == null &&
+                resource.category?.name?.trim()
+                  ? resource.category.name.trim()
+                  : "Uncategorized";
 
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {resource.title}
-                      </p>
-
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {(resource as {
-                          category?: {
-                            name?: string;
-                          };
-                        }).category?.name ??
-                          "Uncategorized"}{" "}
-                        · {resource.download_count} downloads
-                        {" · "}
-                        {new Date(
-                          resource.created_at,
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  {resource.status === "draft" && (
-                    <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                      <Link
-                        to="/upload/$draftId"
-                        params={{
-                          draftId: resource.id,
-                        }}
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                        Edit draft
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPendingDelete({
-                            id: resource.id,
-                            title: resource.title,
-                          })
+              return (
+                <li
+                  key={resource.id}
+                  className="p-5"
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 space-y-2">
+                      <StatusPill
+                        status={
+                          resource.status as string
                         }
-                        disabled={
-                          deletingDraftId ===
+                      />
+
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">
+                          {resource.title}
+                        </p>
+
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {categoryName} ·{" "}
+                          {resource.download_count} downloads
+                          {" · "}
+                          {new Date(
+                            resource.created_at,
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {resource.status === "draft" && (
+                      <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                        <Link
+                          to="/upload/$draftId"
+                          params={{
+                            draftId: resource.id,
+                          }}
+                          className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                          Edit draft
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPendingDelete({
+                              id: resource.id,
+                              title: resource.title,
+                            })
+                          }
+                          disabled={
+                            deletingDraftId ===
+                            resource.id
+                          }
+                          className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {deletingDraftId ===
                           resource.id
-                        }
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        {deletingDraftId ===
-                        resource.id
-                          ? "Deleting…"
-                          : "Delete draft"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
+                            ? "Deleting…"
+                            : "Delete draft"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <EmptyState

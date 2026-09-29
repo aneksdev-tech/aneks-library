@@ -51,6 +51,7 @@ function PublicProfilePage() {
     isLoading,
   } = useQuery({
     queryKey: ["public-profile", userId],
+    enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("public_profiles")
@@ -74,6 +75,7 @@ function PublicProfilePage() {
 
   const { data: resources } = useQuery({
     queryKey: ["public-profile-resources", userId],
+    enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("resources")
@@ -82,7 +84,7 @@ function PublicProfilePage() {
           title,
           download_count,
           created_at,
-          category:categories(name)
+          category:categories(name, deleted_at)
         `)
         .eq("uploader_id", userId)
         .eq("status", "approved")
@@ -155,9 +157,7 @@ function PublicProfilePage() {
         .toUpperCase();
     }
 
-    return (
-      parts[0][0] + parts[1][0]
-    ).toUpperCase();
+    return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
   })();
 
   return (
@@ -304,50 +304,52 @@ function PublicProfilePage() {
 
             {resources && resources.length > 0 ? (
               <div className="space-y-2">
-                {resources.map((resource) => (
-                  <Link
-                    key={resource.id}
-                    to="/preview/$resourceId"
-                    params={{
-                      resourceId: resource.id,
-                    }}
-                    className="block rounded-xl border border-border p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    <div className="font-medium leading-snug">
-                      {resource.title}
-                    </div>
+                {resources.map((resource) => {
+                  const categoryName =
+                    resource.category?.deleted_at == null &&
+                    resource.category?.name?.trim()
+                      ? resource.category.name.trim()
+                      : "Uncategorized";
 
-                    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                      {resource.category?.name && (
-                        <span>
-                          {resource.category.name}
-                        </span>
-                      )}
+                  return (
+                    <Link
+                      key={resource.id}
+                      to="/preview/$resourceId"
+                      params={{
+                        resourceId: resource.id,
+                      }}
+                      className="block rounded-xl border border-border p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <div className="font-medium leading-snug">
+                        {resource.title}
+                      </div>
 
-                      {resource.category?.name && (
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                        <span>{categoryName}</span>
+
                         <span aria-hidden="true">
                           •
                         </span>
-                      )}
 
-                      <span>
-                        {new Date(
-                          resource.created_at,
-                        ).toLocaleDateString()}
-                      </span>
+                        <span>
+                          {new Date(
+                            resource.created_at,
+                          ).toLocaleDateString()}
+                        </span>
 
-                      <span aria-hidden="true">
-                        •
-                      </span>
+                        <span aria-hidden="true">
+                          •
+                        </span>
 
-                      <span className="inline-flex items-center gap-1">
-                        <Download className="h-3.5 w-3.5" />
-                        {resource.download_count}{" "}
-                        downloads
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+                        <span className="inline-flex items-center gap-1">
+                          <Download className="h-3.5 w-3.5" />
+                          {resource.download_count}{" "}
+                          downloads
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-xl border border-dashed p-6 text-center">

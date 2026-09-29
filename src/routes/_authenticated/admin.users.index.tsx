@@ -1,8 +1,21 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
 import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  ChevronDown,
+  ChevronUp,
   GraduationCap,
+  History,
   Loader2,
   Search,
   Shield,
@@ -11,16 +24,38 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, type AccountStatus, type AppRole } from "@/lib/auth";
+import {
+  useAuth,
+  type AccountStatus,
+  type AppRole,
+} from "@/lib/auth";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/_authenticated/admin/users/")({
+export const Route = createFileRoute(
+  "/_authenticated/admin/users/",
+)({
   beforeLoad: async () => {
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u } =
+      await supabase.auth.getUser();
 
     if (!u.user) {
       throw redirect({
@@ -31,18 +66,19 @@ export const Route = createFileRoute("/_authenticated/admin/users/")({
       });
     }
 
-    const { data: profile } = await supabase
-      .from("private_profiles")
-      .select("primary_role")
-      .eq("id", u.user.id)
-      .single();
+    const { data: profile } =
+      await supabase
+        .from("private_profiles")
+        .select("primary_role")
+        .eq("id", u.user.id)
+        .single();
 
     if (
       !profile ||
-     !profile.primary_role ||
-     !["admin", "co-admin"].includes(
-       profile.primary_role,
-     )
+      !profile.primary_role ||
+      !["admin", "co-admin"].includes(
+        profile.primary_role,
+      )
     ) {
       throw redirect({
         to: "/admin",
@@ -84,14 +120,18 @@ type ProfileQueryRow = {
   avatar_url: string | null;
   bio: string | null;
   phone_number: string | null;
+
   college: string | null;
   department: string | null;
   level: string | null;
+
   primary_role: DatabaseAppRole;
   status: AccountStatus;
   reputation: number;
+
   created_at: string;
   updated_at: string;
+
   subscription_plan: SubscriptionPlan;
   subscription_status: string;
   subscription_started_at: string | null;
@@ -136,6 +176,22 @@ type PendingAction =
     }
   | null;
 
+type UserAuditLog = {
+  id: string;
+  user_id: string;
+  performed_by: string;
+  action: string;
+  reason: string;
+  old_data: Record<string, unknown>;
+  new_data: Record<string, unknown>;
+  created_at: string;
+};
+
+type ActorProfile = {
+  id: string;
+  full_name: string | null;
+};
+
 function mapUserProfile(
   row: ProfileQueryRow,
 ): UserProfile {
@@ -170,7 +226,9 @@ function mapUserProfile(
 function formatLabel(value: string) {
   return value
     .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\b\w/g, (char) =>
+      char.toUpperCase(),
+    );
 }
 
 function formatDate(
@@ -186,11 +244,39 @@ function formatDate(
     return "—";
   }
 
-  return date.toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return date.toLocaleDateString(
+    undefined,
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    },
+  );
+}
+
+function formatDateTime(
+  value: string | null | undefined,
+) {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleString(
+    undefined,
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    },
+  );
 }
 
 function getInitials(
@@ -238,17 +324,78 @@ function getRoleIcon(
   return UserRound;
 }
 
+function getActorLabel(
+  performedBy: string | null | undefined,
+  actorMap: Map<string, string>,
+) {
+  if (!performedBy) {
+    return "System / SQL Editor";
+  }
+
+  return (
+    actorMap.get(performedBy) ??
+    "Unknown user"
+  );
+}
+
+function getAuditChange(
+  log: UserAuditLog,
+) {
+  let oldValue: unknown;
+  let newValue: unknown;
+
+  if (log.action === "role_changed") {
+    oldValue = log.old_data?.primary_role;
+    newValue = log.new_data?.primary_role;
+  } else if (
+    log.action === "status_changed"
+  ) {
+    oldValue = log.old_data?.status;
+    newValue = log.new_data?.status;
+  }
+
+  if (
+    typeof oldValue === "string" &&
+    typeof newValue === "string"
+  ) {
+    return `${formatLabel(oldValue)} → ${formatLabel(
+      newValue,
+    )}`;
+  }
+
+  return "Change recorded";
+}
+
+function getAuditActionLabel(
+  action: string,
+) {
+  switch (action) {
+    case "role_changed":
+      return "Role changed";
+
+    case "status_changed":
+      return "Status changed";
+
+    default:
+      return formatLabel(action);
+  }
+}
+
 function UsersPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const {
     user: currentUser,
     roles,
   } = useAuth();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
+
   const [statusFilter, setStatusFilter] =
     useState("all");
+
   const [roleFilter, setRoleFilter] =
     useState("all");
 
@@ -256,6 +403,51 @@ function UsersPage() {
     pendingAction,
     setPendingAction,
   ] = useState<PendingAction>(null);
+
+  const [actionReason, setActionReason] =
+    useState("");
+
+  const [
+    expandedHistoryUserId,
+    setExpandedHistoryUserId,
+  ] = useState<string | null>(null);
+
+  /*
+   * Keep the currently open Users page
+   * synchronized with the authenticated
+   * user's permissions.
+   *
+   * The sidebar already reacts when the
+   * authenticated user's role changes.
+   * This guard makes the page itself react
+   * as well instead of remaining accessible
+   * simply because /admin/users was already
+   * open in the browser.
+   */
+  useEffect(() => {
+    const stillHasUserManagementAccess =
+      roles?.includes("admin") ||
+      roles?.includes("co-admin");
+
+    if (
+      currentUser &&
+      roles &&
+      !stillHasUserManagementAccess
+    ) {
+      toast.error(
+        "Your account no longer has permission to access Users.",
+      );
+
+      navigate({
+        to: "/admin",
+        replace: true,
+      });
+    }
+  }, [
+    currentUser,
+    roles,
+    navigate,
+  ]);
 
   const {
     data,
@@ -265,33 +457,34 @@ function UsersPage() {
     queryKey: ["admin-users"],
 
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("private_profiles")
-        .select(
-          [
-            "id",
-            "full_name",
-            "email",
-            "avatar_url",
-            "bio",
-            "phone_number",
-            "college",
-            "department",
-            "level",
-            "primary_role",
-            "status",
-            "reputation",
-            "created_at",
-            "updated_at",
-            "subscription_plan",
-            "subscription_status",
-            "subscription_started_at",
-            "subscription_expires_at",
-          ].join(", "),
-        )
-        .order("created_at", {
-          ascending: false,
-        });
+      const { data, error } =
+        await supabase
+          .from("private_profiles")
+          .select(
+            [
+              "id",
+              "full_name",
+              "email",
+              "avatar_url",
+              "bio",
+              "phone_number",
+              "college",
+              "department",
+              "level",
+              "primary_role",
+              "status",
+              "reputation",
+              "created_at",
+              "updated_at",
+              "subscription_plan",
+              "subscription_status",
+              "subscription_started_at",
+              "subscription_expires_at",
+            ].join(", "),
+          )
+          .order("created_at", {
+            ascending: false,
+          });
 
       if (error) {
         throw error;
@@ -305,45 +498,197 @@ function UsersPage() {
     },
   });
 
+  const {
+    data: auditLogs,
+    isLoading: auditLogsLoading,
+  } = useQuery<UserAuditLog[]>({
+    queryKey: [
+      "admin-user-audits",
+    ],
+
+    queryFn: async () => {
+      const { data, error } =
+        await supabase
+          .from("user_audit_logs")
+          .select(
+            [
+              "id",
+              "user_id",
+              "performed_by",
+              "action",
+              "reason",
+              "old_data",
+              "new_data",
+              "created_at",
+            ].join(", "),
+          )
+          .order("created_at", {
+            ascending: false,
+          });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as unknown as UserAuditLog[];
+    },
+  });
+
+  const actorIds = useMemo(() => {
+    return Array.from(
+      new Set(
+        (auditLogs ?? [])
+          .map(
+            (log) => log.performed_by,
+          )
+          .filter(Boolean),
+      ),
+    );
+  }, [auditLogs]);
+
+  const {
+    data: actorProfiles,
+  } = useQuery<ActorProfile[]>({
+    queryKey: [
+      "admin-user-audit-actors",
+      actorIds,
+    ],
+
+    enabled: actorIds.length > 0,
+
+    queryFn: async () => {
+      const { data, error } =
+        await supabase
+          .from("private_profiles")
+          .select("id, full_name")
+          .in("id", actorIds);
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as ActorProfile[];
+    },
+  });
+
+  const actorMap = useMemo(() => {
+    const map = new Map<
+      string,
+      string
+    >();
+
+    for (
+      const actor of
+        (actorProfiles ?? []).filter(
+          (
+            actor,
+          ): actor is {
+            id: string;
+            full_name: string | null;
+          } => Boolean(actor.id),
+        )
+    ) {
+      if (actor.full_name?.trim()) {
+        map.set(
+          actor.id,
+          actor.full_name.trim(),
+        );
+      }
+    }
+
+    return map;
+  }, [actorProfiles]);
+
+  const auditByUser = useMemo(() => {
+    const map = new Map<
+      string,
+      UserAuditLog[]
+    >();
+
+    for (const log of auditLogs ?? []) {
+      const existing =
+        map.get(log.user_id) ?? [];
+
+      existing.push(log);
+      map.set(
+        log.user_id,
+        existing,
+      );
+    }
+
+    return map;
+  }, [auditLogs]);
+
   const setStatus = useMutation({
     mutationFn: async ({
       id,
       status,
+      reason,
     }: {
       id: string;
       status: AccountStatus;
+      reason: string;
     }) => {
-      const { error } =
+      const trimmedReason =
+        reason.trim();
+
+      if (!trimmedReason) {
+        throw new Error(
+          "A reason is required.",
+        );
+      }
+
+      const { data, error } =
         await supabase.rpc(
           "admin_set_user_status",
           {
             _target_user_id: id,
             _new_status: status,
+            _reason: trimmedReason,
           },
         );
 
       if (error) {
         throw error;
       }
+
+      return data;
     },
 
-    onSuccess: (_, variables) => {
-      toast.success(
-        `Status changed to ${formatLabel(
-          variables.status,
-        )}.`,
-      );
+    onSuccess: (
+      changed,
+      variables,
+    ) => {
+      if (!changed) {
+        toast.success(
+          "No changes were made.",
+        );
+      } else {
+        toast.success(
+          `Status changed to ${formatLabel(
+            variables.status,
+          )} and audit history recorded.`,
+        );
+      }
 
       qc.invalidateQueries({
         queryKey: ["admin-users"],
       });
 
+      qc.invalidateQueries({
+        queryKey: [
+          "admin-user-audits",
+        ],
+      });
+
       setPendingAction(null);
+      setActionReason("");
     },
 
     onError: (error: Error) => {
       toast.error(error.message);
       setPendingAction(null);
+      setActionReason("");
     },
   });
 
@@ -351,41 +696,72 @@ function UsersPage() {
     mutationFn: async ({
       id,
       role,
+      reason,
     }: {
       id: string;
       role: AppRole;
+      reason: string;
     }) => {
-      const { error } =
+      const trimmedReason =
+        reason.trim();
+
+      if (!trimmedReason) {
+        throw new Error(
+          "A reason is required.",
+        );
+      }
+
+      const { data, error } =
         await supabase.rpc(
           "admin_set_user_role",
           {
             _target_user_id: id,
             _new_role: role,
+            _reason: trimmedReason,
           },
         );
 
       if (error) {
         throw error;
       }
+
+      return data;
     },
 
-    onSuccess: (_, variables) => {
-      toast.success(
-        `Role changed to ${formatLabel(
-          variables.role,
-        )}.`,
-      );
+    onSuccess: (
+      changed,
+      variables,
+    ) => {
+      if (!changed) {
+        toast.success(
+          "No changes were made.",
+        );
+      } else {
+        toast.success(
+          `Role changed to ${formatLabel(
+            variables.role,
+          )} and audit history recorded.`,
+        );
+      }
 
       qc.invalidateQueries({
         queryKey: ["admin-users"],
       });
 
+      qc.invalidateQueries({
+        queryKey: [
+          "admin-user-audits",
+        ],
+      });
+
       setPendingAction(null);
+      setActionReason("");
     },
 
     onError: (error: Error) => {
       toast.error(error.message);
       setPendingAction(null);
+      setActionReason("");
     },
   });
 
@@ -438,7 +814,9 @@ function UsersPage() {
       return false;
     }
 
-    if (currentUser.id === target.id) {
+    if (
+      currentUser.id === target.id
+    ) {
       return false;
     }
 
@@ -467,6 +845,8 @@ function UsersPage() {
       return;
     }
 
+    setActionReason("");
+
     setPendingAction({
       type: "status",
       user: target,
@@ -485,7 +865,9 @@ function UsersPage() {
       return;
     }
 
-    if (role === target.primary_role) {
+    if (
+      role === target.primary_role
+    ) {
       return;
     }
 
@@ -499,6 +881,8 @@ function UsersPage() {
       return;
     }
 
+    setActionReason("");
+
     setPendingAction({
       type: "role",
       user: target,
@@ -511,6 +895,16 @@ function UsersPage() {
       return;
     }
 
+    const trimmedReason =
+      actionReason.trim();
+
+    if (!trimmedReason) {
+      toast.error(
+        "A reason is required before confirming this change.",
+      );
+      return;
+    }
+
     if (
       pendingAction.type ===
       "status"
@@ -518,6 +912,7 @@ function UsersPage() {
       setStatus.mutate({
         id: pendingAction.user.id,
         status: pendingAction.value,
+        reason: trimmedReason,
       });
 
       return;
@@ -526,6 +921,7 @@ function UsersPage() {
     setRole.mutate({
       id: pendingAction.user.id,
       role: pendingAction.value,
+      reason: trimmedReason,
     });
   };
 
@@ -533,9 +929,17 @@ function UsersPage() {
     setStatus.isPending ||
     setRole.isPending;
 
-  /*
-   * Users list
-   */
+  const toggleHistory = (
+    userId: string,
+  ) => {
+    setExpandedHistoryUserId(
+      (current) =>
+        current === userId
+          ? null
+          : userId,
+    );
+  };
+
   return (
     <>
       <div className="w-full space-y-4">
@@ -739,174 +1143,305 @@ function UsersPage() {
                           user.primary_role,
                         );
 
+                      const userHistory =
+                        auditByUser.get(
+                          user.id,
+                        ) ?? [];
+
+                      const historyOpen =
+                        expandedHistoryUserId ===
+                        user.id;
+
                       return (
-                        <tr
+                        <Fragment
                           key={user.id}
-                          className="transition-colors hover:bg-muted/30"
                         >
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              {user.avatar_url ? (
-                                <img
-                                  src={
-                                    user.avatar_url
-                                  }
-                                  alt={
-                                    user.full_name
-                                  }
-                                  className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                                  {getInitials(
-                                    user.full_name ||
-                                      "User",
-                                  )}
-                                </div>
-                              )}
+                          <tr className="transition-colors hover:bg-muted/30">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                {user.avatar_url ? (
+                                  <img
+                                    src={
+                                      user.avatar_url
+                                    }
+                                    alt={
+                                      user.full_name
+                                    }
+                                    className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                                    {getInitials(
+                                      user.full_name ||
+                                        "User",
+                                    )}
+                                  </div>
+                                )}
 
-                              <div className="min-w-0">
-                                <div className="font-medium">
-                                  {user.full_name ||
-                                    "Unnamed user"}
+                                <div className="min-w-0">
+                                  <div className="font-medium">
+                                    {user.full_name ||
+                                      "Unnamed user"}
 
-                                  {isSelf && (
-                                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                      (You)
-                                    </span>
-                                  )}
-                                </div>
+                                    {isSelf && (
+                                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                        (You)
+                                      </span>
+                                    )}
+                                  </div>
 
-                                <div className="truncate text-xs text-muted-foreground">
-                                  {user.email ||
-                                    "—"}
+                                  <div className="truncate text-xs text-muted-foreground">
+                                    {user.email ||
+                                      "—"}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
+                            </td>
 
-                          <td className="p-4">
-                            <Select
-                              value={
-                                user.primary_role
-                              }
-                              onValueChange={(
-                                value,
-                              ) =>
-                                requestRoleChange(
-                                  user,
-                                  value as AppRole,
-                                )
-                              }
-                              disabled={
-                                !canModify ||
-                                setRole.isPending
-                              }
-                            >
-                              <SelectTrigger className="w-[160px]">
-                                <div className="flex items-center gap-2">
-                                  <RoleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                            <td className="p-4">
+                              <Select
+                                value={
+                                  user.primary_role
+                                }
+                                onValueChange={(
+                                  value,
+                                ) =>
+                                  requestRoleChange(
+                                    user,
+                                    value as AppRole,
+                                  )
+                                }
+                                disabled={
+                                  !canModify ||
+                                  setRole.isPending
+                                }
+                              >
+                                <SelectTrigger className="w-[160px]">
+                                  <div className="flex items-center gap-2">
+                                    <RoleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                  {ROLES.map(
+                                    (role) => {
+                                      const blockedForCoAdmin =
+                                        !currentUserIsAdmin &&
+                                        role ===
+                                          "admin";
+
+                                      return (
+                                        <SelectItem
+                                          key={role}
+                                          value={role}
+                                          disabled={
+                                            blockedForCoAdmin
+                                          }
+                                        >
+                                          {formatLabel(
+                                            role,
+                                          )}
+                                        </SelectItem>
+                                      );
+                                    },
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </td>
+
+                            <td className="p-4">
+                              <Select
+                                value={
+                                  user.status
+                                }
+                                onValueChange={(
+                                  value,
+                                ) =>
+                                  requestStatusChange(
+                                    user,
+                                    value as AccountStatus,
+                                  )
+                                }
+                                disabled={
+                                  !canModify ||
+                                  setStatus.isPending
+                                }
+                              >
+                                <SelectTrigger className="w-[150px]">
                                   <SelectValue />
-                                </div>
-                              </SelectTrigger>
+                                </SelectTrigger>
 
-                              <SelectContent>
-                                {ROLES.map(
-                                  (role) => {
-                                    const blockedForCoAdmin =
-                                      !currentUserIsAdmin &&
-                                      role ===
-                                        "admin";
-
-                                    return (
+                                <SelectContent>
+                                  {STATUSES.map(
+                                    (
+                                      status,
+                                    ) => (
                                       <SelectItem
-                                        key={role}
-                                        value={role}
-                                        disabled={
-                                          blockedForCoAdmin
+                                        key={
+                                          status
+                                        }
+                                        value={
+                                          status
                                         }
                                       >
                                         {formatLabel(
-                                          role,
+                                          status,
                                         )}
                                       </SelectItem>
-                                    );
-                                  },
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </td>
+                                    ),
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </td>
 
-                          <td className="p-4">
-                            <Select
-                              value={
-                                user.status
-                              }
-                              onValueChange={(
-                                value,
-                              ) =>
-                                requestStatusChange(
-                                  user,
-                                  value as AccountStatus,
-                                )
-                              }
-                              disabled={
-                                !canModify ||
-                                setStatus.isPending
-                              }
-                            >
-                              <SelectTrigger className="w-[150px]">
-                                <SelectValue />
-                              </SelectTrigger>
+                            <td className="whitespace-nowrap p-4 text-muted-foreground">
+                              {formatDate(
+                                user.created_at,
+                              )}
+                            </td>
 
-                              <SelectContent>
-                                {STATUSES.map(
-                                  (
-                                    status,
-                                  ) => (
-                                    <SelectItem
-                                      key={
-                                        status
+                            <td className="p-4">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-9 px-2.5 text-muted-foreground"
+                                  onClick={() =>
+                                    toggleHistory(
+                                      user.id,
+                                    )
+                                  }
+                                >
+                                  <History className="mr-1.5 h-3.5 w-3.5" />
+
+                                  {historyOpen ? (
+                                    <>
+                                      Hide history
+                                      <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      History (
+                                      {
+                                        userHistory.length
                                       }
-                                      value={
-                                        status
-                                      }
-                                    >
-                                      {formatLabel(
-                                        status,
-                                      )}
-                                    </SelectItem>
-                                  ),
+                                      )
+                                      <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                                    </>
+                                  )}
+                                </Button>
+
+                                {isSelf ? (
+                                  <span className="px-2 text-xs text-muted-foreground">
+                                    Your account
+                                  </span>
+                                ) : (
+                                  <Link
+                                    to="/admin/users/$userId"
+                                    params={{
+                                      userId:
+                                        user.id,
+                                    }}
+                                    className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                  >
+                                    <UserCog className="mr-1 h-3.5 w-3.5" />
+                                    Details
+                                  </Link>
                                 )}
-                              </SelectContent>
-                            </Select>
-                          </td>
+                              </div>
+                            </td>
+                          </tr>
 
-                          <td className="whitespace-nowrap p-4 text-muted-foreground">
-                            {formatDate(
-                              user.created_at,
-                            )}
-                          </td>
-
-                          <td className="p-4 text-right">
-                            {isSelf ? (
-                              <span className="text-xs text-muted-foreground">
-                                Your account
-                              </span>
-                            ) : (
-                              <Link
-                                to="/admin/users/$userId"
-                                params={{
-                                  userId: user.id,
-                                }}
-                                className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          {historyOpen && (
+                            <tr className="bg-muted/10">
+                              <td
+                                colSpan={5}
+                                className="p-0"
                               >
-                                <UserCog className="mr-1 h-3.5 w-3.5" />
-                                Details
-                              </Link>
-                            )}
-                          </td>
-                        </tr>
+                                <div className="border-t border-border px-4 py-4 sm:px-6">
+                                  <div className="mb-3 flex items-center justify-between">
+                                    <div>
+                                      <h4 className="text-sm font-semibold">
+                                        User history
+                                      </h4>
+
+                                      <p className="text-xs text-muted-foreground">
+                                        Role and account-status changes recorded for this user.
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {auditLogsLoading ? (
+                                    <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                      Loading history...
+                                    </div>
+                                  ) : userHistory.length ===
+                                    0 ? (
+                                    <div className="py-6 text-sm text-muted-foreground">
+                                      No account changes have been recorded for this user.
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      {userHistory.map(
+                                        (log) => (
+                                          <div
+                                            key={
+                                              log.id
+                                            }
+                                            className="border-l-2 border-border pl-4"
+                                          >
+                                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                                              <div>
+                                                <div className="text-sm font-medium">
+                                                  {getAuditActionLabel(
+                                                    log.action,
+                                                  )}
+                                                </div>
+
+                                                <div className="text-xs text-muted-foreground">
+                                                  {getAuditChange(
+                                                    log,
+                                                  )}
+                                                </div>
+                                              </div>
+
+                                              <div className="text-xs text-muted-foreground sm:text-right">
+                                                {formatDateTime(
+                                                  log.created_at,
+                                                )}
+                                              </div>
+                                            </div>
+
+                                            <div className="mt-2 text-xs text-muted-foreground">
+                                              By{" "}
+                                              <span className="font-medium text-foreground">
+                                                {getActorLabel(
+                                                  log.performed_by,
+                                                  actorMap,
+                                                )}
+                                              </span>
+                                            </div>
+
+                                            <div className="mt-1 text-xs text-muted-foreground">
+                                              Reason:{" "}
+                                              <span className="text-foreground">
+                                                {log.reason ||
+                                                  "—"}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       );
                     },
                   )}
@@ -925,6 +1460,7 @@ function UsersPage() {
             !actionLoading
           ) {
             setPendingAction(null);
+            setActionReason("");
           }
         }}
       >
@@ -936,20 +1472,16 @@ function UsersPage() {
 
             <AlertDialogDescription>
               {pendingAction?.type ===
-              "status" ? (
+                "status" && (
                 <>
                   Change{" "}
                   <strong>
-                    {
-                      pendingAction.user
-                        .full_name
-                    }
+                    {pendingAction.user.full_name}
                   </strong>{" "}
                   from{" "}
                   <strong>
                     {formatLabel(
-                      pendingAction.user
-                        .status,
+                      pendingAction.user.status,
                     )}
                   </strong>{" "}
                   to{" "}
@@ -960,21 +1492,19 @@ function UsersPage() {
                   </strong>
                   ?
                 </>
-              ) : pendingAction?.type ===
-                "role" ? (
+              )}
+
+              {pendingAction?.type ===
+                "role" && (
                 <>
                   Change{" "}
                   <strong>
-                    {
-                      pendingAction.user
-                        .full_name
-                    }
+                    {pendingAction.user.full_name}
                   </strong>
                   's role from{" "}
                   <strong>
                     {formatLabel(
-                      pendingAction.user
-                        .primary_role,
+                      pendingAction.user.primary_role,
                     )}
                   </strong>{" "}
                   to{" "}
@@ -985,11 +1515,36 @@ function UsersPage() {
                   </strong>
                   ?
                 </>
-              ) : (
-                "Are you sure you want to make this change?"
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="user-change-reason"
+              className="text-sm font-medium"
+            >
+              Reason
+            </label>
+
+            <Input
+              id="user-change-reason"
+              value={actionReason}
+              onChange={(event) =>
+                setActionReason(
+                  event.target.value,
+                )
+              }
+              placeholder="Enter a reason for this change..."
+              disabled={actionLoading}
+              autoComplete="off"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              This reason will be saved in
+              the user audit history.
+            </p>
+          </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel
@@ -1003,7 +1558,10 @@ function UsersPage() {
                 event.preventDefault();
                 confirmAction();
               }}
-              disabled={actionLoading}
+              disabled={
+                actionLoading ||
+                !actionReason.trim()
+              }
             >
               {actionLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

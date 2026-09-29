@@ -24,7 +24,6 @@ import {
   Eye,
   FileText,
   Loader2,
-  Trash2,
   X,
   XCircle,
 } from "lucide-react";
@@ -131,6 +130,7 @@ type Resource = {
   uploader_id: string;
   category?: {
     name?: string;
+    deleted_at?: string | null;
   } | null;
   uploader?: {
     full_name?: string | null;
@@ -235,7 +235,7 @@ function Approvals() {
             created_at,
             status,
             uploader_id,
-            category:categories(name)
+            category:categories(name, deleted_at)
           `,
         )
         .eq(
@@ -324,21 +324,6 @@ function Approvals() {
         );
       }
 
-      /*
-       * APPROVE
-       *
-       * The secured database function:
-       * - verifies the authenticated actor
-       * - verifies the actor is active
-       * - verifies the actor has an authorized role
-       * - verifies the resource is pending
-       * - approves the resource
-       * - records the approving user
-       * - awards +10 reputation to the uploader
-       *
-       * The approval and reputation update happen
-       * inside the same database transaction.
-       */
       if (v.approve) {
         const {
           data,
@@ -363,13 +348,6 @@ function Approvals() {
         return;
       }
 
-      /*
-       * REJECT
-       *
-       * Rejection reason is mandatory.
-       * This is enforced here in addition to the
-       * database function's own validation.
-       */
       const normalizedReason =
         v.reason?.trim() ?? "";
 
@@ -379,15 +357,6 @@ function Approvals() {
         );
       }
 
-      /*
-       * The Storage file must be removed while the
-       * resource is still pending because the B1
-       * Lecturer/Staff Storage policy only permits
-       * deletion of pending resource files.
-       *
-       * Admin and Co-admin are covered by the broader
-       * administrator Storage policy.
-       */
       const {
         error: storageError,
       } = await supabase.storage
@@ -400,18 +369,6 @@ function Approvals() {
         );
       }
 
-      /*
-       * The secured database function:
-       * - verifies the authenticated actor
-       * - verifies the actor is active
-       * - verifies the actor has an authorized role
-       * - verifies the resource is still pending
-       * - records the rejection
-       * - stores the mandatory rejection reason
-       * - clears approval metadata
-       * - records rejected_by / rejected_at
-       * - resets file_size to 0
-       */
       const {
         data,
         error,
@@ -548,7 +505,6 @@ function Approvals() {
   return (
     <>
       <section className="space-y-5">
-        {/* Review queue */}
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
           {isLoading ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
@@ -570,17 +526,20 @@ function Approvals() {
                   resource.status ===
                     "pending";
 
+                const categoryName =
+                  resource.category?.deleted_at == null &&
+                  resource.category?.name?.trim()
+                    ? resource.category.name.trim()
+                    : "Uncategorized";
+
                 return (
                   <li
                     key={resource.id}
                     className="group border-b-2 border-border/70 p-4 transition-colors sm:p-5 odd:bg-card even:bg-muted/40 hover:bg-muted/50"
                   >
                     <div className="flex flex-col gap-4">
-                      {/* Resource header */}
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        {/* Resource information */}
                         <div className="min-w-0 flex-1">
-                          {/* Status + Category */}
                           <div className="flex flex-wrap items-center gap-2">
                             <StatusPill
                               status={
@@ -588,27 +547,16 @@ function Approvals() {
                               }
                             />
 
-                            {resource.category
-                              ?.name && (
-                              <span className="max-w-[220px] truncate rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                {
-                                  resource
-                                    .category
-                                    .name
-                                }
-                              </span>
-                            )}
+                            <span className="max-w-[220px] truncate rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                              {categoryName}
+                            </span>
                           </div>
 
-                          {/* File / Metadata */}
                           <div className="mt-2 min-w-0">
                             <p className="break-words text-base font-semibold leading-6 text-foreground sm:text-lg">
-                              {
-                                resource.file_name
-                              }
+                              {resource.title}
                             </p>
 
-                            {/* Description */}
                             {resource.description && (
                               <p className="mt-3 max-w-4xl line-clamp-2 text-sm leading-6 text-muted-foreground">
                                 {
@@ -618,7 +566,6 @@ function Approvals() {
                             )}
                           </div>
 
-                          {/* File metadata */}
                           <div className="mt-2 flex flex-col gap-1.5 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5">
                             <span>
                               {formatFileSize(
@@ -680,7 +627,6 @@ function Approvals() {
                           </div>
                         </div>
 
-                        {/* Actions */}
                         <div className="hidden shrink-0 flex-wrap items-center gap-2 lg:flex lg:justify-end">
                           {canPreview && (
                             <Button
@@ -766,7 +712,6 @@ function Approvals() {
                         </div>
                       </div>
 
-                      {/* Audit information */}
                       <div className="grid gap-4 text-xs sm:grid-cols-2 xl:grid-cols-3">
                         <AuditItem
                           label="Uploader"
@@ -791,7 +736,6 @@ function Approvals() {
                         />
                       </div>
 
-                      {/* Responsive actions */}
                       <div className="flex flex-wrap items-center gap-2 lg:hidden">
                         {canPreview && (
                           <Button
@@ -889,7 +833,6 @@ function Approvals() {
         </div>
       </section>
 
-      {/* Approval / rejection confirmation */}
       <AlertDialog
         open={
           pendingDecision !== null
@@ -1024,7 +967,6 @@ function Approvals() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Preview overlay */}
       {previewResource && (
         <PreviewModal
           resource={previewResource}
@@ -1201,7 +1143,6 @@ function PreviewModal({
       }}
     >
       <div className="flex max-h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        {/* Preview header */}
         <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-4">
           <div className="min-w-0">
             <p className="truncate font-medium">
@@ -1224,7 +1165,6 @@ function PreviewModal({
           </Button>
         </div>
 
-        {/* Preview content */}
         <div
           ref={(node) => setScrollRoot(node)}
           className="min-h-0 flex-1 overflow-auto p-4"

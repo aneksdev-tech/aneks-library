@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   useMutation,
   useQuery,
@@ -13,6 +13,9 @@ import {
   Power,
   PowerOff,
   Loader2,
+  History,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,9 +64,27 @@ type Announcement = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  deletion_reason: string | null;
   creator?: AnnouncementProfile | null;
   updater?: AnnouncementProfile | null;
   deleter?: AnnouncementProfile | null;
+};
+
+type AnnouncementAudit = {
+  id: string;
+  announcement_id: string;
+  performed_by: string;
+  action: string;
+  reason: string | null;
+  old_data: unknown;
+  new_data: unknown;
+  created_at: string;
+  performer?: AnnouncementProfile | null;
+};
+
+type PendingToggle = {
+  announcement: Announcement;
+  nextIsActive: boolean;
 };
 
 function AnnouncementsPage() {
@@ -78,8 +99,24 @@ function AnnouncementsPage() {
   const [editingAnnouncement, setEditingAnnouncement] =
     useState<Announcement | null>(null);
 
+  const [editSummary, setEditSummary] = useState("");
+  const [pendingEditSave, setPendingEditSave] =
+    useState<boolean>(false);
+
+  const [pendingToggle, setPendingToggle] =
+    useState<PendingToggle | null>(null);
+
+  const [toggleReason, setToggleReason] = useState("");
+  const toggleReasonRef =
+    useRef<HTMLTextAreaElement | null>(null);
+
   const [pendingDelete, setPendingDelete] =
     useState<Announcement | null>(null);
+
+  const [deleteReason, setDeleteReason] = useState("");
+
+  const [expandedHistoryIds, setExpandedHistoryIds] =
+    useState<Set<string>>(new Set());
 
   const { data: announcements, isLoading } = useQuery({
     queryKey: ["admin-announcements"],
@@ -87,7 +124,7 @@ function AnnouncementsPage() {
       const { data: announcements, error } = await supabase
         .from("announcements")
         .select(
-          "id, title, body, content, link, is_active, created_by, updated_by, deleted_by, created_at, updated_at, deleted_at",
+          "id, title, body, content, link, is_active, created_by, updated_by, deleted_by, created_at, updated_at, deleted_at, deletion_reason",
         )
         .order("created_at", { ascending: false });
 
@@ -130,42 +167,159 @@ function AnnouncementsPage() {
       }
 
       const profileMap = new Map<
-  string,
-  AnnouncementProfile
->(
-  (profiles ?? [])
-    .filter(
-      (
-        profile,
-      ): profile is typeof profile & {
-        id: string;
-      } => profile.id !== null,
-    )
-    .map((profile) => [
-      profile.id,
-      {
-        full_name: profile.full_name,
-        email: profile.email,
-      },
-    ]),
-);
+        string,
+        AnnouncementProfile
+      >(
+        (profiles ?? [])
+          .filter(
+            (
+              profile,
+            ): profile is typeof profile & {
+              id: string;
+            } => profile.id !== null,
+          )
+          .map((profile) => [
+            profile.id,
+            {
+              full_name: profile.full_name,
+              email: profile.email,
+            },
+          ]),
+      );
 
       return announcements.map(
         (announcement): Announcement => ({
           ...announcement,
           creator: announcement.created_by
-            ? profileMap.get(announcement.created_by) ?? null
+            ? profileMap.get(
+                announcement.created_by,
+              ) ?? null
             : null,
           updater: announcement.updated_by
-            ? profileMap.get(announcement.updated_by) ?? null
+            ? profileMap.get(
+                announcement.updated_by,
+              ) ?? null
             : null,
           deleter: announcement.deleted_by
-            ? profileMap.get(announcement.deleted_by) ?? null
+            ? profileMap.get(
+                announcement.deleted_by,
+              ) ?? null
             : null,
         }),
       );
     },
   });
+
+  const {
+    data: auditLogs = [],
+    isLoading: isAuditLoading,
+  } = useQuery({
+    queryKey: ["admin-announcement-audits"],
+    queryFn: async (): Promise<AnnouncementAudit[]> => {
+      const { data: audits, error } = await supabase
+        .from("announcement_audit_logs")
+        .select(
+          "id, announcement_id, performed_by, action, reason, old_data, new_data, created_at",
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!audits?.length) {
+        return [];
+      }
+
+      const performerIds = [
+        ...new Set(
+          audits
+            .map((audit) => audit.performed_by)
+            .filter(
+              (id): id is string => Boolean(id),
+            ),
+        ),
+      ];
+
+      if (!performerIds.length) {
+        return audits;
+      }
+
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await supabase
+        .from("private_profiles")
+        .select("id, full_name, email")
+        .in("id", performerIds);
+
+      if (profilesError) {
+        throw profilesError;
+      }
+
+      const profileMap = new Map<
+        string,
+        AnnouncementProfile
+      >(
+        (profiles ?? [])
+          .filter(
+            (
+              profile,
+            ): profile is typeof profile & {
+              id: string;
+            } => profile.id !== null,
+          )
+          .map((profile) => [
+            profile.id,
+            {
+              full_name: profile.full_name,
+              email: profile.email,
+            },
+          ]),
+      );
+
+      return audits.map(
+        (audit): AnnouncementAudit => ({
+          ...audit,
+          performer:
+            profileMap.get(audit.performed_by) ??
+            null,
+        }),
+      );
+    },
+  });
+
+  const getAnnouncementHistory = (
+    announcementId: string,
+  ) =>
+    auditLogs.filter(
+      (audit) =>
+        audit.announcement_id === announcementId,
+    );
+
+  const getLatestAudit = (
+    announcementId: string,
+  ) => {
+    const history = getAnnouncementHistory(
+      announcementId,
+    );
+
+    return history[0] ?? null;
+  };
+
+  const toggleHistory = (announcementId: string) => {
+    setExpandedHistoryIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(announcementId)) {
+        next.delete(announcementId);
+      } else {
+        next.add(announcementId);
+      }
+
+      return next;
+    });
+  };
 
   const saveAnnouncement = useMutation({
     mutationFn: async () => {
@@ -181,88 +335,99 @@ function AnnouncementsPage() {
       const trimmedLink = link.trim() || null;
 
       if (!trimmedTitle) {
-        throw new Error("Announcement title is required.");
+        throw new Error(
+          "Announcement title is required.",
+        );
       }
 
       if (!trimmedBody) {
-        throw new Error("Announcement message is required.");
+        throw new Error(
+          "Announcement message is required.",
+        );
       }
 
       if (!trimmedContent) {
-        throw new Error("Announcement content is required.");
+        throw new Error(
+          "Announcement content is required.",
+        );
       }
 
       if (editingAnnouncement) {
-        const { error } = await supabase
-          .from("announcements")
-          .update({
-            title: trimmedTitle,
-            body: trimmedBody,
-            content: trimmedContent,
-            link: trimmedLink,
-            updated_at: new Date().toISOString(),
-            updated_by: user.id,
-          })
-          .eq("id", editingAnnouncement.id)
-          .is("deleted_at", null);
+        const { data, error } = await supabase.rpc(
+          "admin_edit_announcement",
+          {
+            _announcement_id:
+              editingAnnouncement.id,
+            _title: trimmedTitle,
+            _body: trimmedBody,
+            _content: trimmedContent,
+            _link: trimmedLink || undefined,
+            _edit_summary:
+              editSummary.trim() || undefined,
+          },
+        );
 
         if (error) {
           throw error;
         }
 
-        return "updated";
+        const result = data as {
+          id?: string;
+          changed?: boolean;
+        } | null;
+
+        if (!result?.id) {
+          throw new Error(
+            "The announcement could not be updated.",
+          );
+        }
+
+        return result.changed
+          ? "updated"
+          : "unchanged";
       }
 
-      /*
-       * Keep only one active Dashboard announcement.
-       *
-       * Existing announcements remain stored for history.
-       */
-      const { error: deactivateError } = await supabase
-        .from("announcements")
-        .update({
-          is_active: false,
-          updated_at: new Date().toISOString(),
-          updated_by: user.id,
-        })
-        .eq("is_active", true)
-        .is("deleted_at", null);
-
-      if (deactivateError) {
-        throw deactivateError;
-      }
-
-      const { error } = await supabase
-        .from("announcements")
-        .insert({
-          title: trimmedTitle,
-          body: trimmedBody,
-          content: trimmedContent,
-          link: trimmedLink,
-          is_active: true,
-          created_by: user.id,
-          updated_by: user.id,
-        });
+      const { data, error } = await supabase.rpc(
+        "admin_create_announcement",
+        {
+          _title: trimmedTitle,
+          _body: trimmedBody,
+          _content: trimmedContent,
+          _link: trimmedLink || undefined,
+        },
+      );
 
       if (error) {
         throw error;
+      }
+
+      if (!data) {
+        throw new Error(
+          "The announcement could not be published.",
+        );
       }
 
       return "created";
     },
 
     onSuccess: (result) => {
-      toast.success(
-        result === "created"
-          ? "Announcement published successfully."
-          : "Announcement updated successfully.",
-      );
+      if (result === "unchanged") {
+        toast.info("No changes were made.");
+      } else {
+        toast.success(
+          result === "created"
+            ? "Announcement published successfully."
+            : "Announcement updated successfully.",
+        );
+      }
 
       setTitle("");
       setBody("");
       setContent("");
       setLink("");
+      setEditSummary("");
       setEditingAnnouncement(null);
+      setPendingEditSave(false);
 
       qc.invalidateQueries({
         queryKey: ["admin-announcements"],
@@ -270,6 +435,10 @@ function AnnouncementsPage() {
 
       qc.invalidateQueries({
         queryKey: ["active-announcement"],
+      });
+
+      qc.invalidateQueries({
+        queryKey: ["admin-announcement-audits"],
       });
     },
 
@@ -279,7 +448,13 @@ function AnnouncementsPage() {
   });
 
   const toggleAnnouncement = useMutation({
-    mutationFn: async (announcement: Announcement) => {
+    mutationFn: async ({
+      announcement,
+      reason,
+    }: {
+      announcement: Announcement;
+      reason: string;
+    }) => {
       if (!user) {
         throw new Error(
           "You must be signed in to manage announcements.",
@@ -292,39 +467,54 @@ function AnnouncementsPage() {
         );
       }
 
-      if (!announcement.is_active) {
-        const { error: deactivateError } = await supabase
-          .from("announcements")
-          .update({
-            is_active: false,
-            updated_at: new Date().toISOString(),
-            updated_by: user.id,
-          })
-          .eq("is_active", true)
-          .is("deleted_at", null);
+      const trimmedReason = reason.trim();
 
-        if (deactivateError) {
-          throw deactivateError;
-        }
+      if (!trimmedReason) {
+        throw new Error(
+          announcement.is_active
+            ? "A deactivation reason is required."
+            : "An activation reason is required.",
+        );
       }
 
-      const { error } = await supabase
-        .from("announcements")
-        .update({
-          is_active: !announcement.is_active,
-          updated_at: new Date().toISOString(),
-          updated_by: user.id,
-        })
-        .eq("id", announcement.id)
-        .is("deleted_at", null);
+      const { data, error } = await supabase.rpc(
+        "admin_toggle_announcement",
+        {
+          _announcement_id: announcement.id,
+          _is_active: !announcement.is_active,
+          _reason: trimmedReason,
+        },
+      );
 
       if (error) {
         throw error;
       }
+
+      const result = data as {
+        id?: string;
+        changed?: boolean;
+      } | null;
+
+      if (!result?.id) {
+        throw new Error(
+          "The announcement status could not be updated.",
+        );
+      }
+
+      return result.changed ?? false;
     },
 
-    onSuccess: () => {
-      toast.success("Announcement status updated.");
+    onSuccess: (changed, variables) => {
+      toast.success(
+        changed
+          ? variables.announcement.is_active
+            ? "Announcement deactivated successfully."
+            : "Announcement activated successfully."
+          : "No changes were made.",
+      );
+
+      setPendingToggle(null);
+      setToggleReason("");
 
       qc.invalidateQueries({
         queryKey: ["admin-announcements"],
@@ -332,6 +522,10 @@ function AnnouncementsPage() {
 
       qc.invalidateQueries({
         queryKey: ["active-announcement"],
+      });
+
+      qc.invalidateQueries({
+        queryKey: ["admin-announcement-audits"],
       });
     },
 
@@ -341,7 +535,13 @@ function AnnouncementsPage() {
   });
 
   const deleteAnnouncement = useMutation({
-    mutationFn: async (announcement: Announcement) => {
+    mutationFn: async ({
+      announcement,
+      reason,
+    }: {
+      announcement: Announcement;
+      reason: string;
+    }) => {
       if (!user) {
         throw new Error(
           "You must be signed in to manage announcements.",
@@ -354,20 +554,30 @@ function AnnouncementsPage() {
         );
       }
 
-      const { error } = await supabase
-        .from("announcements")
-        .update({
-          is_active: false,
-          deleted_by: user.id,
-          deleted_at: new Date().toISOString(),
-          updated_by: user.id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", announcement.id)
-        .is("deleted_at", null);
+      const trimmedReason = reason.trim();
+
+      if (!trimmedReason) {
+        throw new Error(
+          "A deletion reason is required.",
+        );
+      }
+
+      const { data, error } = await supabase.rpc(
+        "admin_delete_announcement",
+        {
+          _announcement_id: announcement.id,
+          _deletion_reason: trimmedReason,
+        },
+      );
 
       if (error) {
         throw error;
+      }
+
+      if (!data) {
+        throw new Error(
+          "The announcement could not be deleted.",
+        );
       }
     },
 
@@ -375,6 +585,7 @@ function AnnouncementsPage() {
       toast.success("Announcement deleted.");
 
       setPendingDelete(null);
+      setDeleteReason("");
 
       qc.invalidateQueries({
         queryKey: ["admin-announcements"],
@@ -383,15 +594,20 @@ function AnnouncementsPage() {
       qc.invalidateQueries({
         queryKey: ["active-announcement"],
       });
+
+      qc.invalidateQueries({
+        queryKey: ["admin-announcement-audits"],
+      });
     },
 
     onError: (error: Error) => {
       toast.error(error.message);
-      setPendingDelete(null);
     },
   });
 
-  const startEditing = (announcement: Announcement) => {
+  const startEditing = (
+    announcement: Announcement,
+  ) => {
     if (announcement.deleted_at) {
       return;
     }
@@ -399,20 +615,203 @@ function AnnouncementsPage() {
     setEditingAnnouncement(announcement);
     setTitle(announcement.title);
     setBody(announcement.body);
-    setContent(announcement.content ?? announcement.body);
+    setContent(announcement.content ?? "");
     setLink(announcement.link ?? "");
+    setEditSummary("");
+    setPendingEditSave(false);
   };
 
   const cancelEditing = () => {
+    if (saveAnnouncement.isPending) {
+      return;
+    }
+
     setEditingAnnouncement(null);
     setTitle("");
     setBody("");
     setContent("");
     setLink("");
+    setEditSummary("");
+    setPendingEditSave(false);
+  };
+
+  const hasActualChanges = () => {
+    if (!editingAnnouncement) {
+      return true;
+    }
+
+    const trimmedTitle = title.trim();
+    const trimmedBody = body.trim();
+    const trimmedContent = content.trim();
+    const trimmedLink = link.trim() || null;
+
+    return (
+      trimmedTitle !== editingAnnouncement.title ||
+      trimmedBody !== editingAnnouncement.body ||
+      trimmedContent !==
+        (editingAnnouncement.content ?? "") ||
+      trimmedLink !== editingAnnouncement.link
+    );
   };
 
   const handleSave = () => {
+    if (!editingAnnouncement) {
+      saveAnnouncement.mutate();
+      return;
+    }
+
+    const trimmedTitle = title.trim();
+    const trimmedBody = body.trim();
+    const trimmedContent = content.trim();
+
+    if (!trimmedTitle) {
+      toast.error("Announcement title is required.");
+      return;
+    }
+
+    if (!trimmedBody) {
+      toast.error(
+        "Announcement message is required.",
+      );
+      return;
+    }
+
+    if (!trimmedContent) {
+      toast.error(
+        "Announcement content is required.",
+      );
+      return;
+    }
+
+    setPendingEditSave(true);
+  };
+
+  const closeEditConfirmation = () => {
+    if (saveAnnouncement.isPending) {
+      return;
+    }
+
+    setPendingEditSave(false);
+  };
+
+  const confirmEditSave = () => {
+    if (!editingAnnouncement) {
+      return;
+    }
+
+    if (!hasActualChanges()) {
+      setPendingEditSave(false);
+      toast.info("No changes were made.");
+      return;
+    }
+
+    if (!editSummary.trim()) {
+      toast.error("An edit summary is required.");
+      return;
+    }
+
     saveAnnouncement.mutate();
+  };
+
+  const openToggleDialog = (
+    announcement: Announcement,
+  ) => {
+    if (announcement.deleted_at) {
+      return;
+    }
+
+    setPendingToggle({
+      announcement,
+      nextIsActive: !announcement.is_active,
+    });
+
+    setToggleReason("");
+  };
+
+  const closeToggleDialog = () => {
+    if (toggleAnnouncement.isPending) {
+      return;
+    }
+
+    setPendingToggle(null);
+    setToggleReason("");
+  };
+
+  const handleToggle = () => {
+    if (!pendingToggle) {
+      return;
+    }
+
+    const reason =
+      toggleReasonRef.current?.value.trim() ??
+      toggleReason.trim();
+
+    if (!reason) {
+      toast.error(
+        pendingToggle.nextIsActive
+          ? "Please provide an activation reason."
+          : "Please provide a deactivation reason.",
+      );
+      return;
+    }
+
+    toggleAnnouncement.mutate({
+      announcement: pendingToggle.announcement,
+      reason,
+    });
+  };
+
+  const openDeleteDialog = (
+    announcement: Announcement,
+  ) => {
+    setPendingDelete(announcement);
+    setDeleteReason("");
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleteAnnouncement.isPending) {
+      return;
+    }
+
+    setPendingDelete(null);
+    setDeleteReason("");
+  };
+
+  const handleDelete = () => {
+    if (!pendingDelete) {
+      return;
+    }
+
+    const trimmedReason = deleteReason.trim();
+
+    if (!trimmedReason) {
+      toast.error(
+        "Please provide a reason for deleting this announcement.",
+      );
+      return;
+    }
+
+    deleteAnnouncement.mutate({
+      announcement: pendingDelete,
+      reason: trimmedReason,
+    });
+  };
+
+  const getAuditActionLabel = (action: string) => {
+    switch (action) {
+      case "create":
+        return "Created";
+      case "edit":
+        return "Edited";
+      case "activate":
+        return "Activated";
+      case "deactivate":
+        return "Deactivated";
+      case "delete":
+        return "Deleted";
+      default:
+        return action;
+    }
   };
 
   return (
@@ -578,21 +977,33 @@ function AnnouncementsPage() {
               Loading announcements…
             </div>
           </div>
-        ) : announcements && announcements.length > 0 ? (
+        ) : announcements &&
+          announcements.length > 0 ? (
           <ul className="divide-y divide-border">
             {announcements.map((announcement) => {
               const isToggling =
                 toggleAnnouncement.isPending &&
-                toggleAnnouncement.variables?.id ===
-                  announcement.id;
+                toggleAnnouncement.variables?.announcement
+                  .id === announcement.id;
 
               const isDeleting =
                 deleteAnnouncement.isPending &&
-                deleteAnnouncement.variables?.id ===
-                  announcement.id;
+                deleteAnnouncement.variables?.announcement
+                  .id === announcement.id;
 
               const isDeleted =
                 announcement.deleted_at !== null;
+
+              const history =
+                getAnnouncementHistory(announcement.id);
+
+              const latestAudit =
+                getLatestAudit(announcement.id);
+
+              const isHistoryExpanded =
+                expandedHistoryIds.has(
+                  announcement.id,
+                );
 
               return (
                 <li
@@ -644,18 +1055,23 @@ function AnnouncementsPage() {
                           <span className="font-medium text-foreground">
                             Created by:
                           </span>{" "}
-                          {announcement.creator?.full_name ??
+                          {announcement.creator
+                            ?.full_name ??
                             announcement.creator?.email ??
                             "Unknown user"}
                         </p>
 
-                        {announcement.creator?.full_name &&
+                        {announcement.creator
+                          ?.full_name &&
                           announcement.creator.email && (
                             <p>
                               <span className="font-medium text-foreground">
                                 Email:
                               </span>{" "}
-                              {announcement.creator.email}
+                              {
+                                announcement.creator
+                                  .email
+                              }
                             </p>
                           )}
 
@@ -668,23 +1084,83 @@ function AnnouncementsPage() {
                           ).toLocaleString()}
                         </p>
 
-                        <p>
-                          <span className="font-medium text-foreground">
-                            Updated by:
-                          </span>{" "}
-                          {announcement.updater?.full_name ??
-                            announcement.updater?.email ??
-                            "Unknown user"}
-                        </p>
+                        {!isDeleted &&
+                          latestAudit?.action ===
+                            "activate" && (
+                            <>
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Activated by:
+                                </span>{" "}
+                                {latestAudit.performer
+                                  ?.full_name ??
+                                  latestAudit.performer
+                                    ?.email ??
+                                  "Unknown user"}
+                              </p>
 
-                        <p>
-                          <span className="font-medium text-foreground">
-                            Updated:
-                          </span>{" "}
-                          {new Date(
-                            announcement.updated_at,
-                          ).toLocaleString()}
-                        </p>
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Activated:
+                                </span>{" "}
+                                {new Date(
+                                  latestAudit.created_at,
+                                ).toLocaleString()}
+                              </p>
+                            </>
+                          )}
+
+                        {!isDeleted &&
+                          latestAudit?.action ===
+                            "deactivate" && (
+                            <>
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Deactivated by:
+                                </span>{" "}
+                                {latestAudit.performer
+                                  ?.full_name ??
+                                  latestAudit.performer
+                                    ?.email ??
+                                  "Unknown user"}
+                              </p>
+
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Deactivated:
+                                </span>{" "}
+                                {new Date(
+                                  latestAudit.created_at,
+                                ).toLocaleString()}
+                              </p>
+                            </>
+                          )}
+
+                        {!isDeleted &&
+                          latestAudit?.action ===
+                            "edit" && (
+                            <>
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Updated by:
+                                </span>{" "}
+                                {announcement.updater
+                                  ?.full_name ??
+                                  announcement.updater
+                                    ?.email ??
+                                  "Unknown user"}
+                              </p>
+
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Updated:
+                                </span>{" "}
+                                {new Date(
+                                  announcement.updated_at,
+                                ).toLocaleString()}
+                              </p>
+                            </>
+                          )}
 
                         {isDeleted && (
                           <>
@@ -692,8 +1168,10 @@ function AnnouncementsPage() {
                               <span className="font-medium text-foreground">
                                 Deleted by:
                               </span>{" "}
-                              {announcement.deleter?.full_name ??
-                                announcement.deleter?.email ??
+                              {announcement.deleter
+                                ?.full_name ??
+                                announcement.deleter
+                                  ?.email ??
                                 "Unknown user"}
                             </p>
 
@@ -707,9 +1185,104 @@ function AnnouncementsPage() {
                                   ).toLocaleString()
                                 : "Unknown"}
                             </p>
+
+                            {announcement.deletion_reason && (
+                              <p className="pt-1">
+                                <span className="font-medium text-foreground">
+                                  Deletion reason:
+                                </span>{" "}
+                                {
+                                  announcement.deletion_reason
+                                }
+                              </p>
+                            )}
                           </>
                         )}
                       </div>
+
+                      {/* Audit history */}
+                      {history.length > 0 && (
+                        <div className="mt-4 border-t border-border pt-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              toggleHistory(
+                                announcement.id,
+                              )
+                            }
+                            className="h-8 px-2 text-xs"
+                          >
+                            <History className="mr-1.5 h-3.5 w-3.5" />
+
+                            {isHistoryExpanded
+                              ? "Hide history"
+                              : `History (${history.length})`}
+
+                            {isHistoryExpanded ? (
+                              <ChevronUp className="ml-1.5 h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                            )}
+                          </Button>
+
+                          {isHistoryExpanded && (
+                            <div className="mt-3 space-y-3 border-l border-border pl-3">
+                              {isAuditLoading ? (
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  Loading history…
+                                </div>
+                              ) : (
+                                history.map((audit) => (
+                                  <div
+                                    key={audit.id}
+                                    className="space-y-1 text-xs"
+                                  >
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                      <span className="font-semibold text-foreground">
+                                        {getAuditActionLabel(
+                                          audit.action,
+                                        )}
+                                      </span>
+
+                                      <span className="text-muted-foreground">
+                                        {new Date(
+                                          audit.created_at,
+                                        ).toLocaleString()}
+                                      </span>
+                                    </div>
+
+                                    <p className="text-muted-foreground">
+                                      <span className="font-medium text-foreground">
+                                        By:
+                                      </span>{" "}
+                                      {audit.performer
+                                        ?.full_name ??
+                                        audit.performer
+                                          ?.email ??
+                                        "Unknown user"}
+                                    </p>
+
+                                    {audit.reason && (
+                                      <p className="text-muted-foreground">
+                                        <span className="font-medium text-foreground">
+                                          {audit.action ===
+                                          "edit"
+                                            ? "Summary:"
+                                            : "Reason:"}
+                                        </span>{" "}
+                                        {audit.reason}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -721,10 +1294,12 @@ function AnnouncementsPage() {
                             variant="outline"
                             disabled={
                               isToggling ||
-                              deleteAnnouncement.isPending
+                              toggleAnnouncement.isPending ||
+                              deleteAnnouncement.isPending ||
+                              saveAnnouncement.isPending
                             }
                             onClick={() =>
-                              toggleAnnouncement.mutate(
+                              openToggleDialog(
                                 announcement,
                               )
                             }
@@ -748,10 +1323,13 @@ function AnnouncementsPage() {
                             variant="outline"
                             disabled={
                               toggleAnnouncement.isPending ||
-                              deleteAnnouncement.isPending
+                              deleteAnnouncement.isPending ||
+                              saveAnnouncement.isPending
                             }
                             onClick={() =>
-                              startEditing(announcement)
+                              startEditing(
+                                announcement,
+                              )
                             }
                           >
                             <Pencil className="mr-1.5 h-3.5 w-3.5" />
@@ -764,10 +1342,13 @@ function AnnouncementsPage() {
                             variant="outline"
                             disabled={
                               toggleAnnouncement.isPending ||
-                              deleteAnnouncement.isPending
+                              deleteAnnouncement.isPending ||
+                              saveAnnouncement.isPending
                             }
                             onClick={() =>
-                              setPendingDelete(announcement)
+                              openDeleteDialog(
+                                announcement,
+                              )
                             }
                             className="text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
                           >
@@ -794,12 +1375,199 @@ function AnnouncementsPage() {
         )}
       </div>
 
+      {/* Edit confirmation */}
+      <AlertDialog
+        open={pendingEditSave}
+        onOpenChange={(open) => {
+          if (!open && !saveAnnouncement.isPending) {
+            closeEditConfirmation();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {hasActualChanges()
+                ? "Save announcement changes?"
+                : "No changes were made"}
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              {hasActualChanges()
+                ? `You are about to update "${editingAnnouncement?.title}". Please provide a brief summary of what was changed.`
+                : "The announcement is unchanged from its original values. No database update or audit entry will be created."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {hasActualChanges() && (
+            <div className="space-y-2">
+              <label
+                htmlFor="announcement-edit-summary"
+                className="text-sm font-medium"
+              >
+                Edit Summary
+                <span className="ml-1 text-destructive">
+                  *
+                </span>
+              </label>
+
+              <textarea
+                id="announcement-edit-summary"
+                value={editSummary}
+                onChange={(event) =>
+                  setEditSummary(event.target.value)
+                }
+                placeholder="e.g. Updated the deadline and added the submission link..."
+                rows={4}
+                disabled={saveAnnouncement.isPending}
+                className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+
+              <p className="text-xs text-muted-foreground">
+                This summary will be permanently retained
+                in the announcement edit history.
+              </p>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={saveAnnouncement.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+
+                if (!hasActualChanges()) {
+                  setPendingEditSave(false);
+                  return;
+                }
+
+                confirmEditSave();
+              }}
+              disabled={
+                saveAnnouncement.isPending ||
+                (hasActualChanges() &&
+                  !editSummary.trim())
+              }
+            >
+              {saveAnnouncement.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+
+              {hasActualChanges()
+                ? "Save changes"
+                : "Close"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Activation / deactivation confirmation */}
+      {pendingToggle && (
+        <AlertDialog
+          open={true}
+          onOpenChange={(open) => {
+            if (
+              !open &&
+              !toggleAnnouncement.isPending
+            ) {
+              closeToggleDialog();
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {pendingToggle.nextIsActive
+                  ? "Activate announcement?"
+                  : "Deactivate announcement?"}
+              </AlertDialogTitle>
+
+              <AlertDialogDescription>
+                {pendingToggle.nextIsActive
+                  ? `You are about to activate "${pendingToggle.announcement.title}". If another announcement is currently active, it will be automatically deactivated.`
+                  : `You are about to deactivate "${pendingToggle.announcement.title}". This action will be recorded in the announcement audit history.`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="announcement-toggle-reason"
+                className="text-sm font-medium"
+              >
+                {pendingToggle.nextIsActive
+                  ? "Activation reason"
+                  : "Deactivation reason"}
+                <span className="ml-1 text-destructive">
+                  *
+                </span>
+              </label>
+
+              <textarea
+                ref={toggleReasonRef}
+                id="announcement-toggle-reason"
+                value={toggleReason}
+                onChange={(event) => {
+                  setToggleReason(
+                    event.target.value,
+                  );
+                }}
+                placeholder={
+                  pendingToggle.nextIsActive
+                    ? "Enter the reason for activating this announcement..."
+                    : "Enter the reason for deactivating this announcement..."
+                }
+                rows={4}
+                disabled={toggleAnnouncement.isPending}
+                className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+
+              <p className="text-xs text-muted-foreground">
+                This reason will be permanently retained
+                in the announcement audit history.
+              </p>
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={toggleAnnouncement.isPending}
+              >
+                Cancel
+              </AlertDialogCancel>
+
+              <AlertDialogAction
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleToggle();
+                }}
+                disabled={
+                  toggleAnnouncement.isPending ||
+                  !toggleReason.trim()
+                }
+              >
+                {toggleAnnouncement.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+
+                {pendingToggle.nextIsActive
+                  ? "Confirm activation"
+                  : "Confirm deactivation"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       {/* Delete confirmation */}
       <AlertDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => {
           if (!open && !deleteAnnouncement.isPending) {
-            setPendingDelete(null);
+            closeDeleteDialog();
           }
         }}
       >
@@ -814,8 +1582,37 @@ function AnnouncementsPage() {
               <strong>{pendingDelete?.title}</strong>? This
               announcement will be removed from active
               announcements but retained in the admin history.
+              A deletion reason is required.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="announcement-delete-reason"
+              className="text-sm font-medium"
+            >
+              Deletion reason
+              <span className="ml-1 text-destructive">
+                *
+              </span>
+            </label>
+
+            <Input
+              id="announcement-delete-reason"
+              value={deleteReason}
+              onChange={(event) =>
+                setDeleteReason(event.target.value)
+              }
+              placeholder="Enter the reason for deleting this announcement..."
+              disabled={deleteAnnouncement.isPending}
+              required
+            />
+
+            <p className="text-xs text-muted-foreground">
+              This reason will be permanently retained in the
+              announcement history.
+            </p>
+          </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel
@@ -827,14 +1624,12 @@ function AnnouncementsPage() {
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();
-
-                if (pendingDelete) {
-                  deleteAnnouncement.mutate(
-                    pendingDelete,
-                  );
-                }
+                handleDelete();
               }}
-              disabled={deleteAnnouncement.isPending}
+              disabled={
+                deleteAnnouncement.isPending ||
+                !deleteReason.trim()
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteAnnouncement.isPending && (
@@ -844,7 +1639,7 @@ function AnnouncementsPage() {
               Delete announcement
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+          </AlertDialogContent>
       </AlertDialog>
     </section>
   );

@@ -9,13 +9,18 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ArrowLeft,
   CalendarDays,
   Download,
   FileText,
   GraduationCap,
+  History,
   Loader2,
   Mail,
   Phone,
@@ -50,6 +55,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute(
   "/_authenticated/admin/users/$userId",
@@ -58,7 +64,7 @@ export const Route = createFileRoute(
     const { data: u, error: authError } =
       await supabase.auth.getUser();
 
-    if (!u.user) {
+    if (authError || !u.user) {
       throw redirect({
         to: "/auth",
         search: {
@@ -68,13 +74,13 @@ export const Route = createFileRoute(
     }
 
     const {
-     data: profile,
-     error: profileError,
+      data: profile,
+      error: profileError,
     } = await supabase
       .from("private_profiles")
-     .select("primary_role, status")
-     .eq("id", u.user.id)
-    .single();
+      .select("primary_role, status")
+      .eq("id", u.user.id)
+      .single();
 
     if (profileError || !profile) {
       throw redirect({
@@ -84,11 +90,11 @@ export const Route = createFileRoute(
     }
 
     if (
-        !profile.primary_role ||
-        !["admin", "co-admin"].includes(
-          profile.primary_role,
-       )
-      ) {
+      !profile.primary_role ||
+      !["admin", "co-admin"].includes(
+        profile.primary_role,
+      )
+    ) {
       throw redirect({
         to: "/admin",
         replace: true,
@@ -201,6 +207,18 @@ type ActivityItem = {
   title: string;
   description: string;
   created_at: string;
+};
+
+type UserAuditLog = {
+  id: string;
+  user_id: string;
+  performed_by: string;
+  action: string;
+  reason: string;
+  old_data: Record<string, unknown>;
+  new_data: Record<string, unknown>;
+  created_at: string;
+  actor_name?: string;
 };
 
 type PendingAction =
@@ -378,6 +396,49 @@ function getRoleIcon(
   return UserRound;
 }
 
+function getAuditChange(
+  log: UserAuditLog,
+) {
+  let oldValue: unknown;
+  let newValue: unknown;
+
+  if (log.action === "role_changed") {
+    oldValue = log.old_data?.primary_role;
+    newValue = log.new_data?.primary_role;
+  } else if (
+    log.action === "status_changed"
+  ) {
+    oldValue = log.old_data?.status;
+    newValue = log.new_data?.status;
+  }
+
+  if (
+    typeof oldValue === "string" &&
+    typeof newValue === "string"
+  ) {
+    return `${formatLabel(
+      oldValue,
+    )} → ${formatLabel(newValue)}`;
+  }
+
+  return "Change recorded";
+}
+
+function getAuditActionLabel(
+  action: string,
+) {
+  switch (action) {
+    case "role_changed":
+      return "Role changed";
+
+    case "status_changed":
+      return "Status changed";
+
+    default:
+      return formatLabel(action);
+  }
+}
+
 function UserDetailsPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -393,8 +454,44 @@ function UserDetailsPage() {
   const [pendingAction, setPendingAction] =
     useState<PendingAction>(null);
 
+  const [actionReason, setActionReason] =
+    useState("");
+
+  const [showHistory, setShowHistory] =
+    useState(false);
+
   const currentUserIsAdmin =
     roles?.includes("admin");
+
+  const hasAdminAccess =
+    Boolean(
+      roles?.includes("admin") ||
+        roles?.includes("co-admin"),
+    );
+
+  useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
+
+    if (!roles) {
+      return;
+    }
+
+    if (
+      !roles.includes("admin") &&
+      !roles.includes("co-admin")
+    ) {
+      void navigate({
+        to: "/admin",
+        replace: true,
+      });
+    }
+  }, [
+    currentUser,
+    roles,
+    navigate,
+  ]);
 
   const {
     data: user,
@@ -483,7 +580,105 @@ function UserDetailsPage() {
         throw error;
       }
 
-      return (data ?? []) as unknown as ResourceRow[];
+      return (data ??
+        []) as unknown as ResourceRow[];
+    },
+  });
+
+  const {
+    data: auditHistory,
+    isLoading: auditHistoryLoading,
+  } = useQuery<UserAuditLog[]>({
+    queryKey: [
+      "admin-user-audits",
+      userId,
+    ],
+
+    queryFn: async () => {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from("user_audit_logs")
+        .select(
+          [
+            "id",
+            "user_id",
+            "performed_by",
+            "action",
+            "reason",
+            "old_data",
+            "new_data",
+            "created_at",
+          ].join(", "),
+        )
+        .eq("user_id", userId)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const logs =
+        (data ??
+          []) as unknown as UserAuditLog[];
+
+      if (logs.length === 0) {
+        return [];
+      }
+
+      const actorIds = Array.from(
+        new Set(
+          logs.map(
+            (log) => log.performed_by,
+          ),
+        ),
+      );
+
+      const {
+        data: actors,
+        error: actorsError,
+      } = await supabase
+        .from("private_profiles")
+        .select("id, full_name")
+        .in("id", actorIds);
+
+      if (actorsError) {
+        throw actorsError;
+      }
+
+      const actorMap = new Map<
+        string,
+        string
+      >();
+
+      for (
+        const actor of
+          (actors ?? []).filter(
+            (
+              actor,
+            ): actor is {
+              id: string;
+              full_name: string | null;
+            } => Boolean(actor.id),
+          )
+      ) {
+        actorMap.set(
+          actor.id,
+          actor.full_name ??
+            "Unknown user",
+        );
+      }
+
+      return logs.map((log) => ({
+        ...log,
+        actor_name:
+          actorMap.get(
+            log.performed_by,
+          ) ?? "Unknown user",
+      }));
     },
   });
 
@@ -585,8 +780,10 @@ function UserDetailsPage() {
   const setStatus = useMutation({
     mutationFn: async ({
       status,
+      reason,
     }: {
       status: AccountStatus;
+      reason: string;
     }) => {
       const { error } =
         await supabase.rpc(
@@ -594,6 +791,7 @@ function UserDetailsPage() {
           {
             _target_user_id: userId,
             _new_status: status,
+            _reason: reason,
           },
         );
 
@@ -620,6 +818,14 @@ function UserDetailsPage() {
         queryKey: ["admin-users"],
       });
 
+      qc.invalidateQueries({
+        queryKey: [
+          "admin-user-audits",
+          userId,
+        ],
+      });
+
+      setActionReason("");
       setPendingAction(null);
     },
 
@@ -632,8 +838,10 @@ function UserDetailsPage() {
   const setRole = useMutation({
     mutationFn: async ({
       role,
+      reason,
     }: {
       role: AppRole;
+      reason: string;
     }) => {
       const { error } =
         await supabase.rpc(
@@ -641,6 +849,7 @@ function UserDetailsPage() {
           {
             _target_user_id: userId,
             _new_role: role,
+            _reason: reason,
           },
         );
 
@@ -667,6 +876,14 @@ function UserDetailsPage() {
         queryKey: ["admin-users"],
       });
 
+      qc.invalidateQueries({
+        queryKey: [
+          "admin-user-audits",
+          userId,
+        ],
+      });
+
+      setActionReason("");
       setPendingAction(null);
     },
 
@@ -704,6 +921,8 @@ function UserDetailsPage() {
       return;
     }
 
+    setActionReason("");
+
     setPendingAction({
       type: "status",
       value: status,
@@ -738,6 +957,8 @@ function UserDetailsPage() {
       return;
     }
 
+    setActionReason("");
+
     setPendingAction({
       type: "role",
       value: role,
@@ -749,12 +970,23 @@ function UserDetailsPage() {
       return;
     }
 
+    const trimmedReason =
+      actionReason.trim();
+
+    if (!trimmedReason) {
+      toast.error(
+        "A reason is required for this change.",
+      );
+      return;
+    }
+
     if (
       pendingAction.type ===
       "status"
     ) {
       setStatus.mutate({
         status: pendingAction.value,
+        reason: trimmedReason,
       });
 
       return;
@@ -762,12 +994,28 @@ function UserDetailsPage() {
 
     setRole.mutate({
       role: pendingAction.value,
+      reason: trimmedReason,
     });
   };
 
   const actionLoading =
     setStatus.isPending ||
     setRole.isPending;
+
+  if (
+    currentUser &&
+    roles &&
+    !hasAdminAccess
+  ) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Redirecting...
+        </div>
+      </div>
+    );
+  }
 
   if (userLoading) {
     return (
@@ -1177,6 +1425,116 @@ function UserDetailsPage() {
                 </div>
               )}
             </section>
+
+            {/* User audit history */}
+            <section className="border border-border bg-card p-5 shadow-soft">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-muted-foreground" />
+
+                  <SectionHeading>
+                    User Audit History
+                  </SectionHeading>
+                </div>
+
+                {auditHistory &&
+                  auditHistory.length >
+                    0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs"
+                      onClick={() =>
+                        setShowHistory(
+                          (value) =>
+                            !value,
+                        )
+                      }
+                    >
+                      {showHistory
+                        ? "Hide history"
+                        : `History (${auditHistory.length})`}
+                    </Button>
+                  )}
+              </div>
+
+              {auditHistoryLoading ? (
+                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading audit history...
+                </div>
+              ) : auditHistory &&
+                auditHistory.length >
+                  0 ? (
+                showHistory ? (
+                  <div className="mt-4 divide-y divide-border">
+                    {auditHistory.map(
+                      (log) => (
+                        <div
+                          key={log.id}
+                          className="py-4"
+                        >
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                              <p className="text-sm font-medium">
+                                {getAuditActionLabel(
+                                  log.action,
+                                )}
+                              </p>
+
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {getAuditChange(
+                                  log,
+                                )}
+                              </p>
+                            </div>
+
+                            <span className="text-[11px] text-muted-foreground">
+                              {formatDateTime(
+                                log.created_at,
+                              )}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            By{" "}
+                            <span className="font-medium text-foreground">
+                              {log.actor_name ??
+                                "Unknown user"}
+                            </span>
+                          </p>
+
+                          <div className="mt-2 border-l-2 border-border pl-3">
+                            <p className="text-xs leading-5 text-muted-foreground">
+                              <span className="font-medium text-foreground">
+                                Reason:
+                              </span>{" "}
+                              {log.reason ||
+                                "No reason recorded."}
+                            </p>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {auditHistory.length}{" "}
+                    recorded{" "}
+                    {auditHistory.length ===
+                    1
+                      ? "change"
+                      : "changes"}.
+                  </p>
+                )
+              ) : (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  No account changes have
+                  been recorded yet.
+                </p>
+              )}
+            </section>
           </div>
 
           {/* Right column */}
@@ -1429,7 +1787,9 @@ function UserDetailsPage() {
 
               <p className="mt-1 text-xs text-muted-foreground">
                 Changes are applied through
-                the protected admin RPCs.
+                the protected admin RPCs
+                and recorded in the audit
+                history.
               </p>
             </div>
 
@@ -1503,6 +1863,7 @@ function UserDetailsPage() {
             !actionLoading
           ) {
             setPendingAction(null);
+            setActionReason("");
           }
         }}
       >
@@ -1514,7 +1875,7 @@ function UserDetailsPage() {
 
             <AlertDialogDescription>
               {pendingAction?.type ===
-              "status" ? (
+                "status" && (
                 <>
                   Change{" "}
                   <strong>
@@ -1535,8 +1896,10 @@ function UserDetailsPage() {
                   </strong>
                   ?
                 </>
-              ) : pendingAction?.type ===
-                "role" ? (
+              )}
+
+              {pendingAction?.type ===
+                "role" && (
                 <>
                   Change{" "}
                   <strong>
@@ -1557,11 +1920,36 @@ function UserDetailsPage() {
                   </strong>
                   ?
                 </>
-              ) : (
-                "Are you sure you want to make this change?"
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="user-change-reason"
+              className="text-sm font-medium"
+            >
+              Reason
+            </label>
+
+            <Input
+              id="user-change-reason"
+              value={actionReason}
+              onChange={(event) =>
+                setActionReason(
+                  event.target.value,
+                )
+              }
+              placeholder="Enter a reason for this change..."
+              disabled={actionLoading}
+              autoComplete="off"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              This reason will be saved in
+              the user audit history.
+            </p>
+          </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel
@@ -1575,7 +1963,10 @@ function UserDetailsPage() {
                 event.preventDefault();
                 confirmAction();
               }}
-              disabled={actionLoading}
+              disabled={
+                actionLoading ||
+                !actionReason.trim()
+              }
             >
               {actionLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

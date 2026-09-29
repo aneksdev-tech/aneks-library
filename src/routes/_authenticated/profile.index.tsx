@@ -48,6 +48,10 @@ export const Route = createFileRoute("/_authenticated/profile/")({
 function ProfilePage() {
   const { profile, user, refresh } = useAuth();
 
+  useEffect(() => {
+    return () => {};
+  }, []);
+
   const isResearcher = profile?.primary_role === "researcher";
   const isLecturer = profile?.primary_role === "lecturer";
   const isStudent = profile?.primary_role === "student";
@@ -913,18 +917,14 @@ function ProfilePage() {
                         value={
                           form.college
                         }
-                        onValueChange={(
-                          value,
-                        ) => {
-                          setForm(
-                            (current) => ({
-                              ...current,
-                              college:
-                                value,
-                              department:
-                                "",
-                            }),
-                          );
+                        onValueChange={(value) => {
+                          if (!value) return;
+
+                          setForm((current) => ({
+                            ...current,
+                            college: value,
+                            department: "",
+                          }));
                         }}
                       >
                         <SelectTrigger
@@ -992,14 +992,11 @@ function ProfilePage() {
                         value={
                           form.department
                         }
-                        onValueChange={(
-                          value,
-                        ) =>
-                          setField(
-                            "department",
-                            value,
-                          )
-                        }
+                        onValueChange={(value) => {
+                          if (!value) return;
+
+                          setField("department", value);
+                        }}
                         disabled={
                           !form.college
                         }
@@ -1063,14 +1060,11 @@ function ProfilePage() {
 
                       <Select
                         value={form.level}
-                        onValueChange={(
-                          value,
-                        ) =>
-                          setField(
-                            "level",
-                            value,
-                          )
-                        }
+                        onValueChange={(value) => {
+                          if (!value) return;
+
+                          setField("level", value);
+                        }}
                       >
                         <SelectTrigger
                           id="level"

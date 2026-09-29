@@ -49,12 +49,13 @@ function PreviewPage() {
 
   const { data: resource, isLoading } = useQuery({
     queryKey: ["preview", resourceId],
+    enabled: !!resourceId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("resources")
         .select(`
           *,
-          category:categories(name)
+          category:categories(name, deleted_at)
         `)
         .eq("id", resourceId)
         .single();
@@ -93,19 +94,30 @@ function PreviewPage() {
     },
   });
 
-  const { data: previewUrl } = useQuery({
+  const {
+    data: previewUrl,
+    isLoading: isPreviewUrlLoading,
+  } = useQuery({
     queryKey: ["preview-url", resourceId],
-    enabled: !!resource,
+    enabled: !!resource && !!user,
     queryFn: async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
+      if (!session?.access_token) {
+        throw new Error(
+          "Your session has expired. Please sign in again.",
+        );
+      }
+
       return {
         url:
           `${import.meta.env.VITE_SUPABASE_URL}` +
-          `/functions/v1/preview-resource?resourceId=${resource!.id}`,
-        accessToken: session?.access_token ?? "",
+          `/functions/v1/preview-resource?resourceId=${encodeURIComponent(
+            resource!.id,
+          )}`,
+        accessToken: session.access_token,
       };
     },
   });
@@ -129,6 +141,12 @@ function PreviewPage() {
   const college = getCollege(
     resource.college ?? "",
   );
+
+  const categoryName =
+    resource.category?.deleted_at == null &&
+    resource.category?.name?.trim()
+      ? resource.category.name.trim()
+      : "Uncategorized";
 
   const download = async () => {
     if (downloading) return;
@@ -177,9 +195,7 @@ function PreviewPage() {
         .toUpperCase();
     }
 
-    return (
-      parts[0][0] + parts[1][0]
-    ).toUpperCase();
+    return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
   })();
 
   return (
@@ -187,6 +203,7 @@ function PreviewPage() {
       <div className="mx-auto max-w-6xl space-y-8">
         <div>
           <button
+            type="button"
             onClick={() => window.history.back()}
             className="mb-6 inline-flex items-center text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
           >
@@ -194,11 +211,9 @@ function PreviewPage() {
           </button>
 
           <div className="mb-4 flex flex-wrap gap-2">
-            {resource.category?.name && (
-              <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                {resource.category.name}
-              </span>
-            )}
+            <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+              {categoryName}
+            </span>
           </div>
 
           <h1 className="font-display text-3xl font-semibold">
@@ -265,7 +280,9 @@ function PreviewPage() {
                       userId: uploader.id,
                     }}
                     className="group block rounded-xl border border-transparent p-3 transition-colors hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    aria-label={`View ${uploader.full_name ?? "uploader"}'s public profile`}
+                    aria-label={`View ${
+                      uploader.full_name ?? "uploader"
+                    }'s public profile`}
                   >
                     <div className="flex min-w-0 items-start gap-3">
                       {uploader.avatar_url ? (
@@ -374,9 +391,13 @@ function PreviewPage() {
               filePath={resource.file_path}
               title={resource.title}
             />
-          ) : (
+          ) : isPreviewUrlLoading ? (
             <div className="flex h-[70vh] items-center justify-center">
               Preparing preview...
+            </div>
+          ) : (
+            <div className="flex h-[70vh] items-center justify-center text-sm text-muted-foreground">
+              Preview unavailable.
             </div>
           )}
         </div>
