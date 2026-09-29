@@ -548,17 +548,17 @@ function AuthPage() {
       );
     }
 
-    /*
-     * Give the opener a moment to receive the message
-     * before closing the popup.
+        /*
+     * The completion message has been dispatched to
+     * the opener. Close the OAuth popup immediately.
+     *
+     * Do not delay this with setTimeout because the
+     * popup may navigate to an account-status page
+     * before the timer fires. That navigation would
+     * unmount this effect and cancel the close timer.
      */
-    const timer = window.setTimeout(() => {
-      window.close();
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
+    window.close();
+    
   }, [
     isGoogleOAuthPopup,
     loading,
@@ -961,7 +961,7 @@ function AuthPage() {
          */
         sessionStorage.setItem(
           GOOGLE_LOGIN_BLOCKED_MESSAGE_KEY,
-          "No account is linked to this Google account yet. Please select your role and continue with Google, or fill in the required fields to create an account with Email and password.",
+          "Account doesn't exist. Please select your role and continue with Google, or fill in the required fields to create an account with Email and password.",
         );
 
         /*
