@@ -406,53 +406,60 @@ function AuthPage() {
         );
 
         if (error) {
-          console.error(
-            "Google registration completion error:",
-            error,
-          );
+  const isAlreadyRegistered =
+    error.code === "P0001" &&
+    (
+      error.message ===
+        "This Google account is not eligible for this registration request" ||
+      error.message ===
+        "This registration flow is only available for Google accounts"
+    );
 
-          sessionStorage.removeItem(
-            GOOGLE_REGISTRATION_NONCE_KEY,
-          );
+  if (!isAlreadyRegistered) {
+    console.error(
+      "Google registration completion error:",
+      error,
+    );
+  }
 
-          localStorage.removeItem(
-            GOOGLE_REGISTRATION_POPUP_NONCE_KEY,
-          );
+  sessionStorage.removeItem(
+    GOOGLE_REGISTRATION_NONCE_KEY,
+  );
 
-          if (
-            error.code === "P0001" &&
-            error.message ===
-              "This Google account is not eligible for this registration request"
-          ) {
-            toast.error(
-  "This account is already registered. Please proceed to the Login page and sign in using Google or your Email and password.",
-);
-          } else {
-            toast.error(
-              "Google registration could not be completed. Please try again.",
-            );
-          }
+  localStorage.removeItem(
+    GOOGLE_REGISTRATION_POPUP_NONCE_KEY,
+  );
 
-          await supabase.auth.signOut();
+  if (isAlreadyRegistered) {
+    toast.error(
+      "This account is already registered. Please proceed to the Login page and sign in using Google or your Email and password.",
+    );
+  } else {
+    toast.error(
+      "Google registration could not be completed. Please try again.",
+    );
+  }
 
-          googleRegistrationProcessingNonce.current =
-            null;
+  await supabase.auth.signOut();
 
-          googleRegistrationHandled.current =
-            false;
+  googleRegistrationProcessingNonce.current =
+    null;
 
-          setGoogleRegistrationBusy(false);
+  googleRegistrationHandled.current =
+    false;
 
-          void navigate({
-            to: "/auth",
-            search: {
-              mode: "register",
-            },
-            replace: true,
-          });
+  setGoogleRegistrationBusy(false);
 
-          return;
-        }
+  void navigate({
+    to: "/auth",
+    search: {
+      mode: "register",
+    },
+    replace: true,
+  });
+
+  return;
+}
 
         /*
          * The registration intent has now been
@@ -558,7 +565,7 @@ function AuthPage() {
      * unmount this effect and cancel the close timer.
      */
     window.close();
-    
+
   }, [
     isGoogleOAuthPopup,
     loading,
@@ -730,32 +737,39 @@ function AuthPage() {
         );
 
         if (error) {
-          console.error(
-            "Google registration completion error:",
-            error,
-          );
+  const isAlreadyRegistered =
+    error.code === "P0001" &&
+    (
+      error.message ===
+        "This Google account is not eligible for this registration request" ||
+      error.message ===
+        "This registration flow is only available for Google accounts"
+    );
 
-          sessionStorage.removeItem(
-            GOOGLE_REGISTRATION_NONCE_KEY,
-          );
+  if (!isAlreadyRegistered) {
+    console.error(
+      "Google registration completion error:",
+      error,
+    );
+  }
 
-          localStorage.removeItem(
-            GOOGLE_REGISTRATION_POPUP_NONCE_KEY,
-          );
+  sessionStorage.removeItem(
+    GOOGLE_REGISTRATION_NONCE_KEY,
+  );
 
-          if (
-            error.code === "P0001" &&
-            error.message ===
-              "This Google account is not eligible for this registration request"
-          ) {
-            toast.error(
-  "This account is already registered. Please proceed to the Login page and sign in using Google or your Email and password.",
-);
-          } else {
-            toast.error(
-              "Google registration could not be completed. Please try again.",
-            );
-          }
+  localStorage.removeItem(
+    GOOGLE_REGISTRATION_POPUP_NONCE_KEY,
+  );
+
+  if (isAlreadyRegistered) {
+    toast.error(
+      "This account is already registered. Please proceed to the Login page and sign in using Google or your Email and password.",
+    );
+  } else {
+    toast.error(
+      "Google registration could not be completed. Please try again.",
+    );
+  }
 
           await supabase.auth.signOut();
 
@@ -1959,7 +1973,7 @@ function RegisterForm() {
             )
           ) {
             toast.error(
-              "Email already exists. Please log in.",
+              "This account is already registered. Please proceed to the Login page and sign in using Google or your Email and password.",
             );
           } else {
             toast.error(
@@ -1982,7 +1996,7 @@ function RegisterForm() {
           data.user.identities.length === 0
         ) {
           toast.error(
-            "Email already exists. Please log in.",
+            "This account is already registered. Please proceed to the Login page and sign in using Google or your Email and password.",
           );
 
           return;
