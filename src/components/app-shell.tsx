@@ -38,6 +38,7 @@ interface NavItem {
   icon: typeof Home;
   label: string;
   admin?: boolean;
+  academic?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -48,9 +49,15 @@ const NAV: NavItem[] = [
   { to: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
   { to: "/premium", icon: Crown, label: "Premium" },
   { to: "/notifications", icon: Bell, label: "Notifications" },
-  { to: "/profile", icon: User, label: "Profile" },
-  { to: "/admin", icon: Shield, label: "Admin", admin: true },
-];
+    { to: "/profile", icon: User, label: "Profile" },
+    {
+      to: "/academic",
+      icon: GraduationCap,
+      label: "Academic",
+      academic: true,
+    },
+    { to: "/admin", icon: Shield, label: "Admin", admin: true },
+  ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { profile, signOut, user } = useAuth();
@@ -61,13 +68,25 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const role = profile?.primary_role;
 
-  const canAccessAdmin =
+    const canAccessAdmin =
     role === "admin" ||
     role === "co-admin" ||
-    role === "lecturer" ||
     role === "staff";
 
-  const items = NAV.filter((n) => (n.admin ? canAccessAdmin : true));
+  const canAccessAcademic =
+    role === "lecturer";
+
+  const items = NAV.filter((n) => {
+    if (n.admin) {
+      return canAccessAdmin;
+    }
+
+    if (n.academic) {
+      return canAccessAcademic;
+    }
+
+    return true;
+  });
 
   const handleSignOut = async () => {
     await signOut();

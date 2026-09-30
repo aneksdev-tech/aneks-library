@@ -8,7 +8,9 @@ export function AnnouncementBanner() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
-        .select("id, title, body, link, created_at")
+        .select(
+          "id, title, body, content, link, created_at",
+        )
         .eq("is_active", true)
         .is("deleted_at", null)
         .order("created_at", { ascending: false })

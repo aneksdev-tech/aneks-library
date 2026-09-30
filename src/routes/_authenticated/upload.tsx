@@ -4,7 +4,7 @@ import {
   useBlocker,
   useNavigate,
 } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -98,6 +98,7 @@ function UploadRouteLayout() {
 export function UploadPage({ draftId }: UploadPageProps) {
   const { user } = useAuth();
   const nav = useNavigate();
+  const qc = useQueryClient();
 
   const [file, setFile] = useState<File | null>(null);
   const [existingFileName, setExistingFileName] = useState("");
@@ -477,6 +478,12 @@ export function UploadPage({ draftId }: UploadPageProps) {
       setFile(null);
       setProgress(0);
       allowNavigationRef.current = true;
+
+    if (variables.status === "pending") {
+    qc.invalidateQueries({
+      queryKey: ["academic-pending-resources"],
+    });
+  }
 
       nav({ to: "/my-uploads" });
 

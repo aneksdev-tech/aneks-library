@@ -10,10 +10,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
-type PublicProfile = {
-  full_name: string | null;
-};
-
 export const Route = createFileRoute(
   "/_authenticated/announcements/$announcementId",
 )({
@@ -36,7 +32,7 @@ function AnnouncementDetailsPage() {
         await supabase
           .from("announcements")
           .select(
-            "id, title, body, content, link, is_active, created_at, updated_at, created_by, updated_by, deleted_at",
+            "id, title, body, content, link, is_active, deleted_at",
           )
           .eq("id", announcementId)
           .eq("is_active", true)
@@ -47,70 +43,7 @@ function AnnouncementDetailsPage() {
         throw announcementError;
       }
 
-      if (!announcement) {
-        return null;
-      }
-
-      const profileIds = [
-        ...new Set(
-          [
-            announcement.created_by,
-            announcement.updated_by,
-          ].filter(
-            (id): id is string => Boolean(id),
-          ),
-        ),
-      ];
-
-      if (!profileIds.length) {
-        return {
-          announcement,
-          creator: null,
-          updater: null,
-        };
-      }
-
-      const {
-        data: profiles,
-        error: profilesError,
-      } = await supabase
-        .from("public_profiles")
-        .select("id, full_name")
-        .in("id", profileIds);
-
-      if (profilesError) {
-        throw profilesError;
-      }
-
-      const profileMap = new Map<
-        string,
-        PublicProfile
-      >(
-        (profiles ?? [])
-          .filter(
-            (
-              profile,
-            ): profile is typeof profile & {
-              id: string;
-            } => profile.id !== null,
-          )
-          .map((profile) => [
-            profile.id,
-            {
-              full_name: profile.full_name,
-            },
-          ]),
-      );
-
-      return {
-        announcement,
-        creator: announcement.created_by
-          ? profileMap.get(announcement.created_by) ?? null
-          : null,
-        updater: announcement.updated_by
-          ? profileMap.get(announcement.updated_by) ?? null
-          : null,
-      };
+      return announcement;
     },
   });
 
@@ -151,17 +84,6 @@ function AnnouncementDetailsPage() {
     );
   }
 
-  const { announcement, creator, updater } = data;
-
-  const creatorName =
-    creator?.full_name ?? "Unknown user";
-
-  const updaterName =
-    updater?.full_name ?? "Unknown user";
-
-  const hasBeenUpdated =
-    announcement.updated_at !== announcement.created_at;
-
   return (
     <section className="mx-auto max-w-3xl space-y-5">
       <Button asChild variant="ghost" size="sm">
@@ -179,33 +101,33 @@ function AnnouncementDetailsPage() {
           </div>
 
           <h1 className="mt-3 font-display text-2xl font-semibold sm:text-3xl">
-            {announcement.title}
+            {data.title}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {announcement.body}
+            {data.body}
           </p>
         </div>
 
         <div className="p-6 sm:p-8">
           <div className="whitespace-pre-wrap text-sm leading-7 text-foreground sm:text-base">
-            {announcement.content?.trim()
-              ? announcement.content
-              : announcement.body}
+            {data.content?.trim()
+              ? data.content
+              : data.body}
           </div>
 
-          {announcement.link && (
+          {data.link && (
             <div className="mt-8 border-t border-border pt-6">
               <Button asChild>
                 <a
-                  href={announcement.link}
+                  href={data.link}
                   target={
-                    announcement.link.startsWith("/")
+                    data.link.startsWith("/")
                       ? undefined
                       : "_blank"
                   }
                   rel={
-                    announcement.link.startsWith("/")
+                    data.link.startsWith("/")
                       ? undefined
                       : "noopener noreferrer"
                   }
@@ -216,46 +138,6 @@ function AnnouncementDetailsPage() {
               </Button>
             </div>
           )}
-        </div>
-
-        <div className="border-t border-border bg-muted/20 px-6 py-5 sm:px-8">
-          <div className="space-y-1 text-xs text-muted-foreground">
-            <p>
-              <span className="font-medium text-foreground">
-                Created by:
-              </span>{" "}
-              {creatorName}
-            </p>
-
-            <p>
-              <span className="font-medium text-foreground">
-                Created:
-              </span>{" "}
-              {new Date(
-                announcement.created_at,
-              ).toLocaleString()}
-            </p>
-
-            {hasBeenUpdated && (
-              <>
-                <p>
-                  <span className="font-medium text-foreground">
-                    Updated by:
-                  </span>{" "}
-                  {updaterName}
-                </p>
-
-                <p>
-                  <span className="font-medium text-foreground">
-                    Updated:
-                  </span>{" "}
-                  {new Date(
-                    announcement.updated_at,
-                  ).toLocaleString()}
-                </p>
-              </>
-            )}
-          </div>
         </div>
       </article>
     </section>

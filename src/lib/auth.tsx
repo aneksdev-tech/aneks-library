@@ -370,19 +370,32 @@ setProfile(nextProfile);
     const canAccessAdminArea =
       profile.primary_role === "admin" ||
       profile.primary_role === "co-admin" ||
-      profile.primary_role === "lecturer" ||
       profile.primary_role === "staff";
+    
+    const canAccessAcademicArea =
+      profile.primary_role === "lecturer";
 
     if (
-      currentPath.startsWith("/admin") &&
-      !canAccessAdminArea
-    ) {
-      window.location.replace(
-        "/dashboard",
-      );
+  currentPath.startsWith("/admin") &&
+  !canAccessAdminArea
+) {
+  window.location.replace(
+    "/dashboard",
+  );
 
-      return;
-    }
+  return;
+}
+
+if (
+  currentPath.startsWith("/academic") &&
+  !canAccessAcademicArea
+) {
+  window.location.replace(
+    "/dashboard",
+  );
+
+  return;
+}
 
     /*
      * Active accounts should not remain on

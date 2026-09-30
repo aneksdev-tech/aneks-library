@@ -65,6 +65,7 @@ function AdminOverview() {
         users,
         resources,
         pending,
+        pendingUsers,
         downloads,
         bookmarks,
         storage,
@@ -73,15 +74,21 @@ function AdminOverview() {
           .from("private_profiles")
           .select("id", { count: "exact", head: true }),
 
-        supabase
+          
+          supabase
           .from("resources")
           .select("id", { count: "exact", head: true })
           .eq("status", "approved"),
-
-        supabase
-          .from("resources")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "pending"),
+          
+          supabase
+            .from("resources")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "pending"),
+          
+          supabase
+            .from("private_profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "pending"),
 
         supabase.rpc(
           "get_total_active_resource_downloads",
@@ -104,6 +111,10 @@ function AdminOverview() {
         throw pending.error;
       }
 
+      if (pendingUsers.error) {
+        throw pendingUsers.error;
+      }
+
       if (downloads.error) {
         throw downloads.error;
       }
@@ -119,7 +130,9 @@ function AdminOverview() {
       return {
         users: users.count ?? 0,
         resources: resources.count ?? 0,
-        pending: pending.count ?? 0,
+        pending:
+          (pending.count ?? 0) +
+          (pendingUsers.count ?? 0),
         downloads: Number(downloads.data ?? 0),
         bookmarks: Number(bookmarks.data ?? 0),
         storage: Number(storage.data ?? 0),
@@ -302,7 +315,7 @@ function AdminOverview() {
             </p>
 
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Resources currently awaiting administrative review.
+              User accounts and resources awaiting administrative review.
             </p>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
   getNextContributorLevel,
 } from "@/lib/reputation";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import type { ReactNode } from "react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -162,6 +163,7 @@ function DashboardPage() {
       </div>
 
       <AnnouncementBanner />
+      <AnnouncementPopup />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (

@@ -97,6 +97,7 @@ type Resource = {
   bookmark_count: number;
   approved_by: string | null;
   approved_at: string | null;
+  approval_reason: string | null;
   deleted_by: string | null;
   deleted_at: string | null;
   deletion_reason: string | null;
@@ -133,6 +134,19 @@ type ResourceEditAudit = {
   edit_summary: string;
   created_at: string;
   editor?: {
+    full_name?: string | null;
+    email?: string | null;
+  } | null;
+};
+
+type ResourceModerationAudit = {
+  id: string;
+  resource_id: string;
+  performed_by: string;
+  action: "approved" | "rejected";
+  reason: string;
+  created_at: string;
+  performer?: {
     full_name?: string | null;
     email?: string | null;
   } | null;
@@ -389,6 +403,7 @@ function ResourcesPage() {
             bookmark_count,
             approved_by,
             approved_at,
+            approval_reason,
             deleted_by,
             deleted_at,
             deletion_reason,
@@ -618,6 +633,100 @@ function ResourcesPage() {
       },
     });
 
+  const { data: moderationAudits } =
+  useQuery({
+    queryKey: [
+      "admin-resource-moderation-audits",
+      resourceIds,
+    ],
+    enabled: resourceIds.length > 0,
+    queryFn: async () => {
+      const {
+        data: audits,
+        error: auditsError,
+      } = await supabase
+        .from(
+          "resource_moderation_audit_logs",
+        )
+        .select(
+          "id, resource_id, performed_by, action, reason, created_at",
+        )
+        .in(
+          "resource_id",
+          resourceIds,
+        )
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (auditsError) {
+        throw auditsError;
+      }
+
+      const rows =
+        (audits ??
+          []) as ResourceModerationAudit[];
+
+      const performerIds = [
+        ...new Set(
+          rows
+            .map(
+              (audit) =>
+                audit.performed_by,
+            )
+            .filter(Boolean),
+        ),
+      ];
+
+      if (
+        performerIds.length === 0
+      ) {
+        return rows;
+      }
+
+      const {
+        data: performers,
+        error: performersError,
+      } = await supabase
+        .from("private_profiles")
+        .select(
+          "id, full_name, email",
+        )
+        .in(
+          "id",
+          performerIds,
+        );
+
+      if (performersError) {
+        throw performersError;
+      }
+
+      const performerMap = new Map(
+        (performers ?? []).map(
+          (performer) => [
+            performer.id,
+            {
+              full_name:
+                performer.full_name,
+              email:
+                performer.email,
+            },
+          ],
+        ),
+      );
+
+      return rows.map(
+        (audit) => ({
+          ...audit,
+          performer:
+            performerMap.get(
+              audit.performed_by,
+            ) ?? null,
+        }),
+      );
+    },
+  });
+
   const latestEditMap = useMemo(() => {
     const map = new Map<
       string,
@@ -639,13 +748,67 @@ function ResourcesPage() {
   }, [editAudits]);
 
   const getResourceHistory = (
-    resourceId: string,
-  ) =>
-    (editAudits ?? []).filter(
+  resourceId: string,
+) => {
+  const editHistory = (
+    editAudits ?? []
+  )
+    .filter(
       (audit) =>
         audit.resource_id ===
         resourceId,
-    );
+    )
+    .map((audit) => ({
+      type: "edit" as const,
+      id: audit.id,
+      created_at:
+        audit.created_at,
+      editor:
+        audit.editor,
+      edited_by:
+        audit.edited_by,
+      edit_summary:
+        audit.edit_summary,
+    }));
+
+  const moderationHistory = (
+    moderationAudits ?? []
+  )
+    .filter(
+      (audit) =>
+        audit.resource_id ===
+        resourceId,
+    )
+    .map((audit) => ({
+      type:
+        audit.action ===
+        "approved"
+          ? ("approved" as const)
+          : ("rejected" as const),
+      id: audit.id,
+      created_at:
+        audit.created_at,
+      performer:
+        audit.performer,
+      performed_by:
+        audit.performed_by,
+      reason:
+        audit.reason,
+    }));
+
+  return [
+    ...editHistory,
+    ...moderationHistory,
+  ].sort(
+    (a, b) =>
+      new Date(
+        b.created_at,
+      ).getTime() -
+      new Date(
+        a.created_at,
+      ).getTime(),
+  );
+};
 
   const editResource = useMutation({
     mutationFn: async ({
@@ -1774,25 +1937,37 @@ function ResourcesPage() {
                             )}
                           </>
                         ) : (
-                          <AuditItem
-                            label="Approved by"
-                            value={
-                              resource.approved_by
-                                ? getPersonName(
-                                    resource.approver,
-                                    resource.approved_by,
-                                  )
-                                : "Not approved"
-                            }
-                            detail={
-                              resource.approved_at
-                                ? formatDateTime(
-                                    resource.approved_at,
-                                  )
-                                : undefined
-                            }
-                          />
-                        )}
+  <>
+    <AuditItem
+      label="Approved by"
+      value={
+        resource.approved_by
+          ? getPersonName(
+              resource.approver,
+              resource.approved_by,
+            )
+          : "Not approved"
+      }
+      detail={
+        resource.approved_at
+          ? formatDateTime(
+              resource.approved_at,
+            )
+          : undefined
+      }
+    />
+
+    {resource.status === "approved" &&
+      resource.approval_reason && (
+        <AuditItem
+          label="Approval reason"
+          value={
+            resource.approval_reason
+          }
+        />
+      )}
+  </>
+)}
 
                         <AuditItem
                           label="Deleted by"
@@ -1847,7 +2022,7 @@ function ResourcesPage() {
                           )}
                       </div>
 
-                      {/* Edit history */}
+                      {/* Resource history */}
                       <div>
                         <Button
                           type="button"
@@ -1874,47 +2049,63 @@ function ResourcesPage() {
                             {history.length >
                             0 ? (
                               <div className="space-y-3">
-                                {history.map(
-                                  (log) => (
-                                    <div
-                                      key={
-                                        log.id
-                                      }
-                                      className="text-xs"
-                                    >
-                                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <span className="font-medium uppercase">
-                                          Edit
-                                        </span>
+                                {history.map((log) => (
+  <div
+    key={`${log.type}-${log.id}`}
+    className="text-xs"
+  >
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span className="font-medium uppercase">
+        {log.type === "edit"
+          ? "Edit"
+          : log.type === "approved"
+            ? "Approve"
+            : "Reject"}
+      </span>
 
-                                        <span className="text-muted-foreground">
-                                          {formatDateTime(
-                                            log.created_at,
-                                          )}
-                                        </span>
-                                      </div>
+      <span className="text-muted-foreground">
+        {formatDateTime(
+          log.created_at,
+        )}
+      </span>
+    </div>
 
-                                      <p className="mt-0.5 text-muted-foreground">
-                                        By{" "}
-                                        {getPersonName(
-                                          log.editor,
-                                          log.edited_by,
-                                        )}
-                                      </p>
+    {log.type === "edit" ? (
+      <>
+        <p className="mt-0.5 text-muted-foreground">
+          By{" "}
+          {getPersonName(
+            log.editor,
+            log.edited_by,
+          )}
+        </p>
 
-                                      <p className="mt-1 text-muted-foreground">
-                                        Summary:{" "}
-                                        {
-                                          log.edit_summary
-                                        }
-                                      </p>
-                                    </div>
-                                  ),
-                                )}
+        <p className="mt-1 text-muted-foreground">
+          Summary:{" "}
+          {log.edit_summary}
+        </p>
+      </>
+    ) : (
+      <>
+        <p className="mt-0.5 text-muted-foreground">
+          By{" "}
+          {getPersonName(
+            log.performer,
+            log.performed_by,
+          )}
+        </p>
+
+        <p className="mt-1 text-muted-foreground">
+          Reason: {log.reason}
+        </p>
+      </>
+    )}
+  </div>
+))}
                               </div>
                             ) : (
                               <p className="py-2 text-xs text-muted-foreground">
-                                No edit history yet.
+                                No history yet.
                               </p>
                             )}
                           </div>

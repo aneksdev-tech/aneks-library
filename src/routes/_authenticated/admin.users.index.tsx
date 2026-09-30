@@ -91,7 +91,6 @@ export const Route = createFileRoute(
 
 const STATUSES: AccountStatus[] = [
   "active",
-  "pending",
   "rejected",
   "suspended",
   "inactive",
@@ -456,35 +455,36 @@ function UsersPage() {
   } = useQuery<UserProfile[]>({
     queryKey: ["admin-users"],
 
-    queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from("private_profiles")
-          .select(
-            [
-              "id",
-              "full_name",
-              "email",
-              "avatar_url",
-              "bio",
-              "phone_number",
-              "college",
-              "department",
-              "level",
-              "primary_role",
-              "status",
-              "reputation",
-              "created_at",
-              "updated_at",
-              "subscription_plan",
-              "subscription_status",
-              "subscription_started_at",
-              "subscription_expires_at",
-            ].join(", "),
-          )
-          .order("created_at", {
-            ascending: false,
-          });
+queryFn: async () => {
+const { data, error } =
+  await supabase
+    .from("private_profiles")
+    .select(
+      [
+        "id",
+        "full_name",
+        "email",
+        "avatar_url",
+        "bio",
+        "phone_number",
+        "college",
+        "department",
+        "level",
+        "primary_role",
+        "status",
+        "reputation",
+        "created_at",
+        "updated_at",
+        "subscription_plan",
+        "subscription_status",
+        "subscription_started_at",
+        "subscription_expires_at",
+      ].join(", "),
+    )
+    .neq("status", "pending")
+    .order("created_at", {
+      ascending: false,
+    });
 
       if (error) {
         throw error;

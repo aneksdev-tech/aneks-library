@@ -28,9 +28,11 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookmarksRouteImport } from './routes/_authenticated/bookmarks'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAcademicRouteImport } from './routes/_authenticated/academic'
 import { Route as AuthenticatedUploadIndexRouteImport } from './routes/_authenticated/upload.index'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAcademicIndexRouteImport } from './routes/_authenticated/academic.index'
 import { Route as AuthenticatedUploadDraftIdRouteImport } from './routes/_authenticated/upload.$draftId'
 import { Route as AuthenticatedProfileUserIdRouteImport } from './routes/_authenticated/profile.$userId'
 import { Route as AuthenticatedPreviewResourceIdRouteImport } from './routes/_authenticated/preview.$resourceId'
@@ -138,6 +140,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAcademicRoute = AuthenticatedAcademicRouteImport.update({
+  id: '/academic',
+  path: '/academic',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUploadIndexRoute =
   AuthenticatedUploadIndexRouteImport.update({
     id: '/',
@@ -155,6 +162,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAcademicIndexRoute =
+  AuthenticatedAcademicIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAcademicRoute,
+  } as any)
 const AuthenticatedUploadDraftIdRoute =
   AuthenticatedUploadDraftIdRouteImport.update({
     id: '/$draftId',
@@ -231,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/suspended': typeof SuspendedRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/academic': typeof AuthenticatedAcademicRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookmarks': typeof AuthenticatedBookmarksRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -249,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
   '/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
+  '/academic/': typeof AuthenticatedAcademicIndexRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
   '/upload/': typeof AuthenticatedUploadIndexRoute
@@ -280,6 +295,7 @@ export interface FileRoutesByTo {
   '/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
   '/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
+  '/academic': typeof AuthenticatedAcademicIndexRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
   '/upload': typeof AuthenticatedUploadIndexRoute
@@ -298,6 +314,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/suspended': typeof SuspendedRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/_authenticated/academic': typeof AuthenticatedAcademicRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookmarks': typeof AuthenticatedBookmarksRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -316,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/preview/$resourceId': typeof AuthenticatedPreviewResourceIdRoute
   '/_authenticated/profile/$userId': typeof AuthenticatedProfileUserIdRoute
   '/_authenticated/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
+  '/_authenticated/academic/': typeof AuthenticatedAcademicIndexRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/upload/': typeof AuthenticatedUploadIndexRoute
@@ -334,6 +352,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/suspended'
     | '/verify-email'
+    | '/academic'
     | '/admin'
     | '/bookmarks'
     | '/dashboard'
@@ -352,6 +371,7 @@ export interface FileRouteTypes {
     | '/preview/$resourceId'
     | '/profile/$userId'
     | '/upload/$draftId'
+    | '/academic/'
     | '/admin/'
     | '/profile/'
     | '/upload/'
@@ -383,6 +403,7 @@ export interface FileRouteTypes {
     | '/preview/$resourceId'
     | '/profile/$userId'
     | '/upload/$draftId'
+    | '/academic'
     | '/admin'
     | '/profile'
     | '/upload'
@@ -400,6 +421,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/suspended'
     | '/verify-email'
+    | '/_authenticated/academic'
     | '/_authenticated/admin'
     | '/_authenticated/bookmarks'
     | '/_authenticated/dashboard'
@@ -418,6 +440,7 @@ export interface FileRouteTypes {
     | '/_authenticated/preview/$resourceId'
     | '/_authenticated/profile/$userId'
     | '/_authenticated/upload/$draftId'
+    | '/_authenticated/academic/'
     | '/_authenticated/admin/'
     | '/_authenticated/profile/'
     | '/_authenticated/upload/'
@@ -573,6 +596,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/academic': {
+      id: '/_authenticated/academic'
+      path: '/academic'
+      fullPath: '/academic'
+      preLoaderRoute: typeof AuthenticatedAcademicRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/upload/': {
       id: '/_authenticated/upload/'
       path: '/'
@@ -593,6 +623,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/academic/': {
+      id: '/_authenticated/academic/'
+      path: '/'
+      fullPath: '/academic/'
+      preLoaderRoute: typeof AuthenticatedAcademicIndexRouteImport
+      parentRoute: typeof AuthenticatedAcademicRoute
     }
     '/_authenticated/upload/$draftId': {
       id: '/_authenticated/upload/$draftId'
@@ -674,6 +711,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAcademicRouteChildren {
+  AuthenticatedAcademicIndexRoute: typeof AuthenticatedAcademicIndexRoute
+}
+
+const AuthenticatedAcademicRouteChildren: AuthenticatedAcademicRouteChildren = {
+  AuthenticatedAcademicIndexRoute: AuthenticatedAcademicIndexRoute,
+}
+
+const AuthenticatedAcademicRouteWithChildren =
+  AuthenticatedAcademicRoute._addFileChildren(
+    AuthenticatedAcademicRouteChildren,
+  )
+
 interface AuthenticatedAdminUsersRouteChildren {
   AuthenticatedAdminUsersUserIdRoute: typeof AuthenticatedAdminUsersUserIdRoute
   AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
@@ -725,6 +775,7 @@ const AuthenticatedUploadRouteWithChildren =
   AuthenticatedUploadRoute._addFileChildren(AuthenticatedUploadRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAcademicRoute: typeof AuthenticatedAcademicRouteWithChildren
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedBookmarksRoute: typeof AuthenticatedBookmarksRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -741,6 +792,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAcademicRoute: AuthenticatedAcademicRouteWithChildren,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedBookmarksRoute: AuthenticatedBookmarksRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

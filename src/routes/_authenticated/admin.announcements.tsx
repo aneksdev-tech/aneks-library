@@ -88,7 +88,28 @@ type PendingToggle = {
 };
 
 function AnnouncementsPage() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+
+const isAdminOrCoAdmin =
+  roles?.includes("admin") ||
+  roles?.includes("co-admin");
+
+const isStaff =
+  roles?.includes("staff");
+
+const canPublishAnnouncements =
+  isAdminOrCoAdmin;
+
+const canManageAnnouncement = (
+  announcement: Announcement,
+) =>
+  Boolean(
+    isAdminOrCoAdmin ||
+      (
+        isStaff &&
+        announcement.created_by === user?.id
+      ),
+  );
   const qc = useQueryClient();
 
   const [title, setTitle] = useState("");
@@ -829,8 +850,10 @@ function AnnouncementsPage() {
             </p>
 
             <p className="text-xs text-muted-foreground">
-              Publish important information to the Dashboard announcement banner.
-            </p>
+  {canPublishAnnouncements
+    ? "Publish important information to the Dashboard announcement banner."
+    : "Create an announcement for Admin or Co-admin review and publication."}
+</p>
           </div>
         </div>
 
@@ -936,12 +959,16 @@ function AnnouncementsPage() {
               )}
 
               {saveAnnouncement.isPending
-                ? editingAnnouncement
-                  ? "Saving…"
-                  : "Publishing…"
-                : editingAnnouncement
-                  ? "Save changes"
-                  : "Publish announcement"}
+  ? editingAnnouncement
+    ? "Saving…"
+    : canPublishAnnouncements
+      ? "Publishing…"
+      : "Submitting…"
+  : editingAnnouncement
+    ? "Save changes"
+    : canPublishAnnouncements
+      ? "Publish announcement"
+      : "Submit announcement"}
             </Button>
 
             {editingAnnouncement && (
@@ -1286,83 +1313,91 @@ function AnnouncementsPage() {
                     </div>
 
                     <div className="flex shrink-0 flex-wrap items-center gap-2">
-                      {!isDeleted && (
-                        <>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              isToggling ||
-                              toggleAnnouncement.isPending ||
-                              deleteAnnouncement.isPending ||
-                              saveAnnouncement.isPending
-                            }
-                            onClick={() =>
-                              openToggleDialog(
-                                announcement,
-                              )
-                            }
-                          >
-                            {isToggling ? (
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            ) : announcement.is_active ? (
-                              <PowerOff className="mr-1.5 h-3.5 w-3.5" />
-                            ) : (
-                              <Power className="mr-1.5 h-3.5 w-3.5" />
-                            )}
+  {!isDeleted && (
+    <>
+      {canPublishAnnouncements && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={
+            isToggling ||
+            toggleAnnouncement.isPending ||
+            deleteAnnouncement.isPending ||
+            saveAnnouncement.isPending
+          }
+          onClick={() =>
+            openToggleDialog(
+              announcement,
+            )
+          }
+        >
+          {isToggling ? (
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+          ) : announcement.is_active ? (
+            <PowerOff className="mr-1.5 h-3.5 w-3.5" />
+          ) : (
+            <Power className="mr-1.5 h-3.5 w-3.5" />
+          )}
 
-                            {announcement.is_active
-                              ? "Deactivate"
-                              : "Activate"}
-                          </Button>
+          {announcement.is_active
+            ? "Deactivate"
+            : "Activate"}
+        </Button>
+      )}
 
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              toggleAnnouncement.isPending ||
-                              deleteAnnouncement.isPending ||
-                              saveAnnouncement.isPending
-                            }
-                            onClick={() =>
-                              startEditing(
-                                announcement,
-                              )
-                            }
-                          >
-                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                            Edit
-                          </Button>
+      {canManageAnnouncement(
+        announcement,
+      ) && (
+        <>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={
+              toggleAnnouncement.isPending ||
+              deleteAnnouncement.isPending ||
+              saveAnnouncement.isPending
+            }
+            onClick={() =>
+              startEditing(
+                announcement,
+              )
+            }
+          >
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
 
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              toggleAnnouncement.isPending ||
-                              deleteAnnouncement.isPending ||
-                              saveAnnouncement.isPending
-                            }
-                            onClick={() =>
-                              openDeleteDialog(
-                                announcement,
-                              )
-                            }
-                            className="text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-                          >
-                            {isDeleting ? (
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                            )}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={
+              toggleAnnouncement.isPending ||
+              deleteAnnouncement.isPending ||
+              saveAnnouncement.isPending
+            }
+            onClick={() =>
+              openDeleteDialog(
+                announcement,
+              )
+            }
+            className="text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
+          >
+            {isDeleting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            )}
 
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                    </div>
+            Delete
+          </Button>
+        </>
+      )}
+    </>
+  )}
+</div>
                   </div>
                 </li>
               );
