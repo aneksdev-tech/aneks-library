@@ -127,9 +127,6 @@ export function AnnouncementPopup() {
 
         <div className="p-6 sm:p-8">
           <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <Megaphone className="h-5 w-5 text-primary" />
-            </div>
 
             <div className="min-w-0 pr-8">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-gold">
