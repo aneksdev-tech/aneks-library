@@ -387,16 +387,11 @@ function LandingPage() {
           {/* Glow */}
           <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
 
-          {/* Image */}
-          <div className="aspect-[5/4] w-full overflow-hidden rounded-xl border border-border shadow-elegant">
-            <img
-              src={heroImg}
-              alt="Illustration of an academic library reading room"
-              width={1280}
-              height={1024}
-              className="h-full w-full object-cover"
-            />
-          </div>
+          {/* Image */} <div className="w-full overflow-hidden rounded-xl border border-border shadow-elegant"> 
+            <img src={heroImg} alt="Illustration of an academic library reading room" 
+                 width={1280} 
+                 height={1024} 
+                 className="h-full w-full object-cover"/> </div>
 
           {/* Floating Card */}
           <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block">
