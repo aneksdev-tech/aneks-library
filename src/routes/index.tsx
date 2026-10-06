@@ -394,7 +394,7 @@ function LandingPage() {
               alt="Illustration of an academic library reading room"
               width={1280}
               height={1024}
-              className="h-full w-full object-cover"
+              className="w-full object-cover"
             />
           </div>
 
