@@ -383,7 +383,7 @@ function LandingPage() {
           </dl>
         </div>
 
-        <div className="relative flex h-fit self-center">
+        <div className="relative flex h-full">
           {/* Glow */}
           <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
 
