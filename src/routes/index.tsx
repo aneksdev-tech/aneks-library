@@ -384,33 +384,60 @@ function LandingPage() {
         </div>
 
         <div className="relative flex h-full">
-          {/* Glow */}
-          <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
+  
+  {/* Glow */}
+  
+  <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
+  
 
-          {/* Image */}
-          <div className="w-full overflow-hidden rounded-xl border border-border shadow-elegant">
-            <img
-              src={heroImg}
-              alt="Illustration of an academic library reading room"
-              width={1280}
-              height={1024}
-              className="w-full"
-            />
-          </div>
+  
+  {/* Image */}
+  
+  <div className="w-full overflow-hidden rounded-xl border border-border shadow-elegant">
+  
+    <img
+  
+      src={heroImg}
+  
+      alt="Illustration of an academic library reading room"
+  
+      width={1280}
+  
+      height={1024}
+  
+      className="h-full w-full object-cover"
+  
+    />
+  
+  </div>
+  
 
-          {/* Floating Card */}
-          <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-              <Users className="h-3.5 w-3.5 text-primary" />
-              Helped Students
-            </div>
+  
+  {/* Floating Card */}
+  
+  <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block">
+  
+    <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+  
+      <Users className="h-3.5 w-3.5 text-primary" />
+  
+      Helped Students
+  
+    </div>
+  
 
-            <div className="mt-1 font-display text-2xl font-semibold">
-              10k+
-            </div>
-          </div>
-        </div>
-      </div>
+  
+    <div className="mt-1 font-display text-2xl font-semibold">
+  
+      10k+
+  
+    </div>
+  
+  </div>
+  
+</div>
+  
+</div>
 
       </section>
       <section id="about" className="border-t border-border/60">
