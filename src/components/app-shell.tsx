@@ -3,7 +3,7 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Bell,
   Bookmark,
@@ -11,6 +11,7 @@ import {
   Home,
   Library,
   LogOut,
+  Menu,
   Moon,
   Settings,
   Sun,
@@ -19,8 +20,10 @@ import {
   GraduationCap,
   FileCheck2,
   Shield,
+  X,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
+import logo from "@/assets/Aneks_Library_Logo.png";
 import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -33,7 +36,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import logo from "@/assets/Aneks_Library_Logo.png";
 
 interface NavItem {
   to: string;
@@ -122,6 +124,11 @@ export function AppShell({
         r.location.pathname,
     });
 
+  const [
+    mobileOpen,
+    setMobileOpen,
+  ] = useState(false);
+
   const role =
     profile?.primary_role;
 
@@ -153,9 +160,10 @@ export function AppShell({
       const {
         data,
         error,
-      } = await supabase.rpc(
-        "get_workspace_attention_count",
-      );
+      } =
+        await supabase.rpc(
+          "get_workspace_attention_count",
+        );
 
       if (error) {
         throw error;
@@ -193,37 +201,80 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh w-full bg-background text-foreground">
-      {/* Responsive sidebar */}
-      <aside className="flex w-16 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground lg:w-64">
-        <Link
-          to="/dashboard"
-          className="flex h-16 items-center justify-center border-b border-sidebar-border px-2 lg:justify-start lg:gap-0.5 lg:px-5"
-        >
-          <img
-            src={logo}
-            alt="Aneks Library"
-            className="h-10 w-10 rounded-lg object-contain"
+  {/* Desktop sidebar */}
+  <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground lg:flex">
+    <Link
+      to="/dashboard"
+      className="flex items-center gap-0.5 px-4 py-6"
+    >
+      <img
+        src={logo}
+        alt="Aneks Library"
+        className="h-10 w-10 rounded-lg object-contain"
+      />
+
+      <span className="-ml-2 font-display text-xs font-semibold tracking-tight sm:text-lg">
+        <span className="text-gold">neks</span> Library
+      </span>
+    </Link>
+
+    <SidebarNav
+      items={items}
+      pathname={pathname}
+      attentionCount={attentionCount}
+    />
+  </aside>
+
+      {/* Mobile icon-only sidebar */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-foreground/40"
+            onClick={() =>
+              setMobileOpen(false)
+            }
           />
 
-          <span className="-ml-2 hidden font-display text-lg font-semibold tracking-tight lg:inline">
-            <span className="text-gold">
-              neks
-            </span>{" "}
-            Library
-          </span>
-        </Link>
+          <aside className="absolute inset-y-0 left-0 flex w-16 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant">
+            <div className="flex h-16 items-center justify-center border-b border-sidebar-border">
+              <button
+                onClick={() =>
+                  setMobileOpen(false)
+                }
+                aria-label="Close menu"
+                className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
-        <SidebarNav
-          items={items}
-          pathname={pathname}
-          attentionCount={
-            attentionCount
-          }
-        />
-      </aside>
+            <SidebarNav
+              items={items}
+              pathname={pathname}
+              attentionCount={
+                attentionCount
+              }
+              onNavigate={() =>
+                setMobileOpen(false)
+              }
+            />
+          </aside>
+        </div>
+      )}
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
+          {/* Mobile menu button */}
+          <button
+            onClick={() =>
+              setMobileOpen(true)
+            }
+            className="rounded-md border border-border p-2 lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
           <div className="ml-auto flex items-center gap-2">
             <NotificationBell />
 
@@ -318,10 +369,12 @@ export function AppShell({
 function SidebarNav({
   items,
   pathname,
+  onNavigate,
   attentionCount,
 }: {
   items: NavItem[];
   pathname: string;
+  onNavigate?: () => void;
   attentionCount: number;
 }) {
   return (
@@ -340,48 +393,39 @@ function SidebarNav({
               )
             ));
 
+        const showAttentionBadge =
+          (item.admin ||
+            item.academic) &&
+          attentionCount > 0;
+
         return (
           <Link
             key={item.to}
             to={item.to}
-            title={item.label}
-            className={`flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors lg:justify-start lg:px-3 ${
+            onClick={onNavigate}
+            className={`relative flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors lg:justify-start lg:px-3 ${
               active
                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
             }`}
+            aria-label={item.label}
           >
-            <div className="relative shrink-0">
-  <item.icon className="h-4 w-4" />
+            <item.icon className="h-4 w-4 shrink-0" />
 
-  {(item.admin || item.academic) &&
-  attentionCount > 0 ? (
-    <span
-      className="absolute -right-2.5 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-0.5 text-[9px] font-semibold leading-none text-gold-foreground lg:hidden"
-      aria-label={`${attentionCount} pending items`}
-    >
-      {attentionCount > 99
-        ? "99+"
-        : attentionCount}
-    </span>
-  ) : null}
-</div>
+            <span className="hidden min-w-0 flex-1 lg:inline">
+              {item.label}
+            </span>
 
-<span className="hidden min-w-0 flex-1 lg:inline">
-  {item.label}
-</span>
-
-{(item.admin || item.academic) &&
-attentionCount > 0 ? (
-  <span
-    className="hidden rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-semibold leading-none text-gold-foreground lg:inline"
-    aria-label={`${attentionCount} pending items`}
-  >
-    {attentionCount > 99
-      ? "99+"
-      : attentionCount}
-  </span>
-) : null}
+            {showAttentionBadge ? (
+              <span
+                className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[9px] font-semibold text-gold-foreground lg:static lg:h-5 lg:min-w-5 lg:text-[10px]"
+                aria-label={`${attentionCount} pending items`}
+              >
+                {attentionCount > 99
+                  ? "99+"
+                  : attentionCount}
+              </span>
+            ) : null}
           </Link>
         );
       })}
