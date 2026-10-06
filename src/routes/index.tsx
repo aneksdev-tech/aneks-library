@@ -326,73 +326,91 @@ function Header() {
 
 function LandingPage() {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
-      <Header />
+  <div className="min-h-dvh bg-background text-foreground">
+    <Header />
 
-      {/* HERO — split screen */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-5 sm:px-6 md:grid-cols-2 lg:py-10 xl:py-25">
-          <div className="flex flex-col justify-center">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft">
-              <Sparkles className="h-3.5 w-3.5 text-gold" />
-              Designed for MOUAU Students
-            </div>
-            <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-5xl">
-            <span className="text-gold">Smart Digital Library,</span> built for Academic Excellence
-            </h1>
-            
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-gradient-emerald text-primary-foreground shadow-elegant">
-                <Link to="/auth" search={{ mode: "register" }}>
-                  Get started <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/library">Login</Link>
-              </Button>
-              {/* <Button asChild size="lg" variant="outline">
-              <Link to="/pricing">Premium Plans</Link>
-              </Button> */}
-            </div>
-            <dl className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4">
-              {stats.map((s) => (
-                <div key={s.label} className="rounded-xl border border-border/60 bg-card/60 p-4 shadow-soft">
-                  <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground">{s.label}</dt>
-                  <dd className="mt-1 break-words font-display text-xl font-semibold">{s.value}</dd>
-                </div>
-              ))}
-            </dl>
+    {/* HERO — split screen */}
+    <section className="relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
+
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-5 sm:px-6 md:grid-cols-2 md:gap-10 lg:py-8 xl:py-12">
+        <div className="flex flex-col justify-center">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft">
+            <Sparkles className="h-3.5 w-3.5 text-gold" />
+            Designed for MOUAU Students
           </div>
 
-          <div className="relative flex h-full">
-  {/* Glow */}
-  <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
+          <h1 className="mt-4 font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-5xl">
+            <span className="text-gold">Smart Digital Library,</span> built
+            for Academic Excellence
+          </h1>
 
-  {/* Image */}
-  <div className="w-full overflow-hidden rounded-xl border border-border shadow-elegant">
-    <img
-      src={heroImg}
-      alt="Illustration of an academic library reading room"
-      width={1280}
-      height={1024}
-      className="h-full w-full object-cover"
-    />
-  </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-emerald text-primary-foreground shadow-elegant"
+            >
+              <Link to="/auth" search={{ mode: "register" }}>
+                Get started <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
 
-  {/* Floating Card */}
-  <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block">
-    <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-      <Users className="h-3.5 w-3.5 text-primary" />
-      Helped Students
-    </div>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/library">Login</Link>
+            </Button>
 
-    <div className="mt-1 font-display text-2xl font-semibold">
-      10k+
-    </div>
-  </div>
-</div>
-</div>
+            {/* <Button asChild size="lg" variant="outline">
+              <Link to="/pricing">Premium Plans</Link>
+            </Button> */}
+          </div>
+
+          <dl className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="rounded-xl border border-border/60 bg-card/60 p-3 shadow-soft sm:p-4"
+              >
+                <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground">
+                  {s.label}
+                </dt>
+
+                <dd className="mt-1 break-words font-display text-xl font-semibold">
+                  {s.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="relative flex h-fit self-center">
+          {/* Glow */}
+          <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
+
+          {/* Image */}
+          <div className="aspect-[5/4] w-full overflow-hidden rounded-xl border border-border shadow-elegant">
+            <img
+              src={heroImg}
+              alt="Illustration of an academic library reading room"
+              width={1280}
+              height={1024}
+              className="h-full w-full object-cover"
+            />
+          </div>
+
+          {/* Floating Card */}
+          <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              Helped Students
+            </div>
+
+            <div className="mt-1 font-display text-2xl font-semibold">
+              10k+
+            </div>
+          </div>
+        </div>
+      </div>
       </section>
       <section id="about" className="border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6">
@@ -431,7 +449,7 @@ function LandingPage() {
               Built to Make Academic Resources Fast, Safe, and Accessible
             </h2>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
             {features.map((f) => (
               <div
                 key={f.title}
@@ -462,7 +480,7 @@ function LandingPage() {
               <Link to="/library">Browse library <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
             {categories.map((c) => (
               <Link
                 key={c.slug}
@@ -584,7 +602,7 @@ function LandingPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto grid max-w-7xl gap-10 px-1 py-14 sm:px-6 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl gap-10 px-1 py-14 sm:px-6 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
