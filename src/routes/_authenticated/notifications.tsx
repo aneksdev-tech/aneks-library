@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Check, ExternalLink } from "lucide-react";
+import { Bell, Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "./dashboard";
 import { toast } from "sonner";
@@ -169,54 +169,83 @@ function Notifications() {
               }
 
               const notificationContent = (
-  <div
-    className={`p-3.5 transition-colors sm:p-5 ${
-      n.read
-        ? "opacity-65"
-        : "bg-primary/[0.03] hover:bg-primary/[0.05]"
-    }`}
-  >
-    <div className="min-w-0">
-      <div className="min-w-0">
-        <p
-          className={`text-sm sm:text-base ${
-            !n.read ? "font-semibold" : "font-medium"
-          }`}
-        >
-          {n.title}
-        </p>
+                <div
+                  className={`flex gap-2.5 p-3.5 transition-colors sm:gap-3 sm:p-5 ${
+                    n.read
+                      ? "opacity-65"
+                      : "bg-primary/[0.03] hover:bg-primary/[0.05]"
+                  }`}
+                >
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Bell
+                      className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
+                        n.read
+                          ? "text-muted-foreground"
+                          : "text-primary"
+                      }`}
+                    />
+                  </div>
 
-        {mainMessage && (
-          <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
-            {mainMessage}
-          </p>
-        )}
+                  <div className="min-w-0 flex-1">
+                    <div className="min-w-0">
+                      <p
+                        className={`text-sm sm:text-base ${
+                          !n.read ? "font-semibold" : "font-medium"
+                        }`}
+                      >
+                        {n.title}
+                      </p>
 
-        {isRejected && rejectionReason && (
-          <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
-            <span className="font-medium text-foreground">
-              Reason:
-            </span>{" "}
-            {rejectionReason}
-          </p>
-        )}
+                      {mainMessage && (
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
+                          {mainMessage}
+                        </p>
+                      )}
 
-        <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-          {new Date(n.created_at).toLocaleString()}
-        </p>
-      </div>
+                      {isRejected && rejectionReason && (
+                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+                          <span className="font-medium text-foreground">
+                            Reason:
+                          </span>{" "}
+                          {rejectionReason}
+                        </p>
+                      )}
 
-      {n.link && (
-        <div className="mt-2.5 sm:mt-3">
-          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary sm:text-xs">
-            Open notification
-            <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          </span>
-        </div>
-      )}
-    </div>
-  </div>
-);
+                      <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                        {new Date(n.created_at).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {(n.link || !n.read) && (
+                      <div className="mt-2.5 flex items-center gap-3 sm:mt-3">
+                        {n.link && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary sm:text-xs">
+                            Open notification
+                            <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          </span>
+                        )}
+
+                        {!n.read && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={markRead.isPending}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              markRead.mutate(n.id);
+                            }}
+                            className="h-7 shrink-0 px-1.5 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
+                          >
+                            <Check className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            Read
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
 
               return (
                 <li key={n.id}>
