@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Bell, Check, ExternalLink } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "./dashboard";
 import { toast } from "sonner";
@@ -170,23 +170,13 @@ function Notifications() {
 
               const notificationContent = (
                 <div
-                  className={`flex gap-2.5 p-3.5 transition-colors sm:gap-3 sm:p-5 ${
+                  className={`p-3.5 transition-colors sm:p-5 ${
                     n.read
                       ? "opacity-65"
                       : "bg-primary/[0.03] hover:bg-primary/[0.05]"
                   }`}
                 >
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Bell
-                      className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
-                        n.read
-                          ? "text-muted-foreground"
-                          : "text-primary"
-                      }`}
-                    />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0">
                     <div className="min-w-0">
                       <p
                         className={`text-sm sm:text-base ${
@@ -277,4 +267,4 @@ function Notifications() {
       </div>
     </div>
   );
-}
+  }
