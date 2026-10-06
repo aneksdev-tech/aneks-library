@@ -50,8 +50,8 @@ function AnnouncementDetailsPage() {
   if (isLoading) {
     return (
       <section className="grid min-h-[40vh] place-items-center">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           Loading announcement…
         </div>
       </section>
@@ -60,22 +60,25 @@ function AnnouncementDetailsPage() {
 
   if (error || !data) {
     return (
-      <section className="grid min-h-[40vh] place-items-center">
+      <section className="grid min-h-[40vh] place-items-center px-3 sm:px-0">
         <div className="max-w-md text-center">
-          <Megaphone className="mx-auto h-8 w-8 text-muted-foreground" />
+          <Megaphone className="mx-auto h-7 w-7 text-muted-foreground sm:h-8 sm:w-8" />
 
-          <h1 className="mt-4 font-display text-xl font-semibold">
+          <h1 className="mt-3 font-display text-lg font-semibold sm:mt-4 sm:text-xl">
             Announcement not found
           </h1>
 
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-normal">
             This announcement may have been deleted, deactivated,
             or is no longer available.
           </p>
 
-          <Button asChild className="mt-5">
+          <Button
+            asChild
+            className="mt-4 h-9 text-xs sm:mt-5 sm:h-10 sm:text-sm"
+          >
             <Link to="/dashboard">
-              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Back to Dashboard
             </Link>
           </Button>
@@ -85,40 +88,48 @@ function AnnouncementDetailsPage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-5">
-      <Button asChild variant="ghost" size="sm">
+    <section className="mx-auto max-w-3xl space-y-4 sm:space-y-5">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="h-8 text-xs sm:h-9 sm:text-sm"
+      >
         <Link to="/dashboard">
-          <ArrowLeft className="mr-1.5 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
           Back to Dashboard
         </Link>
       </Button>
 
       <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-        <div className="border-b border-border bg-primary/[0.03] p-6 sm:p-8">
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
-            <Megaphone className="h-4 w-4" />
+        <div className="border-b border-border bg-primary/[0.03] p-4 sm:p-8">
+          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-primary sm:gap-2 sm:text-xs">
+            <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Announcement
           </div>
 
-          <h1 className="mt-3 font-display text-2xl font-semibold sm:text-3xl">
+          <h1 className="mt-2.5 font-display text-xl font-semibold leading-tight sm:mt-3 sm:text-3xl">
             {data.title}
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          <p className="mt-2.5 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
             {data.body}
           </p>
         </div>
 
-        <div className="p-6 sm:p-8">
-          <div className="whitespace-pre-wrap text-sm leading-7 text-foreground sm:text-base">
+        <div className="p-4 sm:p-8">
+          <div className="whitespace-pre-wrap text-xs leading-6 text-foreground sm:text-base sm:leading-7">
             {data.content?.trim()
               ? data.content
               : data.body}
           </div>
 
           {data.link && (
-            <div className="mt-8 border-t border-border pt-6">
-              <Button asChild>
+            <div className="mt-6 border-t border-border pt-4 sm:mt-8 sm:pt-6">
+              <Button
+                asChild
+                className="h-9 text-xs sm:h-10 sm:text-sm"
+              >
                 <a
                   href={data.link}
                   target={
@@ -133,7 +144,7 @@ function AnnouncementDetailsPage() {
                   }
                 >
                   View related resource
-                  <ExternalLink className="ml-1.5 h-4 w-4" />
+                  <ExternalLink className="ml-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </a>
               </Button>
             </div>

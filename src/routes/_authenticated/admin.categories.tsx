@@ -823,9 +823,9 @@ function CategoriesPage() {
     !hasAdminAccess
   ) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex min-h-[40vh] items-center justify-center px-3 sm:px-0">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           Redirecting...
         </div>
       </div>
@@ -834,18 +834,18 @@ function CategoriesPage() {
 
   return (
     <>
-      <section className="space-y-8">
+      <section className="space-y-5 sm:space-y-8">
         {/* Create category */}
-        <div className="border-b border-border pb-6">
-          <div className="mb-4 flex items-center gap-2">
-            <Plus className="h-4 w-4 text-primary" />
+        <div className="border-b border-border pb-5 sm:pb-6">
+          <div className="mb-3 flex items-center gap-1.5 sm:mb-4 sm:gap-2">
+            <Plus className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
             <div>
-              <p className="text-sm font-semibold">
+              <p className="text-xs font-semibold sm:text-sm">
                 Create category
               </p>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
                 Add a new classification for library resources.
               </p>
             </div>
@@ -858,11 +858,11 @@ function CategoriesPage() {
             }}
             className="space-y-3"
           >
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <div>
                 <label
                   htmlFor="category-name"
-                  className="mb-1.5 block text-xs font-medium text-muted-foreground"
+                  className="mb-1.5 block text-[11px] font-medium text-muted-foreground sm:text-xs"
                 >
                   Category name
                 </label>
@@ -875,13 +875,14 @@ function CategoriesPage() {
                   }
                   placeholder="e.g. Handouts"
                   disabled={create.isPending}
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="category-slug"
-                  className="mb-1.5 block text-xs font-medium text-muted-foreground"
+                  className="mb-1.5 block text-[11px] font-medium text-muted-foreground sm:text-xs"
                 >
                   Slug
                 </label>
@@ -894,13 +895,14 @@ function CategoriesPage() {
                   }
                   placeholder="e.g. handouts"
                   disabled={create.isPending}
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label
                   htmlFor="category-description"
-                  className="mb-1.5 block text-xs font-medium text-muted-foreground"
+                  className="mb-1.5 block text-[11px] font-medium text-muted-foreground sm:text-xs"
                 >
                   Description
                 </label>
@@ -913,6 +915,7 @@ function CategoriesPage() {
                   }
                   placeholder="Optional category description"
                   disabled={create.isPending}
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                 />
               </div>
             </div>
@@ -921,12 +924,12 @@ function CategoriesPage() {
               <Button
                 type="submit"
                 disabled={create.isPending}
-                className="bg-gradient-emerald text-primary-foreground"
+                className="h-9 w-full text-xs bg-gradient-emerald text-primary-foreground sm:h-10 sm:w-auto sm:text-sm"
               >
                 {create.isPending ? (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                 ) : (
-                  <Plus className="mr-1.5 h-4 w-4" />
+                  <Plus className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 )}
 
                 {create.isPending
@@ -939,26 +942,26 @@ function CategoriesPage() {
 
         {/* Active categories */}
         <div>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <FolderTree className="h-4 w-4 text-primary" />
+          <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <FolderTree className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
-              <p className="text-sm font-semibold">
+              <p className="text-xs font-semibold sm:text-sm">
                 Active categories
               </p>
             </div>
 
             {categories && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground sm:text-xs">
                 {activeCategories.length} active
               </span>
             )}
           </div>
 
           {isLoading ? (
-            <div className="border-y border-border py-10 text-center text-sm text-muted-foreground">
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="border-y border-border py-8 text-center text-xs text-muted-foreground sm:py-10 sm:text-sm">
+              <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                 Loading categories…
               </div>
             </div>
@@ -985,11 +988,11 @@ function CategoriesPage() {
                   return (
                     <li
                       key={category.id}
-                      className="group py-4"
+                      className="py-3 sm:py-4"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-border bg-muted/30 text-xs font-medium text-muted-foreground">
+                      <div className="flex items-start justify-between gap-2.5 sm:gap-4">
+                        <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-border bg-muted/30 text-[10px] font-medium text-muted-foreground sm:h-8 sm:w-8 sm:text-xs">
                             {String(index + 1).padStart(
                               2,
                               "0",
@@ -997,13 +1000,13 @@ function CategoriesPage() {
                           </span>
 
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">
+                            <p className="truncate text-xs font-semibold sm:text-sm">
                               {category.name}
                             </p>
 
-                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1.5">
-                                <Tag className="h-3 w-3" />
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground sm:gap-x-3 sm:gap-y-1 sm:text-xs">
+                              <span className="flex items-center gap-1">
+                                <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                 /{category.slug}
                               </span>
 
@@ -1016,18 +1019,19 @@ function CategoriesPage() {
                             </div>
 
                             {category.description && (
-                              <p className="mt-2 text-xs text-muted-foreground">
+                              <p className="mt-1.5 text-[10px] leading-4 text-muted-foreground sm:mt-2 sm:text-xs sm:leading-normal">
                                 {category.description}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-1">
+                        <div className="flex shrink-0 items-center gap-0 sm:gap-1">
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7 sm:h-9 sm:w-9"
                             disabled={
                               isReordering ||
                               reorder.isPending ||
@@ -1044,9 +1048,9 @@ function CategoriesPage() {
                             {isReordering &&
                             reorder.variables?.direction ===
                               "up" ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                             ) : (
-                              <ChevronUp className="h-4 w-4" />
+                              <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
                           </Button>
 
@@ -1054,6 +1058,7 @@ function CategoriesPage() {
                             type="button"
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7 sm:h-9 sm:w-9"
                             disabled={
                               isReordering ||
                               reorder.isPending ||
@@ -1071,9 +1076,9 @@ function CategoriesPage() {
                             {isReordering &&
                             reorder.variables?.direction ===
                               "down" ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                             ) : (
-                              <ChevronDown className="h-4 w-4" />
+                              <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
                           </Button>
 
@@ -1081,6 +1086,7 @@ function CategoriesPage() {
                             type="button"
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7 sm:h-9 sm:w-9"
                             disabled={
                               updateLoading ||
                               del.isPending
@@ -1090,13 +1096,14 @@ function CategoriesPage() {
                             }
                             aria-label={`Edit ${category.name}`}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </Button>
 
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive sm:h-9 sm:w-9"
                             disabled={
                               del.isPending ||
                               updateLoading
@@ -1107,19 +1114,18 @@ function CategoriesPage() {
                                 category.name,
                               )
                             }
-                            className="text-muted-foreground hover:text-destructive"
                             aria-label={`Delete ${category.name}`}
                           >
                             {isDeleting ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                             ) : (
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
                           </Button>
                         </div>
                       </div>
 
-                      <div className="mt-3 ml-11">
+                      <div className="mt-2.5 ml-9 sm:mt-3 sm:ml-11">
                         <Button
                           type="button"
                           variant="ghost"
@@ -1131,9 +1137,9 @@ function CategoriesPage() {
                                 : category.id,
                             )
                           }
-                          className="h-7 px-2 text-xs text-muted-foreground"
+                          className="h-7 px-1.5 text-[10px] text-muted-foreground sm:px-2 sm:text-xs"
                         >
-                          <History className="mr-1.5 h-3.5 w-3.5" />
+                          <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
 
                           {isHistoryOpen
                             ? "Hide history"
@@ -1141,15 +1147,15 @@ function CategoriesPage() {
                         </Button>
 
                         {isHistoryOpen && (
-                          <div className="mt-2 border-l border-border pl-4">
+                          <div className="mt-2 border-l border-border pl-3 sm:pl-4">
                             {history.length > 0 ? (
-                              <div className="space-y-3">
+                              <div className="space-y-2.5 sm:space-y-3">
                                 {history.map((log) => (
                                   <div
                                     key={log.id}
-                                    className="text-xs"
+                                    className="text-[10px] leading-4 sm:text-xs sm:leading-normal"
                                   >
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 sm:gap-y-1">
                                       <span className="font-medium">
                                         {getActionLabel(
                                           log.action,
@@ -1184,7 +1190,7 @@ function CategoriesPage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="py-2 text-xs text-muted-foreground">
+                              <p className="py-2 text-[10px] text-muted-foreground sm:text-xs">
                                 No audit history yet.
                               </p>
                             )}
@@ -1197,14 +1203,14 @@ function CategoriesPage() {
               </ul>
             </div>
           ) : (
-            <div className="border-y border-border py-12 text-center">
-              <FolderTree className="mx-auto h-8 w-8 text-muted-foreground/50" />
+            <div className="border-y border-border py-10 text-center sm:py-12">
+              <FolderTree className="mx-auto h-7 w-7 text-muted-foreground/50 sm:h-8 sm:w-8" />
 
-              <p className="mt-3 text-sm font-medium">
+              <p className="mt-2.5 text-xs font-medium sm:mt-3 sm:text-sm">
                 No active categories
               </p>
 
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 px-4 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
                 Create your first category above to organize resources.
               </p>
             </div>
@@ -1214,16 +1220,16 @@ function CategoriesPage() {
         {/* Deleted categories */}
         {deletedCategories.length > 0 && (
           <div>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Trash2 className="h-4 w-4 text-muted-foreground" />
+            <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
 
-                <p className="text-sm font-semibold">
+                <p className="text-xs font-semibold sm:text-sm">
                   Deleted categories
                 </p>
               </div>
 
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground sm:text-xs">
                 {deletedCategories.length} deleted
               </span>
             </div>
@@ -1251,17 +1257,17 @@ function CategoriesPage() {
                   return (
                     <li
                       key={category.id}
-                      className="py-4"
+                      className="py-3 sm:py-4"
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-muted-foreground">
+                          <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">
                             {category.name}
                           </p>
 
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1.5">
-                              <Tag className="h-3 w-3" />
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground sm:gap-x-3 sm:gap-y-1 sm:text-xs">
+                            <span className="flex items-center gap-1">
+                              <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                               /{category.slug}
                             </span>
 
@@ -1276,7 +1282,7 @@ function CategoriesPage() {
                           </div>
 
                           {deletedLog?.performed_by && (
-                            <p className="mt-2 text-xs text-muted-foreground">
+                            <p className="mt-1.5 text-[10px] text-muted-foreground sm:mt-2 sm:text-xs">
                               Deleted by{" "}
                               <span className="font-medium text-foreground">
                                 {getActorLabel(
@@ -1287,12 +1293,12 @@ function CategoriesPage() {
                           )}
 
                           {deletedLog?.reason && (
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                               Reason: {deletedLog.reason}
                             </p>
                           )}
 
-                          <p className="mt-2 text-xs text-muted-foreground">
+                          <p className="mt-1.5 text-[10px] leading-4 text-muted-foreground sm:mt-2 sm:text-xs sm:leading-normal">
                             Existing resources remain linked to
                             this category and will regain its
                             name when restored.
@@ -1310,19 +1316,19 @@ function CategoriesPage() {
                           onClick={() =>
                             setPendingRestore(category)
                           }
-                          className="shrink-0"
+                          className="h-8 w-full shrink-0 text-[10px] sm:h-9 sm:w-auto sm:text-xs"
                         >
                           {isRestoring ? (
-                            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                           ) : (
-                            <RotateCcw className="mr-1.5 h-4 w-4" />
+                            <RotateCcw className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           )}
 
                           Restore
                         </Button>
                       </div>
 
-                      <div className="mt-3">
+                      <div className="mt-2.5 sm:mt-3">
                         <Button
                           type="button"
                           variant="ghost"
@@ -1334,9 +1340,9 @@ function CategoriesPage() {
                                 : category.id,
                             )
                           }
-                          className="h-7 px-2 text-xs text-muted-foreground"
+                          className="h-7 px-1.5 text-[10px] text-muted-foreground sm:px-2 sm:text-xs"
                         >
-                          <History className="mr-1.5 h-3.5 w-3.5" />
+                          <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
 
                           {isHistoryOpen
                             ? "Hide history"
@@ -1344,15 +1350,15 @@ function CategoriesPage() {
                         </Button>
 
                         {isHistoryOpen && (
-                          <div className="mt-2 border-l border-border pl-4">
+                          <div className="mt-2 border-l border-border pl-3 sm:pl-4">
                             {history.length > 0 ? (
-                              <div className="space-y-3">
+                              <div className="space-y-2.5 sm:space-y-3">
                                 {history.map((log) => (
                                   <div
                                     key={log.id}
-                                    className="text-xs"
+                                    className="text-[10px] leading-4 sm:text-xs sm:leading-normal"
                                   >
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 sm:gap-y-1">
                                       <span className="font-medium">
                                         {getActionLabel(
                                           log.action,
@@ -1387,7 +1393,7 @@ function CategoriesPage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="py-2 text-xs text-muted-foreground">
+                              <p className="py-2 text-[10px] text-muted-foreground sm:text-xs">
                                 No audit history yet.
                               </p>
                             )}
@@ -1412,23 +1418,23 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Edit category
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               Update the category details. Changes are recorded
               in the category audit history.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
               <label
                 htmlFor="edit-category-name"
-                className="mb-1.5 block text-sm font-medium"
+                className="mb-1.5 block text-xs font-medium sm:text-sm"
               >
                 Category name
               </label>
@@ -1440,13 +1446,14 @@ function CategoriesPage() {
                   setEditName(e.target.value)
                 }
                 disabled={updateLoading}
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               />
             </div>
 
             <div>
               <label
                 htmlFor="edit-category-slug"
-                className="mb-1.5 block text-sm font-medium"
+                className="mb-1.5 block text-xs font-medium sm:text-sm"
               >
                 Slug
               </label>
@@ -1458,13 +1465,14 @@ function CategoriesPage() {
                   setEditSlug(e.target.value)
                 }
                 disabled={updateLoading}
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               />
             </div>
 
             <div>
               <label
                 htmlFor="edit-category-description"
-                className="mb-1.5 block text-sm font-medium"
+                className="mb-1.5 block text-xs font-medium sm:text-sm"
               >
                 Description
               </label>
@@ -1476,14 +1484,16 @@ function CategoriesPage() {
                   setEditDescription(e.target.value)
                 }
                 disabled={updateLoading}
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               />
             </div>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={updateLoading}
               onClick={closeEditDialog}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1498,6 +1508,7 @@ function CategoriesPage() {
                 !editName.trim() ||
                 !editSlug.trim()
               }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Review changes
             </AlertDialogAction>
@@ -1514,13 +1525,13 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Confirm category changes
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               You are about to update{" "}
               <strong>{pendingEdit?.name}</strong>. Enter a
               summary explaining what was changed, then confirm
@@ -1528,10 +1539,10 @@ function CategoriesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="category-edit-summary"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Edit Summary
             </label>
@@ -1545,18 +1556,20 @@ function CategoriesPage() {
               placeholder="e.g. Corrected category name and updated slug"
               disabled={updateLoading}
               autoFocus
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
               This summary will be permanently recorded in the
               category audit history.
             </p>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={updateLoading}
               onClick={closeEditConfirmation}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1570,9 +1583,10 @@ function CategoriesPage() {
                 updateLoading ||
                 editSummaryMissing
               }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               {updateLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               {updateLoading
@@ -1592,13 +1606,13 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Delete category?
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               Are you sure you want to delete{" "}
               <strong>{pendingDelete?.name}</strong>? The
               category will be moved to Deleted Categories rather
@@ -1608,10 +1622,10 @@ function CategoriesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="category-deletion-reason"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Deletion reason
             </label>
@@ -1625,18 +1639,20 @@ function CategoriesPage() {
               placeholder="e.g. Duplicate category"
               disabled={deleteLoading}
               autoFocus
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
               A reason is required and will be recorded in the
               category audit history.
             </p>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={deleteLoading}
               onClick={closeDeleteDialog}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1650,10 +1666,10 @@ function CategoriesPage() {
                 deleteLoading ||
                 deleteReasonMissing
               }
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-9 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:h-10 sm:text-sm"
             >
               {deleteLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               {deleteLoading
@@ -1673,13 +1689,13 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Restore category?
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               Restore{" "}
               <strong>{pendingRestore?.name}</strong>? The
               original category will become active again using the
@@ -1688,12 +1704,13 @@ function CategoriesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={restoreLoading}
               onClick={() =>
                 setPendingRestore(null)
               }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1704,9 +1721,10 @@ function CategoriesPage() {
                 confirmRestore();
               }}
               disabled={restoreLoading}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               {restoreLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               {restoreLoading

@@ -431,7 +431,7 @@ function LandingPage() {
               Built to Make Academic Resources Fast, Safe, and Accessible
             </h2>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 min-[900px]:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((f) => (
               <div
                 key={f.title}
@@ -462,7 +462,7 @@ function LandingPage() {
               <Link to="/library">Browse library <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 min-[900px]:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {categories.map((c) => (
               <Link
                 key={c.slug}

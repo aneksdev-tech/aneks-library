@@ -526,28 +526,28 @@ function ProfilePage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">
+      <div className="mb-5 sm:mb-6">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
           Profile
         </p>
 
-        <h1 className="mt-1 font-display text-2xl font-semibold">
+        <h1 className="mt-1 font-display text-lg font-semibold sm:text-2xl">
           Your account
         </h1>
 
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           Manage your personal information,
           academic details, and account profile.
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_340px]">
         {/* Main profile card */}
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
           {/* Profile identity */}
-          <div className="border-b border-border bg-muted/20 p-6 sm:p-8">
-            <div className="flex flex-col items-start gap-6">
-              <div className="flex w-full flex-col items-start gap-6 sm:flex-row sm:items-start">
+          <div className="border-b border-border bg-muted/20 p-3.5 sm:p-8">
+            <div className="flex flex-col items-start gap-4 sm:gap-6">
+              <div className="flex w-full flex-col items-start gap-4 sm:flex-row sm:items-start sm:gap-6">
                 <div className="relative shrink-0">
                   {avatarUrl ? (
                     <img
@@ -556,10 +556,10 @@ function ProfilePage() {
                         profile?.full_name ||
                         "Profile avatar"
                       }
-                      className="h-40 w-32 rounded-2xl border-2 border-primary/30 object-cover shadow-xl"
+                      className="h-32 w-24 rounded-2xl border-2 border-primary/30 object-cover shadow-xl sm:h-40 sm:w-32"
                     />
                   ) : (
-                    <div className="flex h-40 w-32 items-center justify-center rounded-2xl border-2 border-primary/30 bg-muted text-5xl font-bold shadow-lg">
+                    <div className="flex h-32 w-24 items-center justify-center rounded-2xl border-2 border-primary/30 bg-muted text-4xl font-bold shadow-lg sm:h-40 sm:w-32 sm:text-5xl">
                       {(
                         profile?.full_name ||
                         "U"
@@ -575,33 +575,33 @@ function ProfilePage() {
                     onClick={() =>
                       fileInputRef.current?.click()
                     }
-                    className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                    className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:bottom-2 sm:right-2 sm:h-10 sm:w-10"
                     aria-label="Change profile photo"
                     title="Change profile photo"
                   >
-                    <Camera className="h-4 w-4" />
+                    <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
 
                 <div className="min-w-0 flex-1 text-left">
-                  <div className="flex flex-wrap items-center justify-start gap-2">
-                    <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <div className="flex flex-wrap items-center justify-start gap-1.5 sm:gap-2">
+                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary sm:px-3 sm:py-1 sm:text-xs">
                       {roleLabel}
                     </span>
 
-                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 sm:px-3 sm:py-1 sm:text-xs">
                       {contributor.emoji}{" "}
                       {contributor.name}
                     </span>
                   </div>
 
-                  <h2 className="mt-3 truncate font-display text-2xl font-semibold">
+                  <h2 className="mt-2.5 truncate font-display text-xl font-semibold sm:mt-3 sm:text-2xl">
                     {profile?.full_name ||
                       "Unnamed User"}
                   </h2>
 
-                  <div className="mt-2 flex items-center justify-start gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4 shrink-0" />
+                  <div className="mt-1.5 flex items-center justify-start gap-1.5 text-xs text-muted-foreground sm:mt-2 sm:gap-2 sm:text-sm">
+                    <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
 
                     <span className="truncate">
                       {user?.email ||
@@ -610,11 +610,11 @@ function ProfilePage() {
                   </div>
 
                   {profile?.bio ? (
-                    <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+                    <p className="mt-3 max-w-xl text-xs leading-5 text-muted-foreground sm:mt-4 sm:text-sm sm:leading-6">
                       {profile.bio}
                     </p>
                   ) : (
-                    <p className="mt-4 text-sm italic text-muted-foreground">
+                    <p className="mt-3 text-xs italic text-muted-foreground sm:mt-4 sm:text-sm">
                       No bio yet.
                     </p>
                   )}
@@ -624,25 +624,25 @@ function ProfilePage() {
           </div>
 
           {/* Completion — intentionally before editable information */}
-          <div className="border-b border-border sm:p-2">
-            <div className="rounded-2xl border border-none bg-muted/20 p-6">
-              <div className="flex items-center justify-between">
+          <div className="border-b border-border p-2">
+            <div className="rounded-2xl border border-none bg-muted/20 p-3.5 sm:p-6">
+              <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
                     Profile
                   </p>
 
-                  <h3 className="mt-1 text-base font-semibold">
+                  <h3 className="mt-0.5 text-sm font-semibold sm:mt-1 sm:text-base">
                     Completion
                   </h3>
                 </div>
 
-                <span className="text-2xl font-semibold">
+                <span className="text-xl font-semibold sm:text-2xl">
                   {completion}%
                 </span>
               </div>
 
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-4 sm:h-2">
                 <div
                   className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
                   style={{
@@ -651,8 +651,8 @@ function ProfilePage() {
                 />
               </div>
 
-              <div className="mt-5 space-y-2.5 text-xs">
-                <div className="flex items-center justify-between">
+              <div className="mt-4 space-y-2 text-[10px] sm:mt-5 sm:space-y-2.5 sm:text-xs">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">
                     Profile photo
                   </span>
@@ -664,7 +664,7 @@ function ProfilePage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">
                     Full name
                   </span>
@@ -676,7 +676,7 @@ function ProfilePage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">
                     Phone number
                   </span>
@@ -688,7 +688,7 @@ function ProfilePage() {
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">
                     Bio
                   </span>
@@ -701,7 +701,7 @@ function ProfilePage() {
                 </div>
 
                 {hasAcademicInformation && (
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">
                       Academic information
                     </span>
@@ -720,23 +720,26 @@ function ProfilePage() {
           {/* Editable information */}
           <form
             onSubmit={save}
-            className="space-y-7 p-6 sm:p-8"
+            className="space-y-6 p-3.5 sm:space-y-7 sm:p-8"
           >
             <div>
-              <div className="mb-4">
-                <h3 className="text-base font-semibold">
+              <div className="mb-3 sm:mb-4">
+                <h3 className="text-sm font-semibold sm:text-base">
                   Personal information
                 </h3>
 
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                   Keep your account information
                   accurate and up to date.
                 </p>
               </div>
 
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 <div>
-                  <Label htmlFor="email">
+                  <Label
+                    htmlFor="email"
+                    className="text-xs sm:text-sm"
+                  >
                     Email address
                   </Label>
 
@@ -746,10 +749,10 @@ function ProfilePage() {
                       user?.email ?? ""
                     }
                     disabled
-                    className="mt-1.5 bg-muted/50"
+                    className="mt-1.5 h-9 bg-muted/50 text-xs sm:h-10 sm:text-sm"
                   />
 
-                  <p className="mt-1.5 text-xs text-muted-foreground">
+                  <p className="mt-1.5 text-[10px] text-muted-foreground sm:text-xs">
                     Your email address is
                     managed by your account
                     authentication.
@@ -757,7 +760,10 @@ function ProfilePage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="full-name">
+                  <Label
+                    htmlFor="full-name"
+                    className="text-xs sm:text-sm"
+                  >
                     Full name
                   </Label>
 
@@ -770,13 +776,13 @@ function ProfilePage() {
                         e.target.value,
                       )
                     }
-                    className="mt-1.5"
+                    className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
                     placeholder="Enter your full name"
                   />
 
                   {form.full_name &&
                     !fullNameValid && (
-                      <p className="mt-1.5 text-xs text-destructive">
+                      <p className="mt-1.5 text-[10px] text-destructive sm:text-xs">
                         Full name must be at least
                         3 letters and contain only
                         letters, spaces, apostrophes,
@@ -786,7 +792,10 @@ function ProfilePage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="phone">
+                  <Label
+                    htmlFor="phone"
+                    className="text-xs sm:text-sm"
+                  >
                     Phone number
                   </Label>
 
@@ -826,24 +835,27 @@ function ProfilePage() {
                       );
                     }}
                     placeholder="+234 800 000 0000"
-                    className="mt-1.5"
+                    className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
                   />
 
                   {form.phone_number &&
                   !phoneValid ? (
-                    <p className="mt-1.5 text-xs text-destructive">
+                    <p className="mt-1.5 text-[10px] text-destructive sm:text-xs">
                       Enter a valid phone number
                       containing 13–15 digits.
                     </p>
                   ) : (
-                    <p className="mt-1.5 text-xs text-muted-foreground">
+                    <p className="mt-1.5 text-[10px] text-muted-foreground sm:text-xs">
                       Only you and authorized administrators can access your phone number.
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="bio">
+                  <Label
+                    htmlFor="bio"
+                    className="text-xs sm:text-sm"
+                  >
                     Bio
                   </Label>
 
@@ -858,11 +870,11 @@ function ProfilePage() {
                         e.target.value,
                       )
                     }
-                    className="mt-1.5 resize-none"
+                    className="mt-1.5 resize-none text-xs sm:text-sm"
                     placeholder="Tell the Aneks Library community a little about yourself..."
                   />
 
-                  <p className="mt-1.5 text-right text-xs text-muted-foreground">
+                  <p className="mt-1.5 text-right text-[10px] text-muted-foreground sm:text-xs">
                     {form.bio.length}/500
                   </p>
                 </div>
@@ -871,20 +883,20 @@ function ProfilePage() {
 
             {/* Academic information */}
             {hasAcademicInformation && (
-              <div className="border-t border-border pt-7">
-                <div className="mb-4">
-                  <h3 className="text-base font-semibold">
+              <div className="border-t border-border pt-6 sm:pt-7">
+                <div className="mb-3 sm:mb-4">
+                  <h3 className="text-sm font-semibold sm:text-base">
                     Academic information
                   </h3>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                     Select the information that
                     matches your current academic
                     role.
                   </p>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                   {/* College / Institution */}
                   <div
                     className={
@@ -893,7 +905,10 @@ function ProfilePage() {
                         : "sm:col-span-1"
                     }
                   >
-                    <Label htmlFor="college">
+                    <Label
+                      htmlFor="college"
+                      className="text-xs sm:text-sm"
+                    >
                       {isResearcher
                         ? "Institution"
                         : "College"}
@@ -910,7 +925,7 @@ function ProfilePage() {
                           )
                         }
                         placeholder="e.g. OpenAI"
-                        className="mt-1.5"
+                        className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
                       />
                     ) : (
                       <Select
@@ -929,7 +944,7 @@ function ProfilePage() {
                       >
                         <SelectTrigger
                           id="college"
-                          className="mt-1.5 w-full"
+                          className="mt-1.5 h-9 w-full text-xs sm:h-10 sm:text-sm"
                         >
                           <SelectValue placeholder="Select College" />
                         </SelectTrigger>
@@ -966,7 +981,10 @@ function ProfilePage() {
 
                   {/* Department / Research Area */}
                   <div>
-                    <Label htmlFor="department">
+                    <Label
+                      htmlFor="department"
+                      className="text-xs sm:text-sm"
+                    >
                       {isResearcher
                         ? "Research Area"
                         : "Department"}
@@ -985,7 +1003,7 @@ function ProfilePage() {
                           )
                         }
                         placeholder="e.g. Artificial Intelligence"
-                        className="mt-1.5"
+                        className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
                       />
                     ) : (
                       <Select
@@ -1003,7 +1021,7 @@ function ProfilePage() {
                       >
                         <SelectTrigger
                           id="department"
-                          className="mt-1.5 w-full"
+                          className="mt-1.5 h-9 w-full text-xs sm:h-10 sm:text-sm"
                         >
                           <SelectValue
                             placeholder={
@@ -1016,13 +1034,13 @@ function ProfilePage() {
 
                         <SelectContent>
                           {!form.college ? (
-                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                            <div className="px-3 py-2 text-xs text-muted-foreground sm:text-sm">
                               Select College
                               first
                             </div>
                           ) : departments.length ===
                             0 ? (
-                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                            <div className="px-3 py-2 text-xs text-muted-foreground sm:text-sm">
                               No departments
                               available
                             </div>
@@ -1054,7 +1072,10 @@ function ProfilePage() {
                   {/* Level — Student only */}
                   {needsLevel && (
                     <div>
-                      <Label htmlFor="level">
+                      <Label
+                        htmlFor="level"
+                        className="text-xs sm:text-sm"
+                      >
                         Level
                       </Label>
 
@@ -1068,7 +1089,7 @@ function ProfilePage() {
                       >
                         <SelectTrigger
                           id="level"
-                          className="mt-1.5 w-full"
+                          className="mt-1.5 h-9 w-full text-xs sm:h-10 sm:text-sm"
                         >
                           <SelectValue placeholder="Select Level" />
                         </SelectTrigger>
@@ -1093,15 +1114,15 @@ function ProfilePage() {
             )}
 
             {/* Save area */}
-            <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-xs text-muted-foreground">
+            <div className="flex flex-col gap-2.5 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:pt-6">
+              <div className="text-[10px] text-muted-foreground sm:text-xs">
                 {isDirty ? (
                   <span className="text-amber-600 dark:text-amber-400">
                     You have unsaved changes.
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    <Check className="h-3 w-3 text-emerald-500 sm:h-3.5 sm:w-3.5" />
                     All changes are saved.
                   </span>
                 )}
@@ -1110,10 +1131,10 @@ function ProfilePage() {
               <Button
                 type="submit"
                 disabled={!canSave}
-                className="bg-gradient-emerald text-primary-foreground shadow-soft"
+                className="h-9 w-full bg-gradient-emerald text-xs text-primary-foreground shadow-soft sm:h-10 sm:w-auto sm:text-sm"
               >
                 {busy && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                 )}
 
                 {busy
@@ -1125,46 +1146,46 @@ function ProfilePage() {
         </div>
 
         {/* Right sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Reputation */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-            <div className="flex items-start justify-between gap-4">
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-6">
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
                   Contribution
                 </p>
 
-                <h3 className="mt-1 text-base font-semibold">
+                <h3 className="mt-0.5 text-sm font-semibold sm:mt-1 sm:text-base">
                   Reputation
                 </h3>
               </div>
 
-              <span className="text-lg font-semibold">
+              <span className="text-base font-semibold sm:text-lg">
                 {profile?.reputation ?? 0}
 
-                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                <span className="ml-1 text-[10px] font-normal text-muted-foreground sm:text-xs">
                   pts
                 </span>
               </span>
             </div>
 
-            <div className="mt-5 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-xl">
+            <div className="mt-4 flex items-center gap-2.5 sm:mt-5 sm:gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-lg sm:h-11 sm:w-11 sm:text-xl">
                 {contributor.emoji}
               </div>
 
               <div>
-                <p className="font-medium">
+                <p className="text-sm font-medium sm:text-base">
                   {contributor.name}
                 </p>
 
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">
                   Contributor level
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-5 sm:h-2">
               <div
                 className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
                 style={{
@@ -1173,7 +1194,7 @@ function ProfilePage() {
               />
             </div>
 
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-[10px] text-muted-foreground sm:mt-2 sm:text-xs">
               {nextLevel
                 ? `${nextLevel.pointsNeeded} pts until ${nextLevel.emoji} ${nextLevel.name}`
                 : "Highest contributor level reached 👑"}
@@ -1181,32 +1202,32 @@ function ProfilePage() {
           </div>
 
           {/* Account */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-6">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
-              <h3 className="text-base font-semibold">
+              <h3 className="text-sm font-semibold sm:text-base">
                 Account
               </h3>
             </div>
 
-            <div className="mt-5 divide-y divide-border">
-              <div className="flex items-center justify-between py-3 first:pt-0">
-                <span className="text-sm text-muted-foreground">
+            <div className="mt-4 divide-y divide-border sm:mt-5">
+              <div className="flex items-center justify-between gap-3 py-2.5 first:pt-0 sm:py-3">
+                <span className="text-xs text-muted-foreground sm:text-sm">
                   Plan
                 </span>
 
-                <span className="text-sm font-medium">
+                <span className="text-xs font-medium sm:text-sm">
                   {planLabel}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-3">
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-center justify-between gap-3 py-2.5 sm:py-3">
+                <span className="text-xs text-muted-foreground sm:text-sm">
                   Status
                 </span>
 
-                <span className="text-sm font-medium capitalize">
+                <span className="text-xs font-medium capitalize sm:text-sm">
                   {profile?.status ===
                   "active"
                     ? "🟢 Active"
@@ -1215,12 +1236,12 @@ function ProfilePage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-4 py-3 last:pb-0">
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-center justify-between gap-3 py-2.5 last:pb-0 sm:py-3">
+                <span className="text-xs text-muted-foreground sm:text-sm">
                   Member since
                 </span>
 
-                <span className="text-right text-sm font-medium">
+                <span className="text-right text-xs font-medium sm:text-sm">
                   {profile?.created_at
                     ? new Date(
                         profile.created_at,

@@ -124,7 +124,7 @@ function PreviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
+      <div className="flex h-[60vh] items-center justify-center text-sm">
         Loading...
       </div>
     );
@@ -132,7 +132,7 @@ function PreviewPage() {
 
   if (!resource) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
+      <div className="flex h-[60vh] items-center justify-center text-sm">
         Resource not found.
       </div>
     );
@@ -200,43 +200,43 @@ function PreviewPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl space-y-8">
+      <div className="mx-auto max-w-6xl space-y-5 sm:space-y-8">
         <div>
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="mb-6 inline-flex items-center text-lg font-medium text-muted-foreground transition-colors hover:text-primary"
+            className="mb-4 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mb-6 sm:text-lg"
           >
             ← Back
           </button>
 
-          <div className="mb-4 flex flex-wrap gap-2">
-            <span className="rounded-md bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+          <div className="mb-3 flex flex-wrap gap-2 sm:mb-4">
+            <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary sm:px-3 sm:py-1 sm:text-sm">
               {categoryName}
             </span>
           </div>
 
-          <h1 className="font-display text-3xl font-semibold">
+          <h1 className="font-display text-xl font-semibold leading-tight sm:text-3xl">
             {resource.title}
           </h1>
 
           {resource.description && (
-            <p className="mt-4 max-w-3xl leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-3xl text-xs leading-relaxed text-muted-foreground sm:mt-4 sm:text-sm">
               {resource.description}
             </p>
           )}
 
-          <div className="mt-6 grid gap-3 text-sm">
+          <div className="mt-4 grid gap-2.5 text-xs sm:mt-6 sm:gap-3 sm:text-sm">
             {resource.course_code && (
-              <div className="flex items-center gap-3">
-                <BookOpen className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <BookOpen className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
                 <span>{resource.course_code}</span>
               </div>
             )}
 
             {resource.college && (
-              <div className="flex items-center gap-3">
-                <School className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <School className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
 
                 <span>
                   {college
@@ -247,28 +247,28 @@ function PreviewPage() {
             )}
 
             {resource.department && (
-              <div className="flex items-center gap-3">
-                <Building2 className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <Building2 className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
                 <span>{resource.department}</span>
               </div>
             )}
 
             {resource.level && (
-              <div className="flex items-center gap-3">
-                <GraduationCap className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <GraduationCap className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
                 <span>{resource.level}</span>
               </div>
             )}
 
             {resource.semester && (
-              <div className="flex items-center gap-3">
-                <CalendarDays className="h-4 w-4 text-primary" />
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
                 <span>{resource.semester}</span>
               </div>
             )}
 
-            <div className="pt-2">
-              <div className="mb-3 text-sm font-medium text-muted-foreground">
+            <div className="pt-1 sm:pt-2">
+              <div className="mb-2 text-xs font-medium text-muted-foreground sm:mb-3 sm:text-sm">
                 Uploaded by
               </div>
 
@@ -279,12 +279,12 @@ function PreviewPage() {
                     params={{
                       userId: uploader.id,
                     }}
-                    className="group block rounded-xl border border-transparent p-3 transition-colors hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="group block rounded-xl border border-transparent p-2.5 transition-colors hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:p-3"
                     aria-label={`View ${
                       uploader.full_name ?? "uploader"
                     }'s public profile`}
                   >
-                    <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
                       {uploader.avatar_url ? (
                         <img
                           src={uploader.avatar_url}
@@ -292,41 +292,41 @@ function PreviewPage() {
                             uploader.full_name ??
                             "Uploader"
                           }
-                          className="h-12 w-12 shrink-0 rounded-full border object-cover"
+                          className="h-10 w-10 shrink-0 rounded-full border object-cover sm:h-12 sm:w-12"
                         />
                       ) : (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">
                           {uploaderInitials}
                         </div>
                       )}
 
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium">
+                        <div className="text-sm font-medium sm:text-base">
                           {uploader.full_name ??
                             "Unknown user"}
                         </div>
 
                         {uploader.bio && (
-                          <div className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                          <div className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:mt-1 sm:text-sm">
                             {uploader.bio}
                           </div>
                         )}
 
-                        <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-80 transition-opacity group-hover:opacity-100">
+                        <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-primary opacity-80 transition-opacity group-hover:opacity-100 sm:mt-2 sm:text-xs">
                           View profile
-                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                          <ArrowUpRight className="h-3 w-3 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
                         </div>
                       </div>
                     </div>
                   </Link>
                 ) : (
-                  <div className="flex items-center gap-3 rounded-xl border border-transparent p-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+                  <div className="flex items-center gap-2.5 rounded-xl border border-transparent p-2.5 sm:gap-3 sm:p-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">
                       {uploaderInitials}
                     </div>
 
                     <div className="min-w-0">
-                      <div className="font-medium">
+                      <div className="text-sm font-medium sm:text-base">
                         {uploader.full_name ??
                           "Unknown user"}
                       </div>
@@ -334,20 +334,20 @@ function PreviewPage() {
                   </div>
                 )
               ) : (
-                <div className="flex items-center gap-3 rounded-xl border border-transparent p-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border bg-muted text-lg font-semibold">
+                <div className="flex items-center gap-2.5 rounded-xl border border-transparent p-2.5 sm:gap-3 sm:p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">
                     ?
                   </div>
 
                   <div className="min-w-0">
-                    <div className="font-medium">
+                    <div className="text-sm font-medium sm:text-base">
                       Loading uploader...
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="mt-4 text-sm text-muted-foreground">
+              <div className="mt-3 text-xs text-muted-foreground sm:mt-4 sm:text-sm">
                 Uploaded on{" "}
                 {new Date(
                   resource.created_at,
@@ -359,22 +359,22 @@ function PreviewPage() {
               </div>
             </div>
 
-            <div className="max-w-sm pt-2">
+            <div className="max-w-sm pt-1 sm:pt-2">
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 w-full border-primary/40 bg-transparent text-primary hover:bg-primary hover:text-primary-foreground"
+                className="h-9 w-full border-primary/40 bg-transparent text-xs text-primary hover:bg-primary hover:text-primary-foreground sm:h-9 sm:text-sm"
                 onClick={download}
                 disabled={downloading}
               >
                 {downloading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                     Preparing Download...
                   </>
                 ) : (
                   <>
-                    <Download className="mr-2 h-4 w-4 shrink-0" />
+                    <Download className="mr-1.5 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
                     Download
                   </>
                 )}
@@ -383,7 +383,7 @@ function PreviewPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-4">
+        <div className="rounded-2xl border bg-card p-2.5 sm:p-4">
           {previewUrl ? (
             <DocumentPreview
               url={previewUrl.url}
@@ -392,11 +392,11 @@ function PreviewPage() {
               title={resource.title}
             />
           ) : isPreviewUrlLoading ? (
-            <div className="flex h-[70vh] items-center justify-center">
+            <div className="flex h-[60vh] items-center justify-center text-sm sm:h-[70vh]">
               Preparing preview...
             </div>
           ) : (
-            <div className="flex h-[70vh] items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-[60vh] items-center justify-center text-xs text-muted-foreground sm:h-[70vh] sm:text-sm">
               Preview unavailable.
             </div>
           )}

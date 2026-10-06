@@ -3,7 +3,7 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   Bell,
   Bookmark,
@@ -11,7 +11,6 @@ import {
   Home,
   Library,
   LogOut,
-  Menu,
   Moon,
   Settings,
   Sun,
@@ -20,7 +19,6 @@ import {
   GraduationCap,
   FileCheck2,
   Shield,
-  X,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
@@ -35,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import logo from "@/assets/Aneks_Library_Logo.png";
 
 interface NavItem {
   to: string;
@@ -123,11 +122,6 @@ export function AppShell({
         r.location.pathname,
     });
 
-  const [
-    mobileOpen,
-    setMobileOpen,
-  ] = useState(false);
-
   const role =
     profile?.primary_role;
 
@@ -162,7 +156,7 @@ export function AppShell({
       } = await supabase.rpc(
         "get_workspace_attention_count",
       );
-     
+
       if (error) {
         throw error;
       }
@@ -171,7 +165,7 @@ export function AppShell({
     },
     refetchInterval: 30000,
   });
-  
+
   const items =
     NAV.filter((n) => {
       if (n.admin) {
@@ -199,20 +193,22 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh w-full bg-background text-foreground">
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground lg:flex">
+      {/* Responsive sidebar */}
+      <aside className="flex w-16 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground lg:w-64">
         <Link
           to="/dashboard"
-          className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5"
+          className="flex h-16 items-center justify-center border-b border-sidebar-border px-2 lg:justify-start lg:gap-0.5 lg:px-5"
         >
-          <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
-            <GraduationCap className="h-4 w-4" />
-          </span>
+          <img
+            src={logo}
+            alt="Aneks Library"
+            className="h-10 w-10 rounded-lg object-contain"
+          />
 
-          <span className="font-display text-base font-semibold">
+          <span className="-ml-2 hidden font-display text-lg font-semibold tracking-tight lg:inline">
             <span className="text-gold">
-              Aneks
-            </span>
+              neks
+            </span>{" "}
             Library
           </span>
         </Link>
@@ -226,67 +222,8 @@ export function AppShell({
         />
       </aside>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-foreground/40"
-            onClick={() =>
-              setMobileOpen(false)
-            }
-          />
-
-          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-sidebar text-sidebar-foreground shadow-elegant">
-            <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
-              <span className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-emerald text-primary-foreground">
-                  <GraduationCap className="h-4 w-4" />
-                </span>
-
-                <span className="font-display text-base font-semibold">
-                  <span className="text-gold">
-                    Aneks
-                  </span>
-                  Library
-                </span>
-              </span>
-
-              <button
-                onClick={() =>
-                  setMobileOpen(false)
-                }
-                aria-label="Close menu"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <SidebarNav
-              items={items}
-              pathname={pathname}
-              attentionCount={
-                attentionCount
-              }
-              onNavigate={() =>
-                setMobileOpen(false)
-              }
-            />
-          </aside>
-        </div>
-      )}
-
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
-          <button
-            onClick={() =>
-              setMobileOpen(true)
-            }
-            className="rounded-md border border-border p-2 lg:hidden"
-            aria-label="Open menu"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-
           <div className="ml-auto flex items-center gap-2">
             <NotificationBell />
 
@@ -381,16 +318,14 @@ export function AppShell({
 function SidebarNav({
   items,
   pathname,
-  onNavigate,
   attentionCount,
 }: {
   items: NavItem[];
   pathname: string;
-  onNavigate?: () => void;
   attentionCount: number;
 }) {
   return (
-    <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+    <nav className="flex-1 space-y-1 overflow-y-auto p-2 lg:p-3">
       {items.map((item) => {
         const active =
           pathname === item.to ||
@@ -405,40 +340,48 @@ function SidebarNav({
               )
             ));
 
-        const showAttentionBadge =
-          (item.admin ||
-            item.academic) &&
-          attentionCount > 0;
-
         return (
           <Link
             key={item.to}
             to={item.to}
-            onClick={onNavigate}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+            title={item.label}
+            className={`flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors lg:justify-start lg:px-3 ${
               active
                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
             }`}
           >
-            <item.icon className="h-4 w-4" />
+            <div className="relative shrink-0">
+  <item.icon className="h-4 w-4" />
 
-            <span className="min-w-0 flex-1">
-              {item.label}
-            </span>
+  {(item.admin || item.academic) &&
+  attentionCount > 0 ? (
+    <span
+      className="absolute -right-2.5 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-0.5 text-[9px] font-semibold leading-none text-gold-foreground lg:hidden"
+      aria-label={`${attentionCount} pending items`}
+    >
+      {attentionCount > 99
+        ? "99+"
+        : attentionCount}
+    </span>
+  ) : null}
+</div>
 
-            {(item.admin ||
-              item.academic) &&
-            attentionCount > 0 ? (
-              <span
-                className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-gold px-1 text-[10px] font-semibold text-gold-foreground"
-                aria-label={`${attentionCount} pending items`}
-              >
-                {attentionCount > 99
-                  ? "99+"
-                  : attentionCount}
-              </span>
-            ) : null}
+<span className="hidden min-w-0 flex-1 lg:inline">
+  {item.label}
+</span>
+
+{(item.admin || item.academic) &&
+attentionCount > 0 ? (
+  <span
+    className="hidden rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-semibold leading-none text-gold-foreground lg:inline"
+    aria-label={`${attentionCount} pending items`}
+  >
+    {attentionCount > 99
+      ? "99+"
+      : attentionCount}
+  </span>
+) : null}
           </Link>
         );
       })}

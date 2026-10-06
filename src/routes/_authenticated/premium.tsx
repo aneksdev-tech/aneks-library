@@ -17,46 +17,44 @@ function PremiumPage() {
   const { loading, isAdmin, isPremium } = useAccess();
 
   if (loading) {
-  return (
-    <div className="p-8">
-      Loading...
-    </div>
-  );
-}
+    return (
+      <div className="p-4 text-sm sm:p-8">
+        Loading...
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
+      <div className="rounded-2xl border bg-card p-4 shadow-soft sm:rounded-3xl sm:p-6">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div>
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 sm:h-10 sm:w-10">
+              <Crown className="h-6 w-6 text-yellow-500 sm:h-8 sm:w-8" />
+            </div>
 
-      <div className="rounded-3xl border bg-card p-6 shadow-soft">
-        <div className="flex items-center gap-3">
-        <div>
-        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-            <Crown className="h-8 w-8 text-yellow-500" />
-          </div>
-            <h1 className="font-display text-2xl font-bold">
+            <h1 className="font-display text-xl font-bold sm:text-2xl">
               Aneks Library Premium
             </h1>
 
-            <p className="text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
               Unlimited downloads. Faster learning. Premium experience.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        <div className="rounded-2xl border p-6">
-          <h2 className="text-xl font-semibold">
+      <div className="grid gap-3 sm:gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border p-4 sm:p-6">
+          <h2 className="text-lg font-semibold sm:text-xl">
             Free Plan
           </h2>
 
-          <p className="mt-2 text-4xl font-bold">
+          <p className="mt-1.5 text-3xl font-bold sm:mt-2 sm:text-4xl">
             ₦0
           </p>
 
-          <div className="mt-6 space-y-3">
-
+          <div className="mt-5 space-y-2.5 sm:mt-6 sm:space-y-3">
             <Feature text="Browse Resources" />
 
             <Feature text="Preview Resources" />
@@ -70,38 +68,34 @@ function PremiumPage() {
             <Feature text="No Premium Materials" />
 
             <Feature text="Ads" />
-
           </div>
 
           <Button
             disabled
-            className="mt-8 w-full"
+            className="mt-6 h-9 w-full text-xs sm:mt-8 sm:h-10 sm:text-sm"
             variant="outline"
           >
             Current Plan
           </Button>
-
         </div>
 
-        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-6">
-
-          <div className="mb-3 inline-flex rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 sm:p-6">
+          <div className="mb-2.5 inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold text-primary-foreground sm:mb-3 sm:px-3 sm:text-xs">
             Recommended
           </div>
 
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-lg font-semibold sm:text-xl">
             Premium
           </h2>
 
-          <p className="mt-2 text-4xl font-bold">
+          <p className="mt-1.5 text-3xl font-bold sm:mt-2 sm:text-4xl">
             ₦3,000
-            <span className="text-lg font-normal">
+            <span className="text-base font-normal sm:text-lg">
               /month
             </span>
           </p>
 
-          <div className="mt-6 space-y-3">
-
+          <div className="mt-5 space-y-2.5 sm:mt-6 sm:space-y-3">
             <Feature text="Unlimited Downloads" />
 
             <Feature text="Premium Resources" />
@@ -115,66 +109,68 @@ function PremiumPage() {
             <Feature text="Priority Support" />
 
             <Feature text="Future Premium Features" />
-
           </div>
 
           {isAdmin ? (
-            <Button disabled className="mt-8 w-full">
-            Administrator
+            <Button
+              disabled
+              className="mt-6 h-9 w-full text-xs sm:mt-8 sm:h-10 sm:text-sm"
+            >
+              Administrator
             </Button>
-        ) : isPremium ? (
-            <Button disabled className="mt-8 w-full">
-            Current Plan
+          ) : isPremium ? (
+            <Button
+              disabled
+              className="mt-6 h-9 w-full text-xs sm:mt-8 sm:h-10 sm:text-sm"
+            >
+              Current Plan
             </Button>
-        ) : (
-            <Button className="mt-8 w-full">
-            Upgrade to Premium
+          ) : (
+            <Button className="mt-6 h-9 w-full text-xs sm:mt-8 sm:h-10 sm:text-sm">
+              Upgrade to Premium
             </Button>
-        )}
-
+          )}
         </div>
       </div>
 
-        <div className="rounded-2xl border p-6">
-  <h2 className="text-2xl font-semibold">
-    Secure Payments
-  </h2>
+      <div className="rounded-2xl border p-4 sm:p-6">
+        <h2 className="text-xl font-semibold sm:text-2xl">
+          Secure Payments
+        </h2>
 
-  <p className="mt-3 text-muted-foreground">
-    Payments are securely processed through Flutterwave.
-    Your card details are never stored by Aneks Library.
-  </p>
-</div>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
+          Payments are securely processed through Flutterwave.
+          Your card details are never stored by Aneks Library.
+        </p>
+      </div>
 
-<div className="rounded-2xl border p-6">
-  <h2 className="text-2xl font-semibold">
-    Frequently Asked Questions
-  </h2>
+      <div className="rounded-2xl border p-4 sm:p-6">
+        <h2 className="text-xl font-semibold sm:text-2xl">
+          Frequently Asked Questions
+        </h2>
 
-  <div className="mt-6 space-y-6">
+        <div className="mt-5 space-y-5 sm:mt-6 sm:space-y-6">
+          <div>
+            <h3 className="text-sm font-medium sm:text-base">
+              What does Premium include?
+            </h3>
 
-    <div>
-      <h3 className="font-medium">
-        What does Premium include?
-      </h3>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
+              Unlimited downloads, premium resources, No Ads, and future premium features.
+            </p>
+          </div>
 
-      <p className="text-muted-foreground">
-        Unlimited downloads, premium resources, No Ads, and future premium features.
-      </p>
-    </div>
+          <div>
+            <h3 className="text-sm font-medium sm:text-base">
+              Can I cancel anytime?
+            </h3>
 
-    <div>
-      <h3 className="font-medium">
-        Can I cancel anytime?
-      </h3>
-
-      <p className="text-muted-foreground">
-        Yes.
-      </p>
-    </div>
-
-  </div>
-</div>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
+              Yes.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -186,8 +182,10 @@ function Feature({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <CheckCircle2 className="h-5 w-5 text-green-600" />
-      <span>{text}</span>
+      <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 sm:h-5 sm:w-5" />
+      <span className="text-xs sm:text-sm">
+        {text}
+      </span>
     </div>
   );
 }

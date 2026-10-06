@@ -86,18 +86,19 @@ function Bookmarks() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
           Bookmarks
         </p>
-        <h1 className="mt-1 font-display text-3xl font-semibold">
+
+        <h1 className="mt-1 font-display text-lg font-semibold sm:text-3xl">
           Saved for later
         </h1>
       </div>
 
       {data && data.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {data.map((r) => (
             <ResourceCard
               key={r.id}

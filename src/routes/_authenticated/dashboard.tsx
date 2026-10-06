@@ -144,7 +144,7 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8">
+  <div className="space-y-6 sm:space-y-8">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-gold">
           {roles.includes("admin")
@@ -152,7 +152,7 @@ function DashboardPage() {
             : roles[0] ?? "Member"}
         </p>
 
-        <h1 className="mt-1 font-display text-3xl font-semibold">
+        <h1 className="mt-1 font-display text-lg font-semibold sm:text-3xl">
           Welcome back,{" "}
           {profile?.full_name?.split(" ")[0] || "there"}
         </h1>
@@ -165,160 +165,154 @@ function DashboardPage() {
       <AnnouncementBanner />
       <AnnouncementPopup />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            className="rounded-2xl border border-border bg-card p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-elegant"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                {c.label}
-              </span>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+  {cards.map((c) => (
+    <div
+      key={c.label}
+      className="rounded-2xl border border-border bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-elegant sm:p-4 lg:p-5"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate text-[10px] uppercase tracking-wider text-muted-foreground sm:text-xs">
+          {c.label}
+        </span>
 
-              <c.icon className="h-4 w-4 text-primary" />
-            </div>
-
-            <div className="mt-4 font-display text-3xl font-semibold">
-              {c.value}
-            </div>
-
-            <div className="mt-1 text-xs text-muted-foreground">
-              {c.sub}
-            </div>
-
-            {c.label === "Reputation" && (
-              <>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  {nextLevel
-                    ? `${nextLevel.pointsNeeded} pts to ${nextLevel.emoji} ${nextLevel.name}`
-                    : "Highest contributor level reached 👑"}
-                </p>
-              </>
-            )}
-          </div>
-        ))}
+        <c.icon className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
-          <div>
-            <h2 className="font-display text-lg font-semibold">
-              Recent uploads
-            </h2>
+      <div className="mt-3 font-display text-2xl font-semibold sm:mt-4 sm:text-3xl">
+        {c.value}
+      </div>
 
-            <p className="text-sm text-muted-foreground">
-              Your latest contributions and their current status.
-            </p>
+      <div className="mt-1 truncate text-[10px] text-muted-foreground sm:text-xs">
+        {c.sub}
+      </div>
+
+      {c.label === "Reputation" && (
+        <>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-3 sm:h-2">
+            <div
+              className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
           </div>
 
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/my-uploads">
-              View all
-              <ArrowUpRight className="ml-1 h-3 w-3" />
+          <p className="mt-1.5 text-[9px] leading-tight text-muted-foreground sm:mt-2 sm:text-[11px]">
+            {nextLevel
+              ? `${nextLevel.pointsNeeded} pts to ${nextLevel.emoji} ${nextLevel.name}`
+              : "Highest contributor level reached 👑"}
+          </p>
+        </>
+      )}
+    </div>
+  ))}
+</div>
+
+      <div>
+  <div className="flex items-center justify-between gap-3">
+    <div>
+      <h2 className="font-display text-base font-semibold sm:text-lg">
+        Recent uploads
+      </h2>
+
+      <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+        Your latest contributions and their current status.
+      </p>
+    </div>
+
+    <Button asChild variant="ghost" size="sm">
+      <Link to="/my-uploads">
+        View all
+        <ArrowUpRight className="ml-1 h-3 w-3" />
+      </Link>
+    </Button>
+  </div>
+
+  {recent && recent.length > 0 ? (
+    <ul className="mt-3 divide-y divide-border border-y border-border">
+      {recent.map((r) => {
+        const needsStatusCheck =
+          r.status === "rejected" ||
+          r.status === "deleted";
+
+        const categoryName =
+          r.category?.deleted_at == null &&
+          r.category?.name?.trim()
+            ? r.category.name.trim()
+            : "Uncategorized";
+
+        return (
+          <li
+            key={r.id}
+            className={`py-3 transition-colors ${
+              r.status === "deleted"
+                ? "bg-muted/30"
+                : ""
+            }`}
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <StatusPill status={r.status} />
+
+                <p className="mt-1.5 truncate text-sm font-medium">
+                  {r.title}
+                </p>
+
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground sm:text-xs">
+                  <span>{categoryName}</span>
+
+                  <span>·</span>
+
+                  <span>
+                    {r.download_count} downloads
+                  </span>
+
+                  <span>·</span>
+
+                  <span>
+                    {new Date(
+                      r.created_at,
+                    ).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+
+              {needsStatusCheck && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="w-full shrink-0 sm:w-auto"
+                >
+                  <Link to="/notifications">
+                    <Bell className="mr-1.5 h-3.5 w-3.5" />
+                    Check status
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <div className="mt-3 border-y border-border py-8">
+      <EmptyState
+        title="No uploads yet"
+        desc="Contribute your first resource — a past question, project or lecture note."
+        cta={
+          <Button
+            asChild
+            className="bg-gradient-emerald text-primary-foreground"
+          >
+            <Link to="/upload">
+              Upload something
             </Link>
           </Button>
-        </div>
-
-        {recent && recent.length > 0 ? (
-          <ul className="divide-y divide-border">
-            {recent.map((r) => {
-              const needsStatusCheck =
-                r.status === "rejected" ||
-                r.status === "deleted";
-
-              const categoryName =
-                r.category?.deleted_at == null &&
-                r.category?.name?.trim()
-                  ? r.category.name.trim()
-                  : "Uncategorized";
-
-              return (
-                <li
-                  key={r.id}
-                  className={`p-5 transition-colors ${
-                    r.status === "deleted"
-                      ? "bg-muted/30 hover:bg-muted/50"
-                      : "hover:bg-muted/40"
-                  }`}
-                >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <div>
-                        <StatusPill
-                          status={r.status}
-                        />
-                      </div>
-
-                      <p className="mt-2 truncate font-medium">
-                        {r.title}
-                      </p>
-
-                      <div className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
-                        <span>{categoryName}</span>
-
-                        <span className="hidden sm:inline">
-                          ·
-                        </span>
-
-                        <span>
-                          {r.download_count} downloads
-                        </span>
-
-                        <span className="hidden sm:inline">
-                          ·
-                        </span>
-
-                        <span>
-                          {new Date(
-                            r.created_at,
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    {needsStatusCheck && (
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="w-full shrink-0 sm:w-auto"
-                      >
-                        <Link to="/notifications">
-                          <Bell className="mr-1.5 h-3.5 w-3.5" />
-                          Check status
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <EmptyState
-            title="No uploads yet"
-            desc="Contribute your first resource — a past question, project or lecture note."
-            cta={
-              <Button
-                asChild
-                className="bg-gradient-emerald text-primary-foreground"
-              >
-                <Link to="/upload">
-                  Upload something
-                </Link>
-              </Button>
-            }
-          />
-        )}
-      </div>
+        }
+      />
+    </div>
+  )}
+</div>
     </div>
   );
 }

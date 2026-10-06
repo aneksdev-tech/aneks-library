@@ -220,31 +220,31 @@ function MyUploads() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
           My uploads
         </p>
 
-        <h1 className="mt-1 font-display text-3xl font-semibold">
+        <h1 className="mt-1 font-display text-lg font-semibold sm:text-3xl">
           Manage your contributions
         </h1>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4 shadow-soft">
-        <div className="mb-3 flex items-center gap-2">
-          <Filter className="h-4 w-4 text-primary" />
+      <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:rounded-lg sm:p-4">
+        <div className="mb-2.5 flex items-center gap-2 sm:mb-3">
+          <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
-          <p className="text-sm font-semibold">
+          <p className="text-xs font-semibold sm:text-sm">
             Find uploads
           </p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="flex items-center gap-3">
+        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <label
               htmlFor="upload-status"
-              className="whitespace-nowrap text-sm text-muted-foreground"
+              className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm"
             >
               Status
             </label>
@@ -257,7 +257,7 @@ function MyUploads() {
                   event.target.value as StatusFilter,
                 )
               }
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
               aria-label="Filter uploads by status"
             >
               <option value="all">
@@ -286,10 +286,10 @@ function MyUploads() {
             </select>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <label
               htmlFor="upload-sort"
-              className="whitespace-nowrap text-sm text-muted-foreground"
+              className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm"
             >
               Sort by
             </label>
@@ -302,7 +302,7 @@ function MyUploads() {
                   event.target.value as SortOption,
                 )
               }
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
               aria-label="Sort uploads"
             >
               <option value="newest">
@@ -321,9 +321,9 @@ function MyUploads() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card shadow-soft">
+      <div className="rounded-2xl border border-border bg-card shadow-soft sm:rounded-lg">
         {isLoading ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
+          <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             Loading…
           </div>
         ) : filteredAndSortedData.length ? (
@@ -338,10 +338,10 @@ function MyUploads() {
               return (
                 <li
                   key={resource.id}
-                  className="p-5"
+                  className="p-3.5 sm:p-5"
                 >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 space-y-2">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="min-w-0 space-y-1.5 sm:space-y-2">
                       <StatusPill
                         status={
                           resource.status as string
@@ -349,11 +349,11 @@ function MyUploads() {
                       />
 
                       <div className="min-w-0">
-                        <p className="truncate font-medium">
+                        <p className="truncate text-sm font-medium sm:text-base">
                           {resource.title}
                         </p>
 
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                           {categoryName} ·{" "}
                           {resource.download_count} downloads
                           {" · "}
@@ -365,15 +365,15 @@ function MyUploads() {
                     </div>
 
                     {resource.status === "draft" && (
-                      <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                      <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:gap-2">
                         <Link
                           to="/upload/$draftId"
                           params={{
                             draftId: resource.id,
                           }}
-                          className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                          className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:w-auto sm:gap-2 sm:py-2 sm:text-sm"
                         >
-                          <Edit3 className="h-4 w-4" />
+                          <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           Edit draft
                         </Link>
 
@@ -389,9 +389,9 @@ function MyUploads() {
                             deletingDraftId ===
                             resource.id
                           }
-                          className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
+                          className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:w-auto sm:gap-2 sm:py-2 sm:text-sm"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           {deletingDraftId ===
                           resource.id
                             ? "Deleting…"
@@ -426,7 +426,7 @@ function MyUploads() {
               Delete draft?
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-sm">
               Delete{" "}
               <strong>
                 {pendingDelete?.title}
@@ -437,7 +437,7 @@ function MyUploads() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={deletingDraftId !== null}
             >
@@ -453,7 +453,7 @@ function MyUploads() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deletingDraftId !== null && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
               Delete draft
             </AlertDialogAction>

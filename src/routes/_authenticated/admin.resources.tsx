@@ -1414,21 +1414,21 @@ function ResourcesPage() {
   }
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-5 sm:space-y-6">
 
       {/* Filters */}
-      <div className="rounded-lg border border-border bg-card p-4 shadow-soft">
+      <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:rounded-lg sm:p-4">
         <div className="mb-3 flex items-center gap-2">
-          <Filter className="h-4 w-4 text-primary" />
+          <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
-          <p className="text-sm font-semibold">
+          <p className="text-xs font-semibold sm:text-sm">
             Find resources
           </p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_200px_180px]">
+        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-[minmax(0,1fr)_180px_200px_180px]">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
             <Input
               value={search}
@@ -1438,7 +1438,7 @@ function ResourcesPage() {
                 )
               }
               placeholder="Search resource title, file name, uploader…"
-              className="pl-9"
+              className="h-9 pl-8 text-xs sm:h-10 sm:pl-9 sm:text-sm"
             />
           </div>
 
@@ -1451,7 +1451,7 @@ function ResourcesPage() {
                   | ResourceStatus,
               )
             }
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
             aria-label="Filter by status"
           >
             {STATUS_OPTIONS.map(
@@ -1477,7 +1477,7 @@ function ResourcesPage() {
                 e.target.value,
               )
             }
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
             aria-label="Filter by category"
           >
             <option value="all">
@@ -1513,7 +1513,7 @@ function ResourcesPage() {
                   | "oldest",
               )
             }
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
             aria-label="Sort resources"
           >
             <option value="newest">
@@ -1530,8 +1530,8 @@ function ResourcesPage() {
           category !== "all" ||
           sortOrder !==
             "newest") && (
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <p className="text-[10px] text-muted-foreground sm:text-xs">
               Showing{" "}
               {
                 filteredResources.length
@@ -1554,6 +1554,7 @@ function ResourcesPage() {
                   "newest",
                 );
               }}
+              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
             >
               Clear filters
             </Button>
@@ -1562,9 +1563,9 @@ function ResourcesPage() {
       </div>
 
       {/* Resource list */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
         {isLoading ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
+          <div className="p-6 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             Loading resources…
           </div>
         ) : filteredResources.length >
@@ -1644,24 +1645,24 @@ function ResourcesPage() {
                 return (
                   <li
                     key={resource.id}
-                    className={`group border-b-2 border-border/70 p-4 transition-colors sm:p-5 ${
+                    className={`group border-b border-border/70 p-3.5 transition-colors sm:border-b-2 sm:p-5 ${
                       isDeleted
                         ? "bg-muted/30"
                         : "odd:bg-card even:bg-muted/40 hover:bg-muted/50"
                     }`}
                   >
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 sm:gap-4">
                       {/* Resource header */}
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <StatusPill
                               status={
                                 resource.status
                               }
                             />
 
-                            <span className="max-w-[220px] truncate rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
                               {
                                 categoryName
                               }
@@ -1670,7 +1671,7 @@ function ResourcesPage() {
 
                           <div className="mt-2 min-w-0">
                             <p
-                              className={`break-words text-base font-semibold leading-6 sm:text-lg ${
+                              className={`break-words text-sm font-semibold leading-5 sm:text-lg sm:leading-6 ${
                                 isDeleted
                                   ? "text-muted-foreground"
                                   : "text-foreground"
@@ -1681,14 +1682,14 @@ function ResourcesPage() {
                               }
                             </p>
 
-                            <p className="mt-1 break-all text-xs text-muted-foreground">
+                            <p className="mt-1 break-all text-[10px] text-muted-foreground sm:text-xs">
                               {
                                 resource.file_name
                               }
                             </p>
 
                             {resource.description && (
-                              <p className="mt-3 max-w-4xl line-clamp-2 text-sm leading-6 text-muted-foreground">
+                              <p className="mt-2 max-w-4xl line-clamp-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
                                 {
                                   resource.description
                                 }
@@ -1696,7 +1697,7 @@ function ResourcesPage() {
                             )}
                           </div>
 
-                          <div className="mt-2 flex flex-col gap-1.5 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5">
+                          <div className="mt-2 flex flex-col gap-1 text-[10px] text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
                             <span>
                               {formatFileSize(
                                 resource.file_size,
@@ -1782,7 +1783,7 @@ function ResourcesPage() {
                                 )
                               }
                             >
-                              <Eye className="mr-1.5 h-3.5 w-3.5" />
+                              <Eye className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
                               Preview
                             </Button>
                           )}
@@ -1870,30 +1871,30 @@ function ResourcesPage() {
                       </div>
 
                       {/* Usage metrics */}
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2 sm:block">
-                          <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5 sm:block sm:px-3 sm:py-2">
+                          <p className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground sm:text-[10px] sm:tracking-[0.12em]">
                             Downloads
                           </p>
 
-                          <p className="mt-0.5 text-sm font-semibold text-foreground">
+                          <p className="mt-0.5 text-xs font-semibold text-foreground sm:text-sm">
                             {resource.download_count.toLocaleString()}
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2 sm:block">
-                          <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                        <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5 sm:block sm:px-3 sm:py-2">
+                          <p className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground sm:text-[10px] sm:tracking-[0.12em]">
                             Bookmarks
                           </p>
 
-                          <p className="mt-0.5 text-sm font-semibold text-foreground">
+                          <p className="mt-0.5 text-xs font-semibold text-foreground sm:text-sm">
                             {resource.bookmark_count.toLocaleString()}
                           </p>
                         </div>
                       </div>
 
                       {/* Audit information */}
-                      <div className="grid gap-4 text-xs sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
                         <AuditItem
                           label="Uploader"
                           value={getPersonName(
@@ -2035,7 +2036,7 @@ function ResourcesPage() {
                                 : resource.id,
                             )
                           }
-                          className="h-7 px-2 text-xs text-muted-foreground"
+                          className="h-8 px-2 text-[10px] text-muted-foreground sm:h-7 sm:text-xs"
                         >
                           <History className="mr-1.5 h-3.5 w-3.5" />
 
@@ -2045,14 +2046,14 @@ function ResourcesPage() {
                         </Button>
 
                         {isHistoryOpen && (
-                          <div className="mt-2 border-l border-border pl-4">
+                          <div className="mt-2 border-l border-border pl-3 sm:pl-4">
                             {history.length >
                             0 ? (
-                              <div className="space-y-3">
+                              <div className="space-y-2.5 sm:space-y-3">
                                 {history.map((log) => (
   <div
     key={`${log.type}-${log.id}`}
-    className="text-xs"
+    className="text-[10px] sm:text-xs"
   >
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <span className="font-medium uppercase">
@@ -2113,115 +2114,118 @@ function ResourcesPage() {
                       </div>
 
                       {/* Responsive actions */}
-                      <div className="flex flex-wrap items-center gap-2 lg:hidden">
-                        {canPreview && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              editResource.isPending ||
-                              deleteResource.isPending ||
-                              Boolean(
-                                downloadingResourceId,
-                              )
-                            }
-                            onClick={() =>
-                              setPreviewResource(
-                                {
-                                  id: resource.id,
-                                  title:
-                                    resource.title,
-                                  file_path:
-                                    resource.file_path,
-                                },
-                              )
-                            }
-                          >
-                            <Eye className="mr-1.5 h-3.5 w-3.5" />
-                            Preview
-                          </Button>
-                        )}
+<div className="flex flex-wrap items-center gap-2 lg:hidden">
+  {canPreview && (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={
+        editResource.isPending ||
+        deleteResource.isPending ||
+        Boolean(
+          downloadingResourceId,
+        )
+      }
+      onClick={() =>
+        setPreviewResource(
+          {
+            id: resource.id,
+            title:
+              resource.title,
+            file_path:
+              resource.file_path,
+          },
+        )
+      }
+      className="h-8 px-2.5 text-[10px] sm:h-9 sm:px-3 sm:text-xs"
+    >
+      <Eye className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      Preview
+    </Button>
+  )}
 
-                        {canDownload && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              editResource.isPending ||
-                              deleteResource.isPending ||
-                              Boolean(
-                                downloadingResourceId,
-                              )
-                            }
-                            onClick={() =>
-                              handleDownload(
-                                resource,
-                              )
-                            }
-                          >
-                            {isDownloading ? (
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Download className="mr-1.5 h-3.5 w-3.5" />
-                            )}
-                            Download
-                          </Button>
-                        )}
+  {canDownload && (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={
+        editResource.isPending ||
+        deleteResource.isPending ||
+        Boolean(
+          downloadingResourceId,
+        )
+      }
+      onClick={() =>
+        handleDownload(
+          resource,
+        )
+      }
+      className="h-8 px-2.5 text-[10px] sm:h-9 sm:px-3 sm:text-xs"
+    >
+      {isDownloading ? (
+        <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      ) : (
+        <Download className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      )}
+      Download
+    </Button>
+  )}
 
-                        {canEdit && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              editResource.isPending ||
-                              deleteResource.isPending ||
-                              Boolean(
-                                downloadingResourceId,
-                              )
-                            }
-                            onClick={() =>
-                              openEdit(
-                                resource,
-                              )
-                            }
-                          >
-                            {isEditing ? (
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Edit3 className="mr-1.5 h-3.5 w-3.5" />
-                            )}
-                            Edit
-                          </Button>
-                        )}
+  {canEdit && (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={
+        editResource.isPending ||
+        deleteResource.isPending ||
+        Boolean(
+          downloadingResourceId,
+        )
+      }
+      onClick={() =>
+        openEdit(
+          resource,
+        )
+      }
+      className="h-8 px-2.5 text-[10px] sm:h-9 sm:px-3 sm:text-xs"
+    >
+      {isEditing ? (
+        <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      ) : (
+        <Edit3 className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      )}
+      Edit
+    </Button>
+  )}
 
-                        {canDelete && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              editResource.isPending ||
-                              deleteResource.isPending ||
-                              Boolean(
-                                downloadingResourceId,
-                              )
-                            }
-                            onClick={() =>
-                              handleDelete(
-                                resource,
-                              )
-                            }
-                            className="text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-                          >
-                            {isDeleting ? (
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                            )}
+  {canDelete && (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={
+        editResource.isPending ||
+        deleteResource.isPending ||
+        Boolean(
+          downloadingResourceId,
+        )
+      }
+      onClick={() =>
+        handleDelete(
+          resource,
+        )
+      }
+      className="h-8 px-2.5 text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:px-3 sm:text-xs"
+    >
+      {isDeleting ? (
+        <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      ) : (
+        <Trash2 className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      )}
 
-                            Delete
-                          </Button>
-                        )}
-                      </div>
+      Delete
+    </Button>
+  )}
+</div>
                     </div>
                   </li>
                 );
@@ -2230,17 +2234,17 @@ function ResourcesPage() {
           </ul>
         ) : resources &&
           resources.length > 0 ? (
-          <div className="p-10 text-center">
-            <Search className="mx-auto h-8 w-8 text-muted-foreground/50" />
+          <div className="p-6 text-center sm:p-10">
+  <Search className="mx-auto h-7 w-7 text-muted-foreground/50 sm:h-8 sm:w-8" />
 
-            <p className="mt-3 text-sm font-medium">
-              No matching resources
-            </p>
+  <p className="mt-2.5 text-xs font-medium sm:mt-3 sm:text-sm">
+    No matching resources
+  </p>
 
-            <p className="mt-1 text-xs text-muted-foreground">
-              Try changing your search or filters.
-            </p>
-          </div>
+  <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+    Try changing your search or filters.
+  </p>
+</div>
         ) : (
           <EmptyState
             title="No resources yet"
@@ -2264,13 +2268,13 @@ function ResourcesPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <AlertDialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-4 sm:max-w-3xl sm:rounded-lg sm:p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Edit resource
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               Update the resource metadata using
               the same academic details used during
               upload. The uploaded file itself will
@@ -2278,7 +2282,7 @@ function ResourcesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             <FormField
               label="Resource title"
               required
@@ -2298,6 +2302,7 @@ function ResourcesPage() {
                 disabled={
                   editResource.isPending
                 }
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               />
             </FormField>
 
@@ -2320,11 +2325,11 @@ function ResourcesPage() {
                   editResource.isPending
                 }
                 rows={4}
-                className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-20 w-full rounded-md border border-input bg-background px-2.5 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
               />
             </FormField>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <FormField label="Category">
                 <select
                   value={
@@ -2342,7 +2347,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
                 >
                   <option value="">
                     Uncategorized
@@ -2379,11 +2384,12 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                 />
               </FormField>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <FormField label="College">
                 <select
                   value={
@@ -2403,7 +2409,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
                 >
                   <option value="">
                     Select college
@@ -2438,7 +2444,7 @@ function ResourcesPage() {
                     editResource.isPending ||
                     !editForm.college
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
                 >
                   <option value="">
                     {editForm.college
@@ -2464,7 +2470,7 @@ function ResourcesPage() {
               </FormField>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
               <FormField label="Level">
                 <select
                   value={
@@ -2482,7 +2488,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
                 >
                   <option value="">
                     Select level
@@ -2518,7 +2524,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
                 >
                   <option value="">
                     Select semester
@@ -2554,7 +2560,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
                 >
                   <option value="">
                     Select year
@@ -2576,7 +2582,7 @@ function ResourcesPage() {
               </FormField>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <FormField label="Author">
                 <Input
                   value={
@@ -2595,6 +2601,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                 />
               </FormField>
 
@@ -2613,20 +2620,22 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
                 />
 
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                   Separate multiple tags with commas.
                 </p>
               </FormField>
             </div>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
             <AlertDialogCancel
               disabled={
                 editResource.isPending
               }
+              className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -2640,6 +2649,7 @@ function ResourcesPage() {
                 editResource.isPending ||
                 !editForm.title.trim()
               }
+              className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               Save changes
             </AlertDialogAction>
@@ -2647,7 +2657,7 @@ function ResourcesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit save confirmation */}
+            {/* Edit save confirmation */}
       <AlertDialog
         open={
           editConfirmation !== null
@@ -2661,16 +2671,16 @@ function ResourcesPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:rounded-lg sm:p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               {editConfirmation ===
               "no_changes"
                 ? "No changes detected"
                 : "Save resource changes?"}
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               {editConfirmation ===
               "no_changes" ? (
                 <>
@@ -2698,7 +2708,7 @@ function ResourcesPage() {
             <div className="space-y-2">
               <label
                 htmlFor="resource-edit-summary"
-                className="text-sm font-medium"
+                className="text-xs font-medium sm:text-sm"
               >
                 Edit summary
                 <span className="ml-1 text-destructive">
@@ -2727,17 +2737,17 @@ function ResourcesPage() {
                 rows={3}
                 maxLength={500}
                 autoFocus
-                className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-20 w-full rounded-md border border-input bg-background px-2.5 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
               />
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">
                 This summary will be permanently
                 retained in the resource edit history.
               </p>
             </div>
           )}
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
             {editConfirmation ===
             "no_changes" ? (
               <AlertDialogAction
@@ -2745,6 +2755,7 @@ function ResourcesPage() {
                   event.preventDefault();
                   setEditConfirmation(null);
                 }}
+                className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
               >
                 Close
               </AlertDialogAction>
@@ -2754,6 +2765,7 @@ function ResourcesPage() {
                   disabled={
                     editResource.isPending
                   }
+                  className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
                 >
                   Cancel
                 </AlertDialogCancel>
@@ -2767,9 +2779,10 @@ function ResourcesPage() {
                     editResource.isPending ||
                     !editForm.edit_summary.trim()
                   }
+                  className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
                 >
                   {editResource.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                   )}
 
                   Save changes
@@ -2792,7 +2805,7 @@ function ResourcesPage() {
         />
       )}
 
-      {/* Delete confirmation dialog */}
+            {/* Delete confirmation dialog */}
       <AlertDialog
         open={
           pendingDelete !== null
@@ -2807,13 +2820,13 @@ function ResourcesPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:rounded-lg sm:p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Confirm resource deletion
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               Delete{" "}
               <strong>
                 {
@@ -2830,7 +2843,7 @@ function ResourcesPage() {
           <div className="space-y-2">
             <label
               htmlFor="deletion-reason"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Deletion reason
             </label>
@@ -2849,20 +2862,22 @@ function ResourcesPage() {
               }
               required
               aria-required="true"
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground sm:text-xs">
               A reason is required and will be
               retained with the resource audit
               record.
             </p>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
             <AlertDialogCancel
               disabled={
                 deleteResource.isPending
               }
+              className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -2876,9 +2891,10 @@ function ResourcesPage() {
                 deleteResource.isPending ||
                 !deletionReason.trim()
               }
+              className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               {deleteResource.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               Confirm delete
@@ -2901,7 +2917,7 @@ function FormField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium">
+      <label className="text-xs font-medium sm:text-sm">
         {label}
 
         {required && (
@@ -2966,9 +2982,9 @@ function StatusPill({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${item.className}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${item.className}`}
     >
-      <Icon className="h-3 w-3" />
+      <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
       {item.label}
     </span>
   );
@@ -3096,7 +3112,7 @@ function PreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm sm:p-4"
       onMouseDown={(e) => {
         if (
           e.target ===
@@ -3106,14 +3122,14 @@ function PreviewModal({
         }
       }}
     >
-      <div className="flex max-h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-4">
+      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-xl">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:gap-4 sm:px-5 sm:py-4">
           <div className="min-w-0">
-            <p className="truncate font-medium">
+            <p className="truncate text-xs font-medium sm:text-sm">
               {resource.title}
             </p>
 
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
               Resource preview
             </p>
           </div>
@@ -3123,21 +3139,22 @@ function PreviewModal({
             variant="ghost"
             onClick={onClose}
             aria-label="Close preview"
+            className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
           >
-            <XCircle className="h-5 w-5" />
+            <XCircle className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
 
         <div
           ref={scrollRootRef}
-          className="min-h-0 flex-1 overflow-auto p-4"
+          className="min-h-0 flex-1 overflow-auto p-2.5 sm:p-4"
         >
           {isLoading ? (
-            <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
+            <div className="flex min-h-[60vh] items-center justify-center text-xs text-muted-foreground sm:text-sm">
               Preparing preview…
             </div>
           ) : error ? (
-            <div className="flex min-h-[60vh] items-center justify-center text-center text-sm text-destructive">
+            <div className="flex min-h-[60vh] items-center justify-center text-center text-xs text-destructive sm:text-sm">
               {error instanceof Error
                 ? error.message
                 : "Preview could not be prepared."}
@@ -3159,7 +3176,7 @@ function PreviewModal({
               }
             />
           ) : (
-            <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
+            <div className="flex min-h-[60vh] items-center justify-center text-xs text-muted-foreground sm:text-sm">
               Preview unavailable.
             </div>
           )}

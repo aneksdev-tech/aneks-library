@@ -186,28 +186,28 @@ function LibraryPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
           Library
         </p>
 
-        <h1 className="mt-1 font-display text-3xl font-semibold">
+        <h1 className="mt-1 font-display text-lg font-semibold sm:text-3xl">
           Browse approved resources
         </h1>
 
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
           Search, filter and download the collective
           knowledge of the community.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
           {/* Search */}
 
           <div className="relative md:col-span-2 xl:col-span-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
             <Input
               placeholder="Search title, course code, description…"
@@ -215,7 +215,7 @@ function LibraryPage() {
               onChange={(e) =>
                 setQ(e.target.value)
               }
-              className="pl-9"
+              className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
             />
           </div>
 
@@ -228,7 +228,7 @@ function LibraryPage() {
               setDepartment(ALL_OPTION);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="College" />
             </SelectTrigger>
 
@@ -263,11 +263,11 @@ function LibraryPage() {
             onValueChange={setDepartment}
           >
             <SelectTrigger
-              className={
+              className={`h-9 text-xs sm:h-10 sm:text-sm ${
                 college === ALL_OPTION
                   ? "opacity-60"
                   : ""
-              }
+              }`}
             >
               <span>
                 {department === ALL_OPTION
@@ -306,7 +306,7 @@ function LibraryPage() {
             value={level}
             onValueChange={setLevel}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="Level" />
             </SelectTrigger>
 
@@ -332,7 +332,7 @@ function LibraryPage() {
             value={semester}
             onValueChange={setSemester}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="Semester" />
             </SelectTrigger>
 
@@ -358,7 +358,7 @@ function LibraryPage() {
             value={category}
             onValueChange={setCategory}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
 
@@ -386,7 +386,7 @@ function LibraryPage() {
               setSort(v as typeof sort)
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue />
             </SelectTrigger>
 
@@ -408,18 +408,18 @@ function LibraryPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {Array.from({ length: 6 }).map(
             (_, i) => (
               <div
                 key={i}
-                className="h-48 animate-pulse rounded-2xl border border-border bg-card"
+                className="h-40 animate-pulse rounded-2xl border border-border bg-card sm:h-48"
               />
             ),
           )}
         </div>
       ) : data && data.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {data.map((r) => (
             <ResourceCard
               key={r.id}
@@ -544,9 +544,9 @@ export function ResourceCard({
     "Uncategorized";
 
   return (
-    <article className="group flex flex-col rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+    <article className="group flex flex-col rounded-2xl border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
+      <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-3">
+        <span className="min-w-0 truncate rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary sm:px-2.5 sm:text-xs">
           {categoryName}
         </span>
 
@@ -559,17 +559,17 @@ export function ResourceCard({
         />
       </div>
 
-      <h3 className="line-clamp-2 font-display text-lg font-semibold leading-snug">
+      <h3 className="line-clamp-2 font-display text-base font-semibold leading-snug sm:text-lg">
         {r.title}
       </h3>
 
       {r.description && (
-        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+        <p className="mt-1.5 line-clamp-2 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
           {r.description}
         </p>
       )}
 
-      <div className="mt-3 space-y-2 text-sm">
+      <div className="mt-2.5 space-y-1.5 text-xs sm:mt-3 sm:space-y-2 sm:text-sm">
         {r.course_code && (
           <div className="font-medium text-primary">
             📘 {r.course_code}
@@ -601,14 +601,14 @@ export function ResourceCard({
         )}
       </div>
 
-      <div className="mt-auto flex items-center justify-between pt-5 text-xs text-muted-foreground">
+      <div className="mt-auto flex items-center justify-between pt-4 text-[10px] text-muted-foreground sm:pt-5 sm:text-xs">
         <span>
           {new Date(
             r.created_at,
           ).toLocaleDateString()}
         </span>
 
-        <span className="inline-flex items-center gap-3">
+        <span className="inline-flex items-center gap-2.5 sm:gap-3">
           <span className="inline-flex items-center gap-1">
             <Download className="h-3 w-3" />
             {r.download_count}
@@ -621,13 +621,13 @@ export function ResourceCard({
         </span>
       </div>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-3 flex gap-1.5 sm:mt-4 sm:gap-2">
         <div className="flex min-w-0 flex-1">
           <Button
             asChild
             variant="outline"
             size="sm"
-            className="w-full"
+            className="h-8 w-full text-xs sm:h-9 sm:text-sm"
             disabled={previewing}
           >
             <Link
@@ -662,7 +662,7 @@ export function ResourceCard({
         </div>
 
         <Button
-          className="shrink-0"
+          className="h-8 shrink-0 px-2 sm:h-9"
           variant="outline"
           size="sm"
           onClick={() =>

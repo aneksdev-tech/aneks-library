@@ -4,7 +4,7 @@ import {
   useBlocker,
   useNavigate,
 } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient, } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -105,13 +105,10 @@ export function UploadPage({ draftId }: UploadPageProps) {
   const [existingFilePath, setExistingFilePath] = useState("");
   const [progress, setProgress] = useState(0);
 
-  const [form, setForm] = useState<UploadForm>(
-    createEmptyForm(),
-  );
+  const [form, setForm] = useState<UploadForm>(createEmptyForm());
 
-  const [initialForm, setInitialForm] = useState<UploadForm>(
-    createEmptyForm(),
-  );
+  const [initialForm, setInitialForm] =
+    useState<UploadForm>(createEmptyForm());
 
   const [draftLoaded, setDraftLoaded] = useState(!draftId);
 
@@ -479,11 +476,11 @@ export function UploadPage({ draftId }: UploadPageProps) {
       setProgress(0);
       allowNavigationRef.current = true;
 
-    if (variables.status === "pending") {
-    qc.invalidateQueries({
-      queryKey: ["academic-pending-resources"],
-    });
-  }
+      if (variables.status === "pending") {
+        qc.invalidateQueries({
+          queryKey: ["academic-pending-resources"],
+        });
+      }
 
       nav({ to: "/my-uploads" });
 
@@ -578,24 +575,24 @@ export function UploadPage({ draftId }: UploadPageProps) {
   if (draftId && (draftLoading || !draftLoaded)) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <Loader2 className="h-5 w-5 animate-spin text-primary sm:h-6 sm:w-6" />
       </div>
     );
   }
 
   return (
     <>
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="mx-auto max-w-3xl space-y-5 sm:space-y-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
             {draftId ? "Draft" : "Upload"}
           </p>
 
-          <h1 className="mt-1 font-display text-3xl font-semibold">
+          <h1 className="mt-1 font-display text-lg font-semibold sm:text-3xl">
             {title}
           </h1>
 
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground sm:text-sm">
             {draftId
               ? "Continue editing your saved resource before submitting it for review."
               : "Your upload will be reviewed by an admin before appearing in the library."}
@@ -607,10 +604,10 @@ export function UploadPage({ draftId }: UploadPageProps) {
             event.preventDefault();
             handleSubmit();
           }}
-          className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-soft"
+          className="space-y-5 rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:space-y-6 sm:p-6"
         >
           <div>
-            <Label>File</Label>
+            <Label className="text-xs sm:text-sm">File</Label>
 
             <div
               onDragOver={(event) =>
@@ -625,18 +622,18 @@ export function UploadPage({ draftId }: UploadPageProps) {
               onClick={() =>
                 inputRef.current?.click()
               }
-              className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/30 p-10 text-center transition-colors hover:border-primary/40 hover:bg-secondary/50"
+              className="mt-1.5 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/30 p-5 text-center transition-colors hover:border-primary/40 hover:bg-secondary/50 sm:mt-2 sm:min-h-48 sm:p-10"
             >
               {file ? (
-                <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-primary" />
+                <div className="flex max-w-full items-center gap-2.5 sm:gap-3">
+                  <FileText className="h-6 w-6 shrink-0 text-primary sm:h-8 sm:w-8" />
 
-                  <div className="text-left">
-                    <p className="font-medium">
+                  <div className="min-w-0 text-left">
+                    <p className="truncate text-xs font-medium sm:text-sm">
                       {file.name}
                     </p>
 
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground sm:text-xs">
                       {(
                         file.size /
                         1024 /
@@ -652,34 +649,34 @@ export function UploadPage({ draftId }: UploadPageProps) {
                       event.stopPropagation();
                       setFile(null);
                     }}
-                    className="ml-3 rounded p-1 text-muted-foreground hover:text-destructive"
+                    className="ml-1 shrink-0 rounded p-1 text-muted-foreground hover:text-destructive sm:ml-3"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
               ) : existingFileName ? (
-                <div className="flex items-center gap-3">
-                  <FileText className="h-8 w-8 text-primary" />
+                <div className="flex max-w-full items-center gap-2.5 sm:gap-3">
+                  <FileText className="h-6 w-6 shrink-0 text-primary sm:h-8 sm:w-8" />
 
-                  <div className="text-left">
-                    <p className="font-medium">
+                  <div className="min-w-0 text-left">
+                    <p className="truncate text-xs font-medium sm:text-sm">
                       {existingFileName}
                     </p>
 
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground sm:text-xs">
                       Current draft file
                     </p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <UploadIcon className="h-8 w-8 text-muted-foreground" />
+                  <UploadIcon className="h-7 w-7 text-muted-foreground sm:h-8 sm:w-8" />
 
-                  <p className="mt-3 text-sm font-medium">
+                  <p className="mt-2.5 text-xs font-medium sm:mt-3 sm:text-sm">
                     Drag & drop or click to upload
                   </p>
 
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                     PDF, DOCX, PPTX, ZIP, PNG, JPG — up to
                     50MB
                   </p>
@@ -700,9 +697,9 @@ export function UploadPage({ draftId }: UploadPageProps) {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Label htmlFor="title">
+              <Label htmlFor="title" className="text-xs sm:text-sm">
                 Title *
               </Label>
 
@@ -716,12 +713,12 @@ export function UploadPage({ draftId }: UploadPageProps) {
                     title: event.target.value,
                   })
                 }
-                className="mt-1.5"
+                className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <Label htmlFor="desc">
+              <Label htmlFor="desc" className="text-xs sm:text-sm">
                 Description *
               </Label>
 
@@ -736,12 +733,14 @@ export function UploadPage({ draftId }: UploadPageProps) {
                       event.target.value,
                   })
                 }
-                className="mt-1.5"
+                className="mt-1.5 text-xs sm:text-sm"
               />
             </div>
 
             <div>
-              <Label>Category *</Label>
+              <Label className="text-xs sm:text-sm">
+                Category *
+              </Label>
 
               <Select
                 value={form.category_id}
@@ -752,7 +751,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                   <SelectValue placeholder="Choose one" />
                 </SelectTrigger>
 
@@ -761,6 +760,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                     <SelectItem
                       key={category.id}
                       value={category.id}
+                      className="text-xs sm:text-sm"
                     >
                       {category.name}
                     </SelectItem>
@@ -770,7 +770,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
             </div>
 
             <div>
-              <Label htmlFor="course">
+              <Label htmlFor="course" className="text-xs sm:text-sm">
                 Course Code *
               </Label>
 
@@ -785,12 +785,14 @@ export function UploadPage({ draftId }: UploadPageProps) {
                       event.target.value,
                   })
                 }
-                className="mt-1.5"
+                className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
               />
             </div>
 
             <div>
-              <Label>College *</Label>
+              <Label className="text-xs sm:text-sm">
+                College *
+              </Label>
 
               <Select
                 value={form.college}
@@ -802,7 +804,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                   <SelectValue placeholder="Choose College" />
                 </SelectTrigger>
 
@@ -811,6 +813,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                     <SelectItem
                       key={college.id}
                       value={college.id}
+                      className="text-xs sm:text-sm"
                     >
                       <>
                         <span className="sm:hidden">
@@ -829,7 +832,9 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
             {!isSGS && (
               <div>
-                <Label>Department *</Label>
+                <Label className="text-xs sm:text-sm">
+                  Department *
+                </Label>
 
                 <Select
                   value={form.department}
@@ -841,7 +846,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                   }
                   disabled={!form.college}
                 >
-                  <SelectTrigger className="mt-1.5">
+                  <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                     <SelectValue
                       placeholder={
                         form.college
@@ -857,6 +862,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                         <SelectItem
                           key={department}
                           value={department}
+                          className="text-xs sm:text-sm"
                         >
                           {department}
                         </SelectItem>
@@ -868,7 +874,9 @@ export function UploadPage({ draftId }: UploadPageProps) {
             )}
 
             <div>
-              <Label>Level *</Label>
+              <Label className="text-xs sm:text-sm">
+                Level *
+              </Label>
 
               <Select
                 value={form.level}
@@ -879,7 +887,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                   <SelectValue placeholder="Choose Level" />
                 </SelectTrigger>
 
@@ -888,6 +896,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                     <SelectItem
                       key={level}
                       value={level}
+                      className="text-xs sm:text-sm"
                     >
                       {level}
                     </SelectItem>
@@ -897,7 +906,9 @@ export function UploadPage({ draftId }: UploadPageProps) {
             </div>
 
             <div>
-              <Label>Semester *</Label>
+              <Label className="text-xs sm:text-sm">
+                Semester *
+              </Label>
 
               <Select
                 value={form.semester}
@@ -908,7 +919,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                   <SelectValue placeholder="Choose Semester" />
                 </SelectTrigger>
 
@@ -918,6 +929,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                       <SelectItem
                         key={semester}
                         value={semester}
+                        className="text-xs sm:text-sm"
                       >
                         {semester}
                       </SelectItem>
@@ -928,7 +940,9 @@ export function UploadPage({ draftId }: UploadPageProps) {
             </div>
 
             <div>
-              <Label>Year *</Label>
+              <Label className="text-xs sm:text-sm">
+                Year *
+              </Label>
 
               <Select
                 value={form.year}
@@ -939,7 +953,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                   <SelectValue placeholder="Choose Year" />
                 </SelectTrigger>
 
@@ -948,6 +962,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                     <SelectItem
                       key={year}
                       value={year.toString()}
+                      className="text-xs sm:text-sm"
                     >
                       {year}
                     </SelectItem>
@@ -969,6 +984,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 nav({ to: "/dashboard" })
               }
               disabled={saveResource.isPending}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </Button>
@@ -981,12 +997,13 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 saveResource.isPending ||
                 (!file && !existingFilePath)
               }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               {saveResource.isPending &&
               exitAction === "save" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               ) : (
-                <Save className="mr-2 h-4 w-4" />
+                <Save className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               Save as draft
@@ -998,11 +1015,11 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 saveResource.isPending ||
                 (!file && !existingFilePath)
               }
-              className="bg-gradient-emerald text-primary-foreground shadow-soft"
+              className="h-9 bg-gradient-emerald text-xs text-primary-foreground shadow-soft sm:h-10 sm:text-sm"
             >
               {saveResource.isPending &&
               exitAction !== "save" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               ) : null}
 
               Submit for review
@@ -1015,27 +1032,27 @@ export function UploadPage({ draftId }: UploadPageProps) {
         open={showSubmitConfirm}
         onOpenChange={setShowSubmitConfirm}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Submit resource for review?
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-relaxed sm:text-sm">
               Your resource will be uploaded and sent to an
               administrator for review. It will remain pending
               until an admin reviews it.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="h-9 text-xs sm:h-10 sm:text-sm">
               Continue editing
             </AlertDialogCancel>
 
             <AlertDialogAction
               onClick={confirmSubmit}
-              className="bg-gradient-emerald text-primary-foreground"
+              className="h-9 bg-gradient-emerald text-xs text-primary-foreground sm:h-10 sm:text-sm"
             >
               Submit for review
             </AlertDialogAction>
@@ -1047,26 +1064,27 @@ export function UploadPage({ draftId }: UploadPageProps) {
         open={showDraftConfirm}
         onOpenChange={setShowDraftConfirm}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Save as draft?
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-relaxed sm:text-sm">
               Your upload will be saved privately as a draft.
               You can return to My Uploads later, continue
               editing it, and submit it for review when ready.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="h-9 text-xs sm:h-10 sm:text-sm">
               Continue editing
             </AlertDialogCancel>
 
             <AlertDialogAction
               onClick={confirmSaveDraft}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Save as draft
             </AlertDialogAction>
@@ -1076,13 +1094,13 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
       {blocker.status === "blocked" && (
         <AlertDialog open>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
             <AlertDialogHeader>
-              <AlertDialogTitle>
+              <AlertDialogTitle className="text-base sm:text-lg">
                 Save your progress?
               </AlertDialogTitle>
 
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-xs leading-relaxed sm:text-sm">
                 You have unsaved upload information. Would you
                 like to save this resource as a draft before
                 leaving?
@@ -1094,6 +1112,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 type="button"
                 variant="outline"
                 onClick={blocker.reset}
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               >
                 Continue editing
               </Button>
@@ -1102,6 +1121,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 type="button"
                 variant="destructive"
                 onClick={handleDiscard}
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               >
                 Discard
               </Button>
@@ -1110,13 +1130,13 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 type="button"
                 onClick={handleExitSave}
                 disabled={saveResource.isPending}
-                className="bg-gradient-emerald text-primary-foreground"
+                className="h-9 bg-gradient-emerald text-xs text-primary-foreground sm:h-10 sm:text-sm"
               >
                 {saveResource.isPending &&
                 exitAction === "save" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                 ) : (
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
                 )}
 
                 Save as draft

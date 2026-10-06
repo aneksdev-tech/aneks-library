@@ -74,21 +74,20 @@ function AdminOverview() {
           .from("private_profiles")
           .select("id", { count: "exact", head: true }),
 
-          
-          supabase
+        supabase
           .from("resources")
           .select("id", { count: "exact", head: true })
           .eq("status", "approved"),
-          
-          supabase
-            .from("resources")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "pending"),
-          
-          supabase
-            .from("private_profiles")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "pending"),
+
+        supabase
+          .from("resources")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
+
+        supabase
+          .from("private_profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
 
         supabase.rpc(
           "get_total_active_resource_downloads",
@@ -164,10 +163,10 @@ function AdminOverview() {
 
   if (authLoading || !role) {
     return (
-      <section className="space-y-6">
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="h-5 w-40 animate-pulse rounded bg-muted" />
-          <div className="mt-3 h-4 w-64 animate-pulse rounded bg-muted" />
+      <section className="space-y-5 sm:space-y-6">
+        <div className="rounded-lg border border-border bg-card p-3.5 sm:p-6">
+          <div className="h-4 w-32 animate-pulse rounded bg-muted sm:h-5 sm:w-40" />
+          <div className="mt-2.5 h-3 w-52 animate-pulse rounded bg-muted sm:mt-3 sm:h-4 sm:w-64" />
         </div>
       </section>
     );
@@ -177,39 +176,39 @@ function AdminOverview() {
     const pendingCount = staffData?.pending ?? 0;
 
     return (
-      <section className="space-y-6">
+      <section className="space-y-5 sm:space-y-6">
         {/* Staff overview */}
         <div
-          className={`flex items-center justify-between gap-4 rounded-lg border p-5 ${
+          className={`flex items-center justify-between gap-3 rounded-lg border p-3.5 sm:gap-4 sm:p-5 ${
             pendingCount > 0
               ? "border-gold/40 bg-gold/5"
               : "border-border bg-card"
           }`}
         >
-          <div className="flex min-w-0 items-center gap-4">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
             <div
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border sm:h-9 sm:w-9 ${
                 pendingCount > 0
                   ? "border-gold/30 bg-gold/10 text-gold"
                   : "border-border bg-muted/40 text-muted-foreground"
               }`}
             >
-              <ShieldAlert className="h-4 w-4" />
+              <ShieldAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
 
             <div className="min-w-0">
-              <p className="text-sm font-semibold">
+              <p className="text-xs font-semibold sm:text-sm">
                 Pending Approval
               </p>
 
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground sm:text-xs">
                 Resources currently awaiting administrative review.
               </p>
             </div>
           </div>
 
           <span
-            className={`shrink-0 font-display text-2xl font-semibold ${
+            className={`shrink-0 font-display text-xl font-semibold sm:text-2xl ${
               pendingCount > 0
                 ? "text-gold"
                 : "text-foreground"
@@ -253,75 +252,39 @@ function AdminOverview() {
   const pendingCount = data?.pending ?? 0;
 
   return (
-    <section className="space-y-6">
-      {/* Primary statistics */}
-      <div className="grid gap-0 overflow-hidden rounded-lg border border-border bg-card sm:grid-cols-2 lg:grid-cols-5">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-
-          return (
-            <div
-              key={stat.label}
-              className={`group flex min-h-32 flex-col justify-between p-5 transition-colors hover:bg-muted/30 ${
-                index > 0
-                  ? "border-t border-border sm:border-l sm:border-t-0"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                  {stat.label}
-                </span>
-
-                <Icon className="h-4 w-4 text-primary transition-transform duration-200 group-hover:scale-105" />
-              </div>
-
-              <div
-                className={`mt-6 font-display font-semibold tracking-tight ${
-                  stat.label === "Library Storage"
-                    ? "text-2xl sm:text-3xl"
-                    : "text-3xl"
-                }`}
-              >
-                {stat.value}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Pending approvals */}
+    <section className="space-y-5 sm:space-y-6">
+    {/* Pending approvals */}
       <div
-        className={`flex items-center justify-between gap-4 rounded-lg border p-5 ${
+        className={`flex items-center justify-between gap-3 rounded-lg border p-3.5 sm:gap-4 sm:p-5 ${
           pendingCount > 0
             ? "border-gold/40 bg-gold/5"
             : "border-border bg-card"
         }`}
       >
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
           <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border sm:h-9 sm:w-9 ${
               pendingCount > 0
                 ? "border-gold/30 bg-gold/10 text-gold"
                 : "border-border bg-muted/40 text-muted-foreground"
             }`}
           >
-            <ShieldAlert className="h-4 w-4" />
+            <ShieldAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
 
           <div className="min-w-0">
-            <p className="text-sm font-semibold">
+            <p className="text-xs font-semibold sm:text-sm">
               Pending Approval
             </p>
 
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground sm:text-xs">
               User accounts and resources awaiting administrative review.
             </p>
           </div>
         </div>
 
         <span
-          className={`shrink-0 font-display text-2xl font-semibold ${
+          className={`shrink-0 font-display text-xl font-semibold sm:text-2xl ${
             pendingCount > 0
               ? "text-gold"
               : "text-foreground"
@@ -329,6 +292,46 @@ function AdminOverview() {
         >
           {pendingCount}
         </span>
+      </div>
+      
+      {/* Primary statistics */}
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+
+          return (
+            <div
+              key={stat.label}
+              className={`group flex min-h-24 flex-col justify-between bg-card p-3 transition-colors hover:bg-muted/30 sm:min-h-32 sm:p-5 ${
+                index === 4
+                  ? "col-span-2 sm:col-span-1"
+                  : ""
+              } ${
+                index > 0
+                  ? "border-border"
+                  : ""
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2.5 sm:gap-3">
+                <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground sm:text-xs sm:tracking-[0.12em]">
+                  {stat.label}
+                </span>
+
+                <Icon className="h-3.5 w-3.5 shrink-0 text-primary transition-transform duration-200 group-hover:scale-105 sm:h-4 sm:w-4" />
+              </div>
+
+              <div
+                className={`mt-4 font-display font-semibold tracking-tight sm:mt-6 ${
+                  stat.label === "Library Storage"
+                    ? "text-xl sm:text-3xl"
+                    : "text-2xl sm:text-3xl"
+                }`}
+              >
+                {stat.value}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

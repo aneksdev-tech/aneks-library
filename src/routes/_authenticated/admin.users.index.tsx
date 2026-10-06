@@ -4,7 +4,11 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   Fragment,
   useEffect,
@@ -455,36 +459,36 @@ function UsersPage() {
   } = useQuery<UserProfile[]>({
     queryKey: ["admin-users"],
 
-queryFn: async () => {
-const { data, error } =
-  await supabase
-    .from("private_profiles")
-    .select(
-      [
-        "id",
-        "full_name",
-        "email",
-        "avatar_url",
-        "bio",
-        "phone_number",
-        "college",
-        "department",
-        "level",
-        "primary_role",
-        "status",
-        "reputation",
-        "created_at",
-        "updated_at",
-        "subscription_plan",
-        "subscription_status",
-        "subscription_started_at",
-        "subscription_expires_at",
-      ].join(", "),
-    )
-    .neq("status", "pending")
-    .order("created_at", {
-      ascending: false,
-    });
+    queryFn: async () => {
+      const { data, error } =
+        await supabase
+          .from("private_profiles")
+          .select(
+            [
+              "id",
+              "full_name",
+              "email",
+              "avatar_url",
+              "bio",
+              "phone_number",
+              "college",
+              "department",
+              "level",
+              "primary_role",
+              "status",
+              "reputation",
+              "created_at",
+              "updated_at",
+              "subscription_plan",
+              "subscription_status",
+              "subscription_started_at",
+              "subscription_expires_at",
+            ].join(", "),
+          )
+          .neq("status", "pending")
+          .order("created_at", {
+            ascending: false,
+          });
 
       if (error) {
         throw error;
@@ -942,12 +946,12 @@ const { data, error } =
 
   return (
     <>
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-4 sm:space-y-5">
         {/* Filters */}
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-          <div className="flex flex-col gap-3 lg:flex-row">
+        <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-4">
+          <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:left-3 sm:h-4 sm:w-4" />
 
               <Input
                 value={search}
@@ -957,7 +961,7 @@ const { data, error } =
                   )
                 }
                 placeholder="Search by name or email..."
-                className="pl-9"
+                className="h-9 pl-8 text-xs sm:h-10 sm:pl-9 sm:text-sm"
               />
             </div>
 
@@ -967,7 +971,7 @@ const { data, error } =
                 setStatusFilter
               }
             >
-              <SelectTrigger className="w-full lg:w-[180px]">
+              <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
 
@@ -997,7 +1001,7 @@ const { data, error } =
                 setRoleFilter
               }
             >
-              <SelectTrigger className="w-full lg:w-[180px]">
+              <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
                 <SelectValue placeholder="All roles" />
               </SelectTrigger>
 
@@ -1018,7 +1022,7 @@ const { data, error } =
             </Select>
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="mt-2.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground sm:mt-3 sm:text-xs">
             <span>
               {isLoading
                 ? "Loading users..."
@@ -1036,7 +1040,7 @@ const { data, error } =
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7 shrink-0 px-2 text-[10px] sm:text-xs"
                 onClick={() => {
                   setSearch("");
                   setStatusFilter(
@@ -1056,26 +1060,26 @@ const { data, error } =
         {/* User table */}
         <div className="rounded-2xl border border-border bg-card shadow-soft">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <table className="w-full min-w-[850px] text-xs sm:text-sm">
+              <thead className="border-b border-border text-left text-[9px] uppercase tracking-wider text-muted-foreground sm:text-xs">
                 <tr>
-                  <th className="p-4 font-medium">
+                  <th className="p-3 font-medium sm:p-4">
                     User
                   </th>
 
-                  <th className="p-4 font-medium">
+                  <th className="p-3 font-medium sm:p-4">
                     Role
                   </th>
 
-                  <th className="p-4 font-medium">
+                  <th className="p-3 font-medium sm:p-4">
                     Status
                   </th>
 
-                  <th className="p-4 font-medium">
+                  <th className="p-3 font-medium sm:p-4">
                     Registered
                   </th>
 
-                  <th className="p-4 text-right font-medium">
+                  <th className="p-3 text-right font-medium sm:p-4">
                     Actions
                   </th>
                 </tr>
@@ -1086,10 +1090,10 @@ const { data, error } =
                   <tr>
                     <td
                       colSpan={5}
-                      className="p-10 text-center text-muted-foreground"
+                      className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm"
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                         Loading users...
                       </div>
                     </td>
@@ -1101,7 +1105,7 @@ const { data, error } =
                     <tr>
                       <td
                         colSpan={5}
-                        className="p-10 text-center text-destructive"
+                        className="p-8 text-center text-xs text-destructive sm:p-10 sm:text-sm"
                       >
                         Failed to load
                         users.
@@ -1116,7 +1120,7 @@ const { data, error } =
                     <tr>
                       <td
                         colSpan={5}
-                        className="p-10 text-center text-muted-foreground"
+                        className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm"
                       >
                         {data?.length
                           ? "No users match your search or filters."
@@ -1157,8 +1161,8 @@ const { data, error } =
                           key={user.id}
                         >
                           <tr className="transition-colors hover:bg-muted/30">
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
+                            <td className="p-3 sm:p-4">
+                              <div className="flex items-center gap-2.5 sm:gap-3">
                                 {user.avatar_url ? (
                                   <img
                                     src={
@@ -1167,10 +1171,10 @@ const { data, error } =
                                     alt={
                                       user.full_name
                                     }
-                                    className="h-9 w-9 shrink-0 rounded-full border border-border object-cover"
+                                    className="h-8 w-8 shrink-0 rounded-full border border-border object-cover sm:h-9 sm:w-9"
                                   />
                                 ) : (
-                                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold sm:h-9 sm:w-9 sm:text-xs">
                                     {getInitials(
                                       user.full_name ||
                                         "User",
@@ -1184,13 +1188,13 @@ const { data, error } =
                                       "Unnamed user"}
 
                                     {isSelf && (
-                                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                                      <span className="ml-1.5 text-[10px] font-normal text-muted-foreground sm:ml-2 sm:text-xs">
                                         (You)
                                       </span>
                                     )}
                                   </div>
 
-                                  <div className="truncate text-xs text-muted-foreground">
+                                  <div className="max-w-[220px] truncate text-[10px] text-muted-foreground sm:max-w-none sm:text-xs">
                                     {user.email ||
                                       "—"}
                                   </div>
@@ -1198,7 +1202,7 @@ const { data, error } =
                               </div>
                             </td>
 
-                            <td className="p-4">
+                            <td className="p-3 sm:p-4">
                               <Select
                                 value={
                                   user.primary_role
@@ -1216,9 +1220,9 @@ const { data, error } =
                                   setRole.isPending
                                 }
                               >
-                                <SelectTrigger className="w-[160px]">
-                                  <div className="flex items-center gap-2">
-                                    <RoleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                <SelectTrigger className="h-8 w-[145px] text-[10px] sm:h-9 sm:w-[160px] sm:text-xs">
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <RoleIcon className="h-3 w-3 text-muted-foreground sm:h-3.5 sm:w-3.5" />
                                     <SelectValue />
                                   </div>
                                 </SelectTrigger>
@@ -1250,7 +1254,7 @@ const { data, error } =
                               </Select>
                             </td>
 
-                            <td className="p-4">
+                            <td className="p-3 sm:p-4">
                               <Select
                                 value={
                                   user.status
@@ -1268,7 +1272,7 @@ const { data, error } =
                                   setStatus.isPending
                                 }
                               >
-                                <SelectTrigger className="w-[150px]">
+                                <SelectTrigger className="h-8 w-[135px] text-[10px] sm:h-9 sm:w-[150px] sm:text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
 
@@ -1295,31 +1299,31 @@ const { data, error } =
                               </Select>
                             </td>
 
-                            <td className="whitespace-nowrap p-4 text-muted-foreground">
+                            <td className="whitespace-nowrap p-3 text-muted-foreground sm:p-4">
                               {formatDate(
                                 user.created_at,
                               )}
                             </td>
 
-                            <td className="p-4">
+                            <td className="p-3 sm:p-4">
                               <div className="flex items-center justify-end gap-1">
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
-                                  className="h-9 px-2.5 text-muted-foreground"
+                                  className="h-8 px-2 text-[10px] text-muted-foreground sm:h-9 sm:px-2.5 sm:text-xs"
                                   onClick={() =>
                                     toggleHistory(
                                       user.id,
                                     )
                                   }
                                 >
-                                  <History className="mr-1.5 h-3.5 w-3.5" />
+                                  <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
 
                                   {historyOpen ? (
                                     <>
                                       Hide history
-                                      <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                                      <ChevronUp className="ml-0.5 h-3 w-3 sm:ml-1 sm:h-3.5 sm:w-3.5" />
                                     </>
                                   ) : (
                                     <>
@@ -1328,13 +1332,13 @@ const { data, error } =
                                         userHistory.length
                                       }
                                       )
-                                      <ChevronDown className="ml-1 h-3.5 w-3.5" />
+                                      <ChevronDown className="ml-0.5 h-3 w-3 sm:ml-1 sm:h-3.5 sm:w-3.5" />
                                     </>
                                   )}
                                 </Button>
 
                                 {isSelf ? (
-                                  <span className="px-2 text-xs text-muted-foreground">
+                                  <span className="px-2 text-[10px] text-muted-foreground sm:text-xs">
                                     Your account
                                   </span>
                                 ) : (
@@ -1344,9 +1348,9 @@ const { data, error } =
                                       userId:
                                         user.id,
                                     }}
-                                    className="inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    className="inline-flex h-8 items-center justify-center rounded-md px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-9 sm:px-3 sm:text-xs"
                                   >
-                                    <UserCog className="mr-1 h-3.5 w-3.5" />
+                                    <UserCog className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                     Details
                                   </Link>
                                 )}
@@ -1360,62 +1364,62 @@ const { data, error } =
                                 colSpan={5}
                                 className="p-0"
                               >
-                                <div className="border-t border-border px-4 py-4 sm:px-6">
-                                  <div className="mb-3 flex items-center justify-between">
+                                <div className="border-t border-border px-3.5 py-3.5 sm:px-6 sm:py-4">
+                                  <div className="mb-2.5 flex items-center justify-between sm:mb-3">
                                     <div>
-                                      <h4 className="text-sm font-semibold">
+                                      <h4 className="text-xs font-semibold sm:text-sm">
                                         User history
                                       </h4>
 
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
                                         Role and account-status changes recorded for this user.
                                       </p>
                                     </div>
                                   </div>
 
                                   {auditLogsLoading ? (
-                                    <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
-                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    <div className="flex items-center gap-1.5 py-5 text-xs text-muted-foreground sm:gap-2 sm:py-6 sm:text-sm">
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                                       Loading history...
                                     </div>
                                   ) : userHistory.length ===
                                     0 ? (
-                                    <div className="py-6 text-sm text-muted-foreground">
+                                    <div className="py-5 text-xs text-muted-foreground sm:py-6 sm:text-sm">
                                       No account changes have been recorded for this user.
                                     </div>
                                   ) : (
-                                    <div className="space-y-3">
+                                    <div className="space-y-2.5 sm:space-y-3">
                                       {userHistory.map(
                                         (log) => (
                                           <div
                                             key={
                                               log.id
                                             }
-                                            className="border-l-2 border-border pl-4"
+                                            className="border-l-2 border-border pl-3 sm:pl-4"
                                           >
                                             <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                                               <div>
-                                                <div className="text-sm font-medium">
+                                                <div className="text-xs font-medium sm:text-sm">
                                                   {getAuditActionLabel(
                                                     log.action,
                                                   )}
                                                 </div>
 
-                                                <div className="text-xs text-muted-foreground">
+                                                <div className="text-[10px] text-muted-foreground sm:text-xs">
                                                   {getAuditChange(
                                                     log,
                                                   )}
                                                 </div>
                                               </div>
 
-                                              <div className="text-xs text-muted-foreground sm:text-right">
+                                              <div className="text-[10px] text-muted-foreground sm:text-right sm:text-xs">
                                                 {formatDateTime(
                                                   log.created_at,
                                                 )}
                                               </div>
                                             </div>
 
-                                            <div className="mt-2 text-xs text-muted-foreground">
+                                            <div className="mt-1.5 text-[10px] text-muted-foreground sm:mt-2 sm:text-xs">
                                               By{" "}
                                               <span className="font-medium text-foreground">
                                                 {getActorLabel(
@@ -1425,7 +1429,7 @@ const { data, error } =
                                               </span>
                                             </div>
 
-                                            <div className="mt-1 text-xs text-muted-foreground">
+                                            <div className="mt-0.5 text-[10px] text-muted-foreground sm:mt-1 sm:text-xs">
                                               Reason:{" "}
                                               <span className="text-foreground">
                                                 {log.reason ||
@@ -1464,13 +1468,13 @@ const { data, error } =
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Confirm account change
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               {pendingAction?.type ===
                 "status" && (
                 <>
@@ -1519,10 +1523,10 @@ const { data, error } =
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="user-change-reason"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Reason
             </label>
@@ -1538,17 +1542,19 @@ const { data, error } =
               placeholder="Enter a reason for this change..."
               disabled={actionLoading}
               autoComplete="off"
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
               This reason will be saved in
               the user audit history.
             </p>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogCancel
               disabled={actionLoading}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1562,9 +1568,10 @@ const { data, error } =
                 actionLoading ||
                 !actionReason.trim()
               }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               {actionLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               Confirm change

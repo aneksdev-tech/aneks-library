@@ -125,7 +125,6 @@ export const Route = createFileRoute(
 
 const STATUSES: AccountStatus[] = [
   "active",
-  "pending",
   "rejected",
   "suspended",
   "inactive",
@@ -1008,9 +1007,9 @@ function UserDetailsPage() {
     !hasAdminAccess
   ) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[400px]">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           Redirecting...
         </div>
       </div>
@@ -1019,9 +1018,9 @@ function UserDetailsPage() {
 
   if (userLoading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[400px]">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           Loading user details...
         </div>
       </div>
@@ -1033,18 +1032,18 @@ function UserDetailsPage() {
       <div className="space-y-4">
         <Button
           variant="ghost"
-          className="px-0"
+          className="h-8 px-0 text-xs sm:h-9 sm:text-sm"
           onClick={() =>
             navigate({
               to: "/admin/users",
             })
           }
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
           Back to Users
         </Button>
 
-        <div className="border border-border bg-card p-8 text-center text-sm text-destructive">
+        <div className="border border-border bg-card p-5 text-center text-xs text-destructive sm:p-8 sm:text-sm">
           Failed to load user
           details.
         </div>
@@ -1057,18 +1056,18 @@ function UserDetailsPage() {
       <div className="space-y-4">
         <Button
           variant="ghost"
-          className="px-0"
+          className="h-8 px-0 text-xs sm:h-9 sm:text-sm"
           onClick={() =>
             navigate({
               to: "/admin/users",
             })
           }
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
           Back to Users
         </Button>
 
-        <div className="border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+        <div className="border border-border bg-card p-5 text-center text-xs text-muted-foreground sm:p-8 sm:text-sm">
           User not found.
         </div>
       </div>
@@ -1085,28 +1084,28 @@ function UserDetailsPage() {
 
   return (
     <>
-      <div className="w-full space-y-5">
+      <div className="w-full space-y-5 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <Button
               variant="ghost"
-              className="mb-2 -ml-3 px-3"
+              className="mb-1.5 -ml-2 h-8 px-2 text-xs sm:mb-2 sm:-ml-3 sm:h-9 sm:px-3 sm:text-sm"
               onClick={() =>
                 navigate({
                   to: "/admin/users",
                 })
               }
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
               Back to Users
             </Button>
 
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1 className="text-lg font-semibold tracking-tight sm:text-2xl">
               User Details
             </h1>
 
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-normal">
               Manage this account and
               review its activity.
             </p>
@@ -1114,28 +1113,28 @@ function UserDetailsPage() {
 
           <Link
             to="/admin/users"
-            className="inline-flex h-9 items-center justify-center rounded-md border border-border px-3 text-sm font-medium transition-colors hover:bg-muted"
+            className="inline-flex h-9 w-full items-center justify-center rounded-md border border-border px-3 text-xs font-medium transition-colors hover:bg-muted sm:w-auto sm:text-sm"
           >
-            <Upload className="mr-2 h-4 w-4" />
+            <Upload className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
             View Uploads
           </Link>
         </div>
 
         {/* Main content */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-[2fr_1fr]">
           {/* Left column */}
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             {/* Profile */}
-            <section className="border border-border bg-card p-5 shadow-soft">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
                 {user.avatar_url ? (
                   <img
                     src={user.avatar_url}
                     alt={user.full_name}
-                    className="h-20 w-20 shrink-0 rounded-full border border-border object-cover"
+                    className="h-16 w-16 shrink-0 rounded-full border border-border object-cover sm:h-20 sm:w-20"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-semibold">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold sm:h-20 sm:w-20 sm:text-lg">
                     {getInitials(
                       user.full_name ||
                         "User",
@@ -1145,14 +1144,14 @@ function UserDetailsPage() {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h2 className="text-xl font-semibold">
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold sm:text-xl">
                         {user.full_name ||
                           "Unnamed user"}
                       </h2>
 
-                      <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                        <Mail className="h-4 w-4" />
+                      <div className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground sm:items-center sm:gap-2 sm:text-sm">
+                        <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 sm:mt-0 sm:h-4 sm:w-4" />
                         <span className="break-all">
                           {user.email ||
                             "No email"}
@@ -1160,8 +1159,8 @@ function UserDetailsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <RoleIcon className="h-4 w-4" />
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+                      <RoleIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       {formatLabel(
                         user.primary_role,
                       )}
@@ -1169,14 +1168,14 @@ function UserDetailsPage() {
                   </div>
 
                   {user.bio && (
-                    <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    <p className="mt-3 max-w-2xl text-xs leading-5 text-muted-foreground sm:mt-4 sm:text-sm sm:leading-6">
                       {user.bio}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
                 <InfoItem
                   icon={Phone}
                   label="Phone"
@@ -1216,12 +1215,12 @@ function UserDetailsPage() {
             </section>
 
             {/* Account overview */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <SectionHeading>
                 Account Overview
               </SectionHeading>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-0 sm:grid-cols-2 sm:gap-4">
                 <InfoItem
                   icon={Shield}
                   label="Role"
@@ -1273,12 +1272,12 @@ function UserDetailsPage() {
             </section>
 
             {/* Subscription */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <SectionHeading>
                 Subscription
               </SectionHeading>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-0 sm:grid-cols-2 sm:gap-4">
                 <InfoItem
                   label="Plan"
                   value={formatLabel(
@@ -1308,7 +1307,7 @@ function UserDetailsPage() {
                 />
               </div>
 
-              <div className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
+              <div className="mt-3 border-t border-border pt-3 text-xs leading-5 text-muted-foreground sm:mt-4 sm:pt-4 sm:text-sm sm:leading-normal">
                 {subscriptionActive ? (
                   <>
                     This account currently has
@@ -1331,26 +1330,26 @@ function UserDetailsPage() {
             </section>
 
             {/* Resources */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <div className="flex items-center justify-between gap-3">
                 <SectionHeading>
                   Resources
                 </SectionHeading>
 
-                <span className="text-xs text-muted-foreground">
+                <span className="text-[10px] text-muted-foreground sm:text-xs">
                   {resources?.length ?? 0}{" "}
                   total
                 </span>
               </div>
 
               {resourcesLoading ? (
-                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <div className="flex items-center justify-center py-7 text-xs text-muted-foreground sm:py-8 sm:text-sm">
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                   Loading resources...
                 </div>
               ) : resources &&
                 resources.length > 0 ? (
-                <div className="mt-4 divide-y divide-border">
+                <div className="mt-3 divide-y divide-border sm:mt-4">
                   {resources
                     .slice(0, 8)
                     .map(
@@ -1359,21 +1358,21 @@ function UserDetailsPage() {
                           key={
                             resource.id
                           }
-                          className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                          className="flex flex-col gap-2.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-4"
                         >
-                          <div className="flex min-w-0 items-start gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
-                              <FileText className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted sm:h-9 sm:w-9">
+                              <FileText className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
                             </div>
 
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-medium">
+                              <p className="truncate text-xs font-medium sm:text-sm">
                                 {resource.title ||
                                   resource.file_name ||
                                   "Untitled resource"}
                               </p>
 
-                              <p className="mt-1 text-xs text-muted-foreground">
+                              <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                                 {resource.file_name ||
                                   "No file name"}
                                 {" · "}
@@ -1384,7 +1383,7 @@ function UserDetailsPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2 pl-10 text-[10px] text-muted-foreground sm:gap-3 sm:pl-0 sm:text-xs">
                             <span>
                               {formatLabel(
                                 resource.status ||
@@ -1403,7 +1402,7 @@ function UserDetailsPage() {
                     )}
                 </div>
               ) : (
-                <div className="mt-4 py-8 text-center text-sm text-muted-foreground">
+                <div className="mt-3 py-7 text-center text-xs text-muted-foreground sm:mt-4 sm:py-8 sm:text-sm">
                   This user has not
                   uploaded any resources.
                 </div>
@@ -1411,7 +1410,7 @@ function UserDetailsPage() {
 
               {approvedResources.length >
                 0 && (
-                <div className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
+                <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground sm:mt-4 sm:pt-4 sm:text-sm">
                   <span className="font-medium text-foreground">
                     {
                       approvedResources.length
@@ -1427,10 +1426,10 @@ function UserDetailsPage() {
             </section>
 
             {/* User audit history */}
-            <section className="border border-border bg-card p-5 shadow-soft">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <History className="h-4 w-4 text-muted-foreground" />
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+                  <History className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
 
                   <SectionHeading>
                     User Audit History
@@ -1444,7 +1443,7 @@ function UserDetailsPage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-2 text-xs"
+                      className="h-8 shrink-0 px-1.5 text-[10px] sm:px-2 sm:text-xs"
                       onClick={() =>
                         setShowHistory(
                           (value) =>
@@ -1460,44 +1459,44 @@ function UserDetailsPage() {
               </div>
 
               {auditHistoryLoading ? (
-                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <div className="flex items-center justify-center py-7 text-xs text-muted-foreground sm:py-8 sm:text-sm">
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                   Loading audit history...
                 </div>
               ) : auditHistory &&
                 auditHistory.length >
                   0 ? (
                 showHistory ? (
-                  <div className="mt-4 divide-y divide-border">
+                  <div className="mt-3 divide-y divide-border sm:mt-4">
                     {auditHistory.map(
                       (log) => (
                         <div
                           key={log.id}
-                          className="py-4"
+                          className="py-3 sm:py-4"
                         >
                           <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                             <div>
-                              <p className="text-sm font-medium">
+                              <p className="text-xs font-medium sm:text-sm">
                                 {getAuditActionLabel(
                                   log.action,
                                 )}
                               </p>
 
-                              <p className="mt-1 text-xs text-muted-foreground">
+                              <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                                 {getAuditChange(
                                   log,
                                 )}
                               </p>
                             </div>
 
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground sm:text-[11px]">
                               {formatDateTime(
                                 log.created_at,
                               )}
                             </span>
                           </div>
 
-                          <p className="mt-2 text-xs text-muted-foreground">
+                          <p className="mt-1.5 text-[10px] text-muted-foreground sm:mt-2 sm:text-xs">
                             By{" "}
                             <span className="font-medium text-foreground">
                               {log.actor_name ??
@@ -1505,8 +1504,8 @@ function UserDetailsPage() {
                             </span>
                           </p>
 
-                          <div className="mt-2 border-l-2 border-border pl-3">
-                            <p className="text-xs leading-5 text-muted-foreground">
+                          <div className="mt-1.5 border-l-2 border-border pl-2.5 sm:mt-2 sm:pl-3">
+                            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
                               <span className="font-medium text-foreground">
                                 Reason:
                               </span>{" "}
@@ -1519,7 +1518,7 @@ function UserDetailsPage() {
                     )}
                   </div>
                 ) : (
-                  <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-2.5 text-[10px] text-muted-foreground sm:mt-3 sm:text-xs">
                     {auditHistory.length}{" "}
                     recorded{" "}
                     {auditHistory.length ===
@@ -1529,7 +1528,7 @@ function UserDetailsPage() {
                   </p>
                 )
               ) : (
-                <p className="mt-4 text-sm text-muted-foreground">
+                <p className="mt-3 text-xs text-muted-foreground sm:mt-4 sm:text-sm">
                   No account changes have
                   been recorded yet.
                 </p>
@@ -1538,16 +1537,16 @@ function UserDetailsPage() {
           </div>
 
           {/* Right column */}
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             {/* Role management */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <SectionHeading>
                 Account Controls
               </SectionHeading>
 
-              <div className="space-y-4">
+              <div className="mt-4 space-y-3 sm:mt-0 sm:space-y-4">
                 <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:mb-2 sm:text-xs">
                     Role
                   </label>
 
@@ -1567,7 +1566,7 @@ function UserDetailsPage() {
                       setRole.isPending
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
 
@@ -1599,7 +1598,7 @@ function UserDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <label className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:mb-2 sm:text-xs">
                     Account status
                   </label>
 
@@ -1617,7 +1616,7 @@ function UserDetailsPage() {
                       setStatus.isPending
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
                       <SelectValue />
                     </SelectTrigger>
 
@@ -1639,7 +1638,7 @@ function UserDetailsPage() {
                 </div>
 
                 {!canModifyUser && (
-                  <p className="text-xs leading-5 text-muted-foreground">
+                  <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
                     {currentUser?.id ===
                     user.id
                       ? "You cannot modify your own account from this page."
@@ -1650,12 +1649,12 @@ function UserDetailsPage() {
             </section>
 
             {/* Account dates */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <SectionHeading>
                 Account Timeline
               </SectionHeading>
 
-              <div className="space-y-4">
+              <div className="mt-4 space-y-3 sm:mt-0 sm:space-y-4">
                 <TimelineItem
                   label="Registered"
                   value={formatDateTime(
@@ -1698,34 +1697,34 @@ function UserDetailsPage() {
             </section>
 
             {/* Activity */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <SectionHeading>
                 Recent Activity
               </SectionHeading>
 
               {recentActivity.length >
               0 ? (
-                <div className="mt-4 space-y-4">
+                <div className="mt-3 space-y-3 sm:mt-4 sm:space-y-4">
                   {recentActivity.map(
                     (item) => (
                       <div
                         key={item.id}
-                        className="relative pl-5"
+                        className="relative pl-4 sm:pl-5"
                       >
-                        <span className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-muted-foreground" />
+                        <span className="absolute left-0 top-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground sm:h-2 sm:w-2" />
 
                         <div>
-                          <p className="text-sm font-medium">
+                          <p className="text-xs font-medium sm:text-sm">
                             {item.title}
                           </p>
 
-                          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          <p className="mt-1 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
                             {
                               item.description
                             }
                           </p>
 
-                          <p className="mt-1 text-[11px] text-muted-foreground">
+                          <p className="mt-1 text-[10px] text-muted-foreground sm:text-[11px]">
                             {formatDateTime(
                               item.created_at,
                             )}
@@ -1736,7 +1735,7 @@ function UserDetailsPage() {
                   )}
                 </div>
               ) : (
-                <p className="mt-4 text-sm text-muted-foreground">
+                <p className="mt-3 text-xs text-muted-foreground sm:mt-4 sm:text-sm">
                   No recent activity
                   recorded.
                 </p>
@@ -1744,12 +1743,12 @@ function UserDetailsPage() {
             </section>
 
             {/* Usage summary */}
-            <section className="border border-border bg-card p-5 shadow-soft">
+            <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
               <SectionHeading>
                 Usage Summary
               </SectionHeading>
 
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 space-y-3 sm:mt-4 sm:space-y-4">
                 <SummaryRow
                   icon={Upload}
                   label="Uploads"
@@ -1778,14 +1777,14 @@ function UserDetailsPage() {
         </div>
 
         {/* Confirmed actions */}
-        <section className="border border-border bg-card p-5 shadow-soft">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="border border-border bg-card p-3.5 shadow-soft sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div>
-              <h2 className="text-sm font-semibold">
+              <h2 className="text-xs font-semibold sm:text-sm">
                 Confirmed Actions
               </h2>
 
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
                 Changes are applied through
                 the protected admin RPCs
                 and recorded in the audit
@@ -1797,6 +1796,7 @@ function UserDetailsPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
                 disabled={
                   !canModifyUser ||
                   user.status ===
@@ -1815,6 +1815,7 @@ function UserDetailsPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
                 disabled={
                   !canModifyUser ||
                   user.status ===
@@ -1833,6 +1834,7 @@ function UserDetailsPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
                 disabled={
                   !canModifyUser ||
                   user.status ===
@@ -1867,13 +1869,13 @@ function UserDetailsPage() {
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Confirm account change
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               {pendingAction?.type ===
                 "status" && (
                 <>
@@ -1924,10 +1926,10 @@ function UserDetailsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5 sm:space-y-2">
             <label
               htmlFor="user-change-reason"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Reason
             </label>
@@ -1943,17 +1945,19 @@ function UserDetailsPage() {
               placeholder="Enter a reason for this change..."
               disabled={actionLoading}
               autoComplete="off"
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
               This reason will be saved in
               the user audit history.
             </p>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2">
             <AlertDialogCancel
               disabled={actionLoading}
+              className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1967,9 +1971,10 @@ function UserDetailsPage() {
                 actionLoading ||
                 !actionReason.trim()
               }
+              className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               {actionLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               Confirm change
@@ -1987,7 +1992,7 @@ function SectionHeading({
   children: React.ReactNode;
 }) {
   return (
-    <h2 className="text-sm font-semibold">
+    <h2 className="text-xs font-semibold sm:text-sm">
       {children}
     </h2>
   );
@@ -2004,14 +2009,14 @@ function InfoItem({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground sm:gap-2 sm:text-xs">
         {Icon && (
-          <Icon className="h-3.5 w-3.5" />
+          <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
         )}
         <span>{label}</span>
       </div>
 
-      <p className="mt-1 break-words text-sm font-medium">
+      <p className="mt-1 break-words text-xs font-medium sm:text-sm">
         {value}
       </p>
     </div>
@@ -2026,12 +2031,12 @@ function TimelineItem({
   value: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <span className="text-xs text-muted-foreground">
+    <div className="flex items-start justify-between gap-3 sm:gap-4">
+      <span className="text-[10px] text-muted-foreground sm:text-xs">
         {label}
       </span>
 
-      <span className="text-right text-xs font-medium">
+      <span className="text-right text-[10px] font-medium sm:text-xs">
         {value}
       </span>
     </div>
@@ -2048,13 +2053,13 @@ function SummaryRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Icon className="h-4 w-4" />
+    <div className="flex items-center justify-between gap-3 sm:gap-4">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span>{label}</span>
       </div>
 
-      <span className="text-sm font-semibold">
+      <span className="text-xs font-semibold sm:text-sm">
         {value}
       </span>
     </div>

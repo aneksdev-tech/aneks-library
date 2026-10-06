@@ -90,26 +90,23 @@ type PendingToggle = {
 function AnnouncementsPage() {
   const { user, roles } = useAuth();
 
-const isAdminOrCoAdmin =
-  roles?.includes("admin") ||
-  roles?.includes("co-admin");
+  const isAdminOrCoAdmin =
+    roles?.includes("admin") ||
+    roles?.includes("co-admin");
 
-const isStaff =
-  roles?.includes("staff");
+  const isStaff = roles?.includes("staff");
 
-const canPublishAnnouncements =
-  isAdminOrCoAdmin;
+  const canPublishAnnouncements = isAdminOrCoAdmin;
 
-const canManageAnnouncement = (
-  announcement: Announcement,
-) =>
-  Boolean(
-    isAdminOrCoAdmin ||
-      (
-        isStaff &&
-        announcement.created_by === user?.id
-      ),
-  );
+  const canManageAnnouncement = (
+    announcement: Announcement,
+  ) =>
+    Boolean(
+      isAdminOrCoAdmin ||
+        (isStaff &&
+          announcement.created_by === user?.id),
+    );
+
   const qc = useQueryClient();
 
   const [title, setTitle] = useState("");
@@ -836,32 +833,32 @@ const canManageAnnouncement = (
   };
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-5 sm:space-y-6">
       {/* Announcement form */}
-      <div className="rounded-lg border border-border bg-card p-5 shadow-soft">
-        <div className="mb-5 flex items-center gap-2">
-          <Megaphone className="h-4 w-4 text-primary" />
+      <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:rounded-lg sm:p-5">
+        <div className="mb-4 flex items-start gap-2 sm:mb-5 sm:items-center">
+          <Megaphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary sm:mt-0 sm:h-4 sm:w-4" />
 
-          <div>
-            <p className="text-sm font-semibold">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold sm:text-sm">
               {editingAnnouncement
                 ? "Edit announcement"
                 : "Create announcement"}
             </p>
 
-            <p className="text-xs text-muted-foreground">
-  {canPublishAnnouncements
-    ? "Publish important information to the Dashboard announcement banner."
-    : "Create an announcement for Admin or Co-admin review and publication."}
-</p>
+            <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
+              {canPublishAnnouncements
+                ? "Publish important information to the Dashboard announcement banner."
+                : "Create an announcement for Admin or Co-admin review and publication."}
+            </p>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="announcement-title"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Title
             </label>
@@ -874,13 +871,14 @@ const canManageAnnouncement = (
               }
               placeholder="e.g. New Upload Guidelines"
               disabled={saveAnnouncement.isPending}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="announcement-body"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Message / Summary
             </label>
@@ -894,14 +892,14 @@ const canManageAnnouncement = (
               placeholder="Enter a short summary for the Dashboard announcement banner..."
               rows={4}
               disabled={saveAnnouncement.isPending}
-              className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="announcement-content"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Full Content
             </label>
@@ -915,18 +913,18 @@ const canManageAnnouncement = (
               placeholder="Enter the complete announcement details..."
               rows={10}
               disabled={saveAnnouncement.isPending}
-              className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
               This is the full content users will see when they open the announcement.
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="announcement-link"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Link
               <span className="ml-1 font-normal text-muted-foreground">
@@ -942,33 +940,34 @@ const canManageAnnouncement = (
               }
               placeholder="e.g. /library"
               disabled={saveAnnouncement.isPending}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <Button
               type="button"
               onClick={handleSave}
               disabled={saveAnnouncement.isPending}
-              className="bg-gradient-emerald text-primary-foreground"
+              className="h-9 w-full text-xs bg-gradient-emerald text-primary-foreground sm:h-10 sm:w-auto sm:text-sm"
             >
               {saveAnnouncement.isPending ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
               ) : (
-                <Plus className="mr-1.5 h-4 w-4" />
+                <Plus className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               )}
 
               {saveAnnouncement.isPending
-  ? editingAnnouncement
-    ? "Saving…"
-    : canPublishAnnouncements
-      ? "Publishing…"
-      : "Submitting…"
-  : editingAnnouncement
-    ? "Save changes"
-    : canPublishAnnouncements
-      ? "Publish announcement"
-      : "Submit announcement"}
+                ? editingAnnouncement
+                  ? "Saving…"
+                  : canPublishAnnouncements
+                    ? "Publishing…"
+                    : "Submitting…"
+                : editingAnnouncement
+                  ? "Save changes"
+                  : canPublishAnnouncements
+                    ? "Publish announcement"
+                    : "Submit announcement"}
             </Button>
 
             {editingAnnouncement && (
@@ -977,6 +976,7 @@ const canManageAnnouncement = (
                 variant="outline"
                 onClick={cancelEditing}
                 disabled={saveAnnouncement.isPending}
+                className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
               >
                 Cancel
               </Button>
@@ -986,21 +986,21 @@ const canManageAnnouncement = (
       </div>
 
       {/* Announcement history */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
-        <div className="border-b border-border p-5">
-          <h2 className="font-display text-lg font-semibold">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+        <div className="border-b border-border p-3.5 sm:p-5">
+          <h2 className="font-display text-base font-semibold sm:text-lg">
             Announcements
           </h2>
 
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             Manage published and inactive announcements.
           </p>
         </div>
 
         {isLoading ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
               Loading announcements…
             </div>
           </div>
@@ -1035,7 +1035,7 @@ const canManageAnnouncement = (
               return (
                 <li
                   key={announcement.id}
-                  className={`p-5 transition-colors ${
+                  className={`p-3.5 transition-colors sm:p-5 ${
                     isDeleted
                       ? "bg-muted/40"
                       : announcement.is_active
@@ -1045,9 +1045,9 @@ const canManageAnnouncement = (
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                          className={`rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${
                             isDeleted
                               ? "border-destructive/20 bg-destructive/10 text-destructive"
                               : announcement.is_active
@@ -1063,21 +1063,21 @@ const canManageAnnouncement = (
                         </span>
                       </div>
 
-                      <h3 className="mt-2 font-medium">
+                      <h3 className="mt-1.5 text-sm font-medium sm:mt-2 sm:text-base">
                         {announcement.title}
                       </h3>
 
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
                         {announcement.body}
                       </p>
 
                       {announcement.link && (
-                        <p className="mt-2 text-xs text-primary">
+                        <p className="mt-1.5 break-all text-[10px] text-primary sm:mt-2 sm:text-xs">
                           Link: {announcement.link}
                         </p>
                       )}
 
-                      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                      <div className="mt-2.5 space-y-1 text-[10px] leading-4 text-muted-foreground sm:mt-3 sm:text-xs sm:leading-normal">
                         <p>
                           <span className="font-medium text-foreground">
                             Created by:
@@ -1229,7 +1229,7 @@ const canManageAnnouncement = (
 
                       {/* Audit history */}
                       {history.length > 0 && (
-                        <div className="mt-4 border-t border-border pt-3">
+                        <div className="mt-3 border-t border-border pt-2.5 sm:mt-4 sm:pt-3">
                           <Button
                             type="button"
                             variant="ghost"
@@ -1239,35 +1239,35 @@ const canManageAnnouncement = (
                                 announcement.id,
                               )
                             }
-                            className="h-8 px-2 text-xs"
+                            className="h-8 px-1.5 text-[10px] sm:px-2 sm:text-xs"
                           >
-                            <History className="mr-1.5 h-3.5 w-3.5" />
+                            <History className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
 
                             {isHistoryExpanded
                               ? "Hide history"
                               : `History (${history.length})`}
 
                             {isHistoryExpanded ? (
-                              <ChevronUp className="ml-1.5 h-3.5 w-3.5" />
+                              <ChevronUp className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             ) : (
-                              <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                              <ChevronDown className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             )}
                           </Button>
 
                           {isHistoryExpanded && (
-                            <div className="mt-3 space-y-3 border-l border-border pl-3">
+                            <div className="mt-2.5 space-y-3 border-l border-border pl-2.5 sm:mt-3 sm:pl-3">
                               {isAuditLoading ? (
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground sm:gap-2 sm:text-xs">
+                                  <Loader2 className="h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
                                   Loading history…
                                 </div>
                               ) : (
                                 history.map((audit) => (
                                   <div
                                     key={audit.id}
-                                    className="space-y-1 text-xs"
+                                    className="space-y-1 text-[10px] leading-4 sm:text-xs sm:leading-normal"
                                   >
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                       <span className="font-semibold text-foreground">
                                         {getAuditActionLabel(
                                           audit.action,
@@ -1312,99 +1312,101 @@ const canManageAnnouncement = (
                       )}
                     </div>
 
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
-  {!isDeleted && (
-    <>
-      {canPublishAnnouncements && (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={
-            isToggling ||
-            toggleAnnouncement.isPending ||
-            deleteAnnouncement.isPending ||
-            saveAnnouncement.isPending
-          }
-          onClick={() =>
-            openToggleDialog(
-              announcement,
-            )
-          }
-        >
-          {isToggling ? (
-            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-          ) : announcement.is_active ? (
-            <PowerOff className="mr-1.5 h-3.5 w-3.5" />
-          ) : (
-            <Power className="mr-1.5 h-3.5 w-3.5" />
-          )}
+                    <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                      {!isDeleted && (
+                        <>
+                          {canPublishAnnouncements && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={
+                                isToggling ||
+                                toggleAnnouncement.isPending ||
+                                deleteAnnouncement.isPending ||
+                                saveAnnouncement.isPending
+                              }
+                              onClick={() =>
+                                openToggleDialog(
+                                  announcement,
+                                )
+                              }
+                              className="h-8 w-full text-[10px] sm:h-9 sm:w-auto sm:text-xs"
+                            >
+                              {isToggling ? (
+                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
+                              ) : announcement.is_active ? (
+                                <PowerOff className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                              ) : (
+                                <Power className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                              )}
 
-          {announcement.is_active
-            ? "Deactivate"
-            : "Activate"}
-        </Button>
-      )}
+                              {announcement.is_active
+                                ? "Deactivate"
+                                : "Activate"}
+                            </Button>
+                          )}
 
-      {canManageAnnouncement(
-        announcement,
-      ) && (
-        <>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={
-              toggleAnnouncement.isPending ||
-              deleteAnnouncement.isPending ||
-              saveAnnouncement.isPending
-            }
-            onClick={() =>
-              startEditing(
-                announcement,
-              )
-            }
-          >
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />
-            Edit
-          </Button>
+                          {canManageAnnouncement(
+                            announcement,
+                          ) && (
+                            <>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={
+                                  toggleAnnouncement.isPending ||
+                                  deleteAnnouncement.isPending ||
+                                  saveAnnouncement.isPending
+                                }
+                                onClick={() =>
+                                  startEditing(
+                                    announcement,
+                                  )
+                                }
+                                className="h-8 w-full text-[10px] sm:h-9 sm:w-auto sm:text-xs"
+                              >
+                                <Pencil className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                Edit
+                              </Button>
 
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={
-              toggleAnnouncement.isPending ||
-              deleteAnnouncement.isPending ||
-              saveAnnouncement.isPending
-            }
-            onClick={() =>
-              openDeleteDialog(
-                announcement,
-              )
-            }
-            className="text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-          >
-            {isDeleting ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-            )}
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={
+                                  toggleAnnouncement.isPending ||
+                                  deleteAnnouncement.isPending ||
+                                  saveAnnouncement.isPending
+                                }
+                                onClick={() =>
+                                  openDeleteDialog(
+                                    announcement,
+                                  )
+                                }
+                                className="h-8 w-full text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:w-auto sm:text-xs"
+                              >
+                                {isDeleting ? (
+                                  <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
+                                ) : (
+                                  <Trash2 className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                )}
 
-            Delete
-          </Button>
-        </>
-      )}
-    </>
-  )}
-</div>
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <div className="p-10 text-center text-sm text-muted-foreground">
+          <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             No announcements have been created yet.
           </div>
         )}
@@ -1419,15 +1421,15 @@ const canManageAnnouncement = (
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               {hasActualChanges()
                 ? "Save announcement changes?"
                 : "No changes were made"}
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               {hasActualChanges()
                 ? `You are about to update "${editingAnnouncement?.title}". Please provide a brief summary of what was changed.`
                 : "The announcement is unchanged from its original values. No database update or audit entry will be created."}
@@ -1435,10 +1437,10 @@ const canManageAnnouncement = (
           </AlertDialogHeader>
 
           {hasActualChanges() && (
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               <label
                 htmlFor="announcement-edit-summary"
-                className="text-sm font-medium"
+                className="text-xs font-medium sm:text-sm"
               >
                 Edit Summary
                 <span className="ml-1 text-destructive">
@@ -1455,19 +1457,20 @@ const canManageAnnouncement = (
                 placeholder="e.g. Updated the deadline and added the submission link..."
                 rows={4}
                 disabled={saveAnnouncement.isPending}
-                className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
               />
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
                 This summary will be permanently retained
                 in the announcement edit history.
               </p>
             </div>
           )}
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={saveAnnouncement.isPending}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1488,9 +1491,10 @@ const canManageAnnouncement = (
                 (hasActualChanges() &&
                   !editSummary.trim())
               }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               {saveAnnouncement.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               {hasActualChanges()
@@ -1514,25 +1518,25 @@ const canManageAnnouncement = (
             }
           }}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
             <AlertDialogHeader>
-              <AlertDialogTitle>
+              <AlertDialogTitle className="text-base sm:text-lg">
                 {pendingToggle.nextIsActive
                   ? "Activate announcement?"
                   : "Deactivate announcement?"}
               </AlertDialogTitle>
 
-              <AlertDialogDescription>
+              <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
                 {pendingToggle.nextIsActive
                   ? `You are about to activate "${pendingToggle.announcement.title}". If another announcement is currently active, it will be automatically deactivated.`
                   : `You are about to deactivate "${pendingToggle.announcement.title}". This action will be recorded in the announcement audit history.`}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               <label
                 htmlFor="announcement-toggle-reason"
-                className="text-sm font-medium"
+                className="text-xs font-medium sm:text-sm"
               >
                 {pendingToggle.nextIsActive
                   ? "Activation reason"
@@ -1558,18 +1562,19 @@ const canManageAnnouncement = (
                 }
                 rows={4}
                 disabled={toggleAnnouncement.isPending}
-                className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
               />
 
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
                 This reason will be permanently retained
                 in the announcement audit history.
               </p>
             </div>
 
-            <AlertDialogFooter>
+            <AlertDialogFooter className="gap-2 sm:gap-0">
               <AlertDialogCancel
                 disabled={toggleAnnouncement.isPending}
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               >
                 Cancel
               </AlertDialogCancel>
@@ -1583,9 +1588,10 @@ const canManageAnnouncement = (
                   toggleAnnouncement.isPending ||
                   !toggleReason.trim()
                 }
+                className="h-9 text-xs sm:h-10 sm:text-sm"
               >
                 {toggleAnnouncement.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                 )}
 
                 {pendingToggle.nextIsActive
@@ -1606,13 +1612,13 @@ const canManageAnnouncement = (
           }
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="text-base sm:text-lg">
               Delete announcement?
             </AlertDialogTitle>
 
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
               Are you sure you want to delete{" "}
               <strong>{pendingDelete?.title}</strong>? This
               announcement will be removed from active
@@ -1621,10 +1627,10 @@ const canManageAnnouncement = (
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <label
               htmlFor="announcement-delete-reason"
-              className="text-sm font-medium"
+              className="text-xs font-medium sm:text-sm"
             >
               Deletion reason
               <span className="ml-1 text-destructive">
@@ -1641,17 +1647,19 @@ const canManageAnnouncement = (
               placeholder="Enter the reason for deleting this announcement..."
               disabled={deleteAnnouncement.isPending}
               required
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
               This reason will be permanently retained in the
               announcement history.
             </p>
           </div>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={deleteAnnouncement.isPending}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
             >
               Cancel
             </AlertDialogCancel>
@@ -1665,16 +1673,16 @@ const canManageAnnouncement = (
                 deleteAnnouncement.isPending ||
                 !deleteReason.trim()
               }
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-9 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:h-10 sm:text-sm"
             >
               {deleteAnnouncement.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
               Delete announcement
             </AlertDialogAction>
           </AlertDialogFooter>
-          </AlertDialogContent>
+        </AlertDialogContent>
       </AlertDialog>
     </section>
   );
