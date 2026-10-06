@@ -29,7 +29,7 @@ import {
   
 import { useState } from "react";
 import heroImg from "@/assets/hero6.jpg";
-import logo from "@/assets/Logo__Circle (2).png";
+import logo from "@/assets/Aneks_Library_Logo.png";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useTheme } from "@/lib/theme";
@@ -158,17 +158,17 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 glass">
       <div className="mx-auto flex h-16 max-w-8xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2">
-        <img
-          src={logo}
-          alt="Aneks Library"
-          className="h-10 w-10 rounded-lg object-contain"
-        />
+        <Link to="/" className="flex items-center gap-0.5">
+          <img
+            src={logo}
+            alt="Aneks Library"
+            className="h-10 w-10 rounded-lg object-contain"
+          />
 
-        <span className="font-display text-lg font-semibold tracking-tight hidden lg:block">
-        <span className="text-gold">Aneks</span>Library
-        </span>
-</Link>
+          <span className="-ml-2 font-display text-lg font-semibold tracking-tight hidden lg:block">
+            <span className="text-gold">neks</span> Library
+          </span>
+        </Link>
   <nav className="hidden items-center gap-3 text-sm text-muted-foreground md:flex">
   <a href="#about" className="transition-colors hover:text-foreground">
     About

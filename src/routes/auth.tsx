@@ -2025,7 +2025,9 @@ function RegisterForm() {
       </h1>
 
       <p className="mt-2 text-sm text-muted-foreground">
-        Join Aneks Library
+      If you don't want to use Email and Password, select ONLY your Role and complete any fields that appear after selecting your Role, then click "Continue with Google" not "Create account".
+      <br /><br />
+      If you prefer Email and Password, fill in all the fields below, then click "Create account" not "Continue with Google".
       </p>
 
       <Button
