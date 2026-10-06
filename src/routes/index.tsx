@@ -476,7 +476,7 @@ function LandingPage() {
               </Button> */}
             </div>
 
-            <dl className="mt-8 grid grid-cols-2 gap-3 md:mt-5 md:gap-2 lg:mt-8 lg:gap-3">
+            <dl className="mt-8 grid grid-cols-2 gap-3 md:mt-5 md:grid-cols-4 md:gap-2 lg:mt-8 lg:gap-3">
               {stats.map((s) => (
                 <div
                   key={s.label}
