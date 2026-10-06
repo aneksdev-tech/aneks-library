@@ -165,7 +165,7 @@ function Header() {
             className="h-10 w-10 rounded-lg object-contain"
           />
 
-          <span className="-ml-2 font-display text-lg font-semibold tracking-tight hidden lg:block">
+          <span className="-ml-2 font-display text-xs font-semibold tracking-tight sm:text-lg">
             <span className="text-gold">neks</span> Library
           </span>
         </Link>
@@ -332,7 +332,7 @@ function LandingPage() {
       {/* HERO — split screen */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-5 sm:px-6 lg:grid-cols-2 lg:py-10 xl:py-25">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-5 sm:px-6 min-[900px]:grid-cols-2 lg:py-10 xl:py-25">
           <div className="flex flex-col justify-center">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft">
               <Sparkles className="h-3.5 w-3.5 text-gold" />
@@ -355,7 +355,7 @@ function LandingPage() {
               <Link to="/pricing">Premium Plans</Link>
               </Button> */}
             </div>
-            <dl className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-2">
+            <dl className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4 min-[900px]:grid-cols-2">
               {stats.map((s) => (
                 <div key={s.label} className="rounded-xl border border-border/60 bg-card/60 p-4 shadow-soft">
                   <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground">{s.label}</dt>
@@ -431,7 +431,7 @@ function LandingPage() {
               Built to Make Academic Resources Fast, Safe, and Accessible
             </h2>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 min-[900px]:grid-cols-4">
             {features.map((f) => (
               <div
                 key={f.title}
@@ -462,7 +462,7 @@ function LandingPage() {
               <Link to="/library">Browse library <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 min-[900px]:grid-cols-4">
             {categories.map((c) => (
               <Link
                 key={c.slug}
