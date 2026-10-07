@@ -10,7 +10,7 @@ export type ContributorLevel = {
 export const contributorLevels: ContributorLevel[] = [
   {
     level: 1,
-    name: "New Contributor",
+    name: "Beginner",
     emoji: "🌱",
     min: 0,
     max: 49,
