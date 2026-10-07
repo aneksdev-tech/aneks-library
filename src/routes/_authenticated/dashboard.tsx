@@ -165,7 +165,7 @@ function DashboardPage() {
       <AnnouncementBanner />
       <AnnouncementPopup />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-4 gap-3 sm:gap-4 lg:grid-cols-4">
   {cards.map((c) => (
     <div
       key={c.label}
