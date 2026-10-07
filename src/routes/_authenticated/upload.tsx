@@ -208,6 +208,10 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
   const isSGS = form.college === "SGS";
 
+  const isPublication =
+    cats?.find((category) => category.id === form.category_id)
+      ?.name === "Publications";
+
   const departments = isSGS
     ? []
     : getDepartments(form.college);
@@ -282,15 +286,15 @@ export function UploadPage({ draftId }: UploadPageProps) {
       throw new Error("Choose a category");
     }
 
-    if (!form.college) {
+    if (!isPublication && !form.college) {
       throw new Error("Choose a college");
     }
 
-    if (!isSGS && !form.department) {
+    if (!isPublication && !isSGS && !form.department) {
       throw new Error("Choose a department");
     }
 
-    if (!form.level) {
+    if (!isPublication && !form.level) {
       throw new Error("Choose a level");
     }
 
@@ -298,7 +302,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
       throw new Error("Choose a semester");
     }
 
-    if (!form.course_code.trim()) {
+    if (!isPublication && !form.course_code.trim()) {
       throw new Error("Course code is required");
     }
 
@@ -700,7 +704,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
           <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label htmlFor="title" className="text-xs sm:text-sm">
-                Title *
+                Title
               </Label>
 
               <Input
@@ -719,7 +723,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
             <div className="sm:col-span-2">
               <Label htmlFor="desc" className="text-xs sm:text-sm">
-                Description *
+                Description
               </Label>
 
               <Textarea
@@ -739,17 +743,32 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
             <div>
               <Label className="text-xs sm:text-sm">
-                Category *
+                Category
               </Label>
 
               <Select
                 value={form.category_id}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const selectedCategory = cats?.find(
+                    (category) => category.id === value,
+                  );
+
+                  const publication =
+                    selectedCategory?.name === "Publications";
+
                   setForm({
                     ...form,
                     category_id: value,
-                  })
-                }
+                    ...(publication
+                      ? {
+                          college: "",
+                          department: "",
+                          level: "",
+                          course_code: "",
+                        }
+                      : {}),
+                  });
+                }}
               >
                 <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
                   <SelectValue placeholder="Choose one" />
@@ -769,71 +788,53 @@ export function UploadPage({ draftId }: UploadPageProps) {
               </Select>
             </div>
 
-            <div>
-              <Label htmlFor="course" className="text-xs sm:text-sm">
-                Course Code *
-              </Label>
-
-              <Input
-                id="course"
-                placeholder="e.g. CSC 301"
-                value={form.course_code}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    course_code:
-                      event.target.value,
-                  })
-                }
-                className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs sm:text-sm">
-                College *
-              </Label>
-
-              <Select
-                value={form.college}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    college: value,
-                    department: "",
-                  })
-                }
-              >
-                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                  <SelectValue placeholder="Choose College" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {colleges.map((college) => (
-                    <SelectItem
-                      key={college.id}
-                      value={college.id}
-                      className="text-xs sm:text-sm"
-                    >
-                      <>
-                        <span className="sm:hidden">
-                          {college.id}
-                        </span>
-
-                        <span className="hidden sm:inline">
-                          {college.name} ({college.id})
-                        </span>
-                      </>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {!isSGS && (
+            {!isPublication && (
               <div>
                 <Label className="text-xs sm:text-sm">
-                  Department *
+                  College
+                </Label>
+
+                <Select
+                  value={form.college}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      college: value,
+                      department: "",
+                    })
+                  }
+                >
+                  <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
+                    <SelectValue placeholder="Choose College" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {colleges.map((college) => (
+                      <SelectItem
+                        key={college.id}
+                        value={college.id}
+                        className="text-xs sm:text-sm"
+                      >
+                        <>
+                          <span className="sm:hidden">
+                            {college.id}
+                          </span>
+
+                          <span className="hidden sm:inline">
+                            {college.name} ({college.id})
+                          </span>
+                        </>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {!isPublication && !isSGS && (
+              <div>
+                <Label className="text-xs sm:text-sm">
+                  Department
                 </Label>
 
                 <Select
@@ -873,41 +874,65 @@ export function UploadPage({ draftId }: UploadPageProps) {
               </div>
             )}
 
+            {!isPublication && (
+              <div>
+                <Label className="text-xs sm:text-sm">
+                  Level
+                </Label>
+
+                <Select
+                  value={form.level}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      level: value,
+                    })
+                  }
+                >
+                  <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
+                    <SelectValue placeholder="Choose Level" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {levels.map((level) => (
+                      <SelectItem
+                        key={level}
+                        value={level}
+                        className="text-xs sm:text-sm"
+                      >
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {!isPublication && (
+              <div>
+                <Label htmlFor="course" className="text-xs sm:text-sm">
+                  Course Code
+                </Label>
+
+                <Input
+                  id="course"
+                  placeholder="e.g. CSC 301"
+                  value={form.course_code}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      course_code:
+                        event.target.value,
+                    })
+                  }
+                  className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
+                />
+              </div>
+            )}
+
             <div>
               <Label className="text-xs sm:text-sm">
-                Level *
-              </Label>
-
-              <Select
-                value={form.level}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    level: value,
-                  })
-                }
-              >
-                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                  <SelectValue placeholder="Choose Level" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {levels.map((level) => (
-                    <SelectItem
-                      key={level}
-                      value={level}
-                      className="text-xs sm:text-sm"
-                    >
-                      {level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-xs sm:text-sm">
-                Semester *
+                Semester
               </Label>
 
               <Select
@@ -941,7 +966,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
             <div>
               <Label className="text-xs sm:text-sm">
-                Year *
+                Year
               </Label>
 
               <Select
@@ -1136,7 +1161,7 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 exitAction === "save" ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                 ) : (
-                  <Save className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+                  <Save className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
                 )}
 
                 Save as draft
