@@ -445,7 +445,7 @@ function LandingPage() {
               Designed for MOUAU Students
             </div>
 
-            <h1 className="mt-4 font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:mt-4 md:text-[3.15rem] lg:mt-4 lg:text-5xl">
+            <h1 className="mt-4 font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:mt-4 md:text-[2.75rem] lg:mt-4 lg:text-5xl">
               <span className="text-gold">Smart Digital Library,</span> built
               for Academic Excellence
             </h1>
