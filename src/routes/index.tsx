@@ -269,7 +269,7 @@ function Header() {
             className="h-10 w-10 rounded-lg object-contain md:h-8 md:w-8 lg:h-10 lg:w-10"
           />
 
-          <span className="-ml-2 font-display text-xs font-semibold tracking-tight sm:text-lg md:text-sm lg:text-lg">
+          <span className="-ml-2.5 font-display text-xs font-semibold tracking-tight sm:text-lg md:text-sm lg:text-lg">
             <span className="text-gold">neks</span> Library
           </span>
         </Link>

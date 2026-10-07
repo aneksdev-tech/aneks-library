@@ -202,9 +202,9 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh w-full bg-background text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-52 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
+      <aside className="hidden w-46 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
         <Link
-          to="/dashboard"
+          to="/"
           className="flex items-center gap-0.5 px-4 py-6"
         >
           <img
@@ -225,7 +225,7 @@ export function AppShell({
         />
       </aside>
 
-      {/* Mobile icon-only sidebar */}
+      {/* Mobile navigation sidebar */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
@@ -235,18 +235,34 @@ export function AppShell({
             }
           />
 
-          <aside className="absolute inset-y-0 left-0 flex w-16 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant">
-            <div className="flex h-16 items-center justify-center border-b border-sidebar-border">
-              <button
-                onClick={() =>
-                  setMobileOpen(false)
-                }
-                aria-label="Close menu"
-                className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+          <aside className="absolute inset-y-0 left-0 flex w-38 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant">
+            <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-3">
+  <Link
+  to="/"
+  onClick={() => setMobileOpen(false)}
+  className="flex min-w-0 items-center"
+>
+  <img
+    src={logo}
+    alt="Aneks Library"
+    className="h-5 w-5 shrink-0 rounded-lg object-contain"
+  />
+
+  <span className="-ml-1 truncate font-display text-[9px] font-semibold tracking-tight">
+    <span className="text-gold">neks</span> Library
+  </span>
+</Link>
+
+  <button
+    onClick={() =>
+      setMobileOpen(false)
+    }
+    aria-label="Close menu"
+    className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  >
+    <X className="h-5 w-5" />
+  </button>
+</div>
 
             <SidebarNav
               items={items}
@@ -403,7 +419,7 @@ function SidebarNav({
             key={item.to}
             to={item.to}
             onClick={onNavigate}
-            className={`relative flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors md:justify-start md:px-3 ${
+            className={`relative flex items-center justify-start gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
               active
                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
@@ -412,7 +428,7 @@ function SidebarNav({
           >
             <item.icon className="h-4 w-4 shrink-0" />
 
-            <span className="hidden min-w-0 flex-1 md:inline">
+            <span className="min-w-0 flex-1 text-xs md:text-sm">
               {item.label}
             </span>
 
