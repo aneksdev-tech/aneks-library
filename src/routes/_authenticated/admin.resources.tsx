@@ -1426,7 +1426,7 @@ function ResourcesPage() {
           </p>
         </div>
 
-        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-[minmax(0,1fr)_180px_200px_180px]">
+        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-[minmax(220px,1fr)_150px_170px_150px] lg:grid-cols-[minmax(0,1fr)_180px_200px_180px]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
