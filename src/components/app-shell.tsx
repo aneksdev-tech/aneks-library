@@ -434,7 +434,7 @@ function SidebarNav({
 
             {showAttentionBadge ? (
               <span
-                className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[9px] font-semibold text-gold-foreground md:static md:h-5 md:min-w-5 md:text-[10px]"
+                className="ml-auto grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[9px] font-semibold text-gold-foreground md:h-5 md:min-w-5 md:text-[10px]"
                 aria-label={`${attentionCount} pending items`}
               >
                 {attentionCount > 99
