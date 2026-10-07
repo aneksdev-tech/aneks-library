@@ -975,7 +975,7 @@ function AuthPage() {
          */
         sessionStorage.setItem(
           GOOGLE_LOGIN_BLOCKED_MESSAGE_KEY,
-          "This account does not exist.",
+          "This account does not exist. Please create your account.",
         );
 
         /*
