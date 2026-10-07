@@ -31,22 +31,20 @@ export function AnnouncementBanner() {
     announcement.link || `/announcements/${announcement.id}`;
 
   return (
-    <div className="flex items-center gap-3 py-2">
-
-      <div className="flex shrink-0 items-center gap-2">
-      </div>
-
+    <div className="flex items-center gap-2 py-1.5">
       <div className="min-w-0 flex-1 overflow-hidden">
         <a
           href={destination}
           className="block min-w-0 rounded-lg transition-colors hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
           aria-label={`View announcement: ${announcement.title}`}
         >
-          <div className="announcement-marquee flex whitespace-nowrap">
-
-            <div className="flex items-center gap-12 px-6">
-              <span className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-gold" />
+          <div
+            className="announcement-marquee flex whitespace-nowrap text-sm"
+            style={{ animationDuration: "18s" }}
+          >
+            <div className="flex items-center gap-8 px-4">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" />
                 <strong>{announcement.title}</strong>
                 <span>—</span>
                 <span>{announcement.body}</span>
@@ -60,9 +58,9 @@ export function AnnouncementBanner() {
               </span>
             </div>
 
-            <div className="flex items-center gap-12 px-6">
-              <span className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-gold" />
+            <div className="flex items-center gap-8 px-4">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" />
                 <strong>{announcement.title}</strong>
                 <span>—</span>
                 <span>{announcement.body}</span>
@@ -75,11 +73,9 @@ export function AnnouncementBanner() {
                 {announcement.body}
               </span>
             </div>
-
           </div>
         </a>
       </div>
-
     </div>
   );
 }
