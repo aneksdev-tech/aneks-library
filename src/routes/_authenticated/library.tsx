@@ -546,17 +546,19 @@ export function ResourceCard({
   return (
     <article className="group flex flex-col rounded-2xl border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
       <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-3">
-        <span className="min-w-0 truncate rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary sm:px-2.5 sm:text-xs">
+        <span className="min-w-0 flex-1 truncate rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary sm:px-2.5 sm:text-xs">
           {categoryName}
         </span>
 
-        <ResourceTypeBadge
-          filePath={
-            r.file_type
-              ? `.${r.file_type}`
-              : ""
-          }
-        />
+        <div className="shrink-0">
+          <ResourceTypeBadge
+            filePath={
+              r.file_type
+                ? `.${r.file_type}`
+                : ""
+            }
+          />
+        </div>
       </div>
 
       <h3 className="line-clamp-2 font-display text-base font-semibold leading-snug sm:text-lg">
