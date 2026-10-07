@@ -310,9 +310,8 @@ function Announcements() {
                 className="group py-3.5 sm:py-5"
               >
                 {announcement.is_active && (
-                  <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-primary sm:mb-2.5 sm:gap-2 sm:text-xs">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary sm:h-2 sm:w-2" />
-                    Current
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gold sm:mb-2.5 sm:text-xs">
+                    CURRENT
                   </div>
                 )}
 
@@ -364,7 +363,7 @@ function Announcements() {
                         announcementId:
                           announcement.id,
                       }}
-                      className="inline-flex shrink-0 items-center rounded-md border border-border px-2 py-1 text-[10px] font-medium text-primary transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-3 sm:py-1.5 sm:text-xs"
+                      className="shrink-0 text-[10px] font-medium text-gold transition-colors hover:text-gold/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:text-xs"
                       onClick={() => {
                         if (!announcement.is_read) {
                           markAsRead.mutate(
@@ -373,7 +372,7 @@ function Announcements() {
                         }
                       }}
                     >
-                      Read
+                      View &gt;
                     </Link>
                   </div>
                 )}
