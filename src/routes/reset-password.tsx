@@ -8,7 +8,12 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password | Aneks Library" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Reset password | Aneks Library" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: ResetPassword,
 });
 
@@ -28,15 +33,18 @@ function ResetPassword() {
     };
     check();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN")
+        setReady(true);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pw.length < 8) return toast.error("Password must be at least 8 characters.");
-    if (pw !== confirm) return toast.error("Passwords don't match.");
+    if (pw.length < 8)
+      return toast.error("Password must be at least 8 characters.");
+    if (pw !== confirm)
+      return toast.error("Passwords don't match.");
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
@@ -47,34 +55,82 @@ function ResetPassword() {
   };
 
   return (
-    <div className="grid min-h-dvh place-items-center bg-background p-6">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-elegant">
-        <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-gradient-emerald text-primary-foreground">
-          <Lock className="h-5 w-5" />
+    <div className="grid min-h-dvh place-items-center bg-background p-4 sm:p-6">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-4 shadow-elegant sm:rounded-2xl sm:p-8">
+        <span className="mx-auto grid h-9 w-9 place-items-center rounded-lg bg-gradient-emerald text-primary-foreground sm:h-12 sm:w-12 sm:rounded-xl">
+          <Lock className="h-4 w-4 sm:h-5 sm:w-5" />
         </span>
-        <h1 className="mt-6 text-center font-display text-2xl font-semibold">Set a new password</h1>
-        <p className="mt-2 text-center text-sm text-muted-foreground">Choose a password you haven't used before.</p>
+
+        <h1 className="mt-4 text-center font-display text-lg font-semibold sm:mt-6 sm:text-2xl">
+          Set a new password
+        </h1>
+
+        <p className="mt-1.5 text-center text-xs text-muted-foreground sm:mt-2 sm:text-sm">
+          Choose a password you haven't used before.
+        </p>
+
         {!ready ? (
-          <p className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center text-xs text-muted-foreground sm:mt-8 sm:text-sm">
             Open the reset link from your email to continue.
           </p>
         ) : (
-          <form onSubmit={submit} className="mt-6 space-y-4">
+          <form
+            onSubmit={submit}
+            className="mt-5 space-y-3 sm:mt-6 sm:space-y-4"
+          >
             <div>
-              <Label htmlFor="pw">New password</Label>
+              <Label htmlFor="pw" className="text-xs sm:text-sm">
+                New password
+              </Label>
+
               <div className="relative mt-1.5">
-                <Input id="pw" type={show ? "text" : "password"} required value={pw} onChange={(e) => setPw(e.target.value)} />
-                <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
-                  {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <Input
+                  id="pw"
+                  type={show ? "text" : "password"}
+                  required
+                  value={pw}
+                  onChange={(e) => setPw(e.target.value)}
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShow((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                >
+                  {show ? (
+                    <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  )}
                 </button>
               </div>
             </div>
+
             <div>
-              <Label htmlFor="confirm">Confirm password</Label>
-              <Input id="confirm" type={show ? "text" : "password"} required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1.5" />
+              <Label htmlFor="confirm" className="text-xs sm:text-sm">
+                Confirm password
+              </Label>
+
+              <Input
+                id="confirm"
+                type={show ? "text" : "password"}
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
+              />
             </div>
-            <Button type="submit" disabled={busy} className="w-full bg-gradient-emerald text-primary-foreground">
-              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Update password
+
+            <Button
+              type="submit"
+              disabled={busy}
+              className="h-9 w-full bg-gradient-emerald text-xs text-primary-foreground sm:h-10 sm:text-sm"
+            >
+              {busy && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
+              )}
+              Update password
             </Button>
           </form>
         )}

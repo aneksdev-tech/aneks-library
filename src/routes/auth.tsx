@@ -516,6 +516,91 @@ function AuthPage() {
     refresh,
   ]);
 
+    /*
+   * iOS/Safari fallback for Google registration.
+   *
+   * Some browsers may successfully establish the
+   * Supabase session inside the OAuth popup but fail
+   * to deliver window.opener.postMessage() back to
+   * the main registration window.
+   *
+   * The main window already owns the registration nonce
+   * in sessionStorage. Once an authenticated Google
+   * session becomes available, dispatch the same
+   * completion event locally so the existing registration
+   * completion handler above performs the RPC.
+   *
+   * This does not create a second completion path.
+   * It reuses the exact same handler and safeguards.
+   */
+  useEffect(() => {
+    if (
+      loading ||
+      !session ||
+      googleRegistrationProcessingNonce.current
+    ) {
+      return;
+    }
+
+    const activeRegistrationNonce =
+      sessionStorage.getItem(
+        GOOGLE_REGISTRATION_NONCE_KEY,
+      );
+
+    if (!activeRegistrationNonce) {
+      return;
+    }
+
+    /*
+     * Only Google sessions can complete a Google
+     * registration flow.
+     */
+    const provider =
+      session.user.app_metadata
+        ?.provider;
+
+    if (provider !== "google") {
+      return;
+    }
+
+    /*
+     * The existing message handler already prevents
+     * duplicate completion attempts.
+     *
+     * If it has already consumed this registration,
+     * there is nothing for the fallback to do.
+     */
+    if (
+      googleRegistrationHandled.current
+    ) {
+      return;
+    }
+
+    /*
+     * Reuse the exact same event consumed by the
+     * existing popup completion handler.
+     *
+     * This is the important iOS fallback: if the popup
+     * could not deliver postMessage(), the main window
+     * completes the same flow itself.
+     */
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        origin:
+          window.location.origin,
+        data: {
+          type:
+            "aneks-google-registration-complete",
+          nonce:
+            activeRegistrationNonce,
+        },
+      }),
+    );
+  }, [
+    loading,
+    session,
+  ]);
+
   /*
    * A Google OAuth popup should never render the
    * normal authentication page.

@@ -11,34 +11,38 @@ function PendingPage() {
   const { signOut } = useAuth();
 
   return (
-    <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-4">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-8 shadow-elegant">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-          <Clock3 className="h-8 w-8 text-amber-500" />
+    <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center px-4">
+      <div className="w-full max-w-lg rounded-xl border border-border bg-card p-4 shadow-elegant sm:rounded-2xl sm:p-8">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 sm:h-16 sm:w-16">
+          <Clock3
+            className="h-6 w-6 text-amber-500 sm:h-8 sm:w-8"
+            strokeWidth={2.5}
+          />
         </div>
 
-        <h1 className="mt-6 text-center font-display text-3xl font-semibold">
+        <h1 className="mt-4 text-center font-display text-xl font-semibold sm:mt-6 sm:text-3xl">
           Account Pending Approval
         </h1>
 
-        <p className="mt-4 text-center leading-7 text-muted-foreground">
-          Your registration has been received successfully. <br />
+        <p className="mt-3 text-center text-xs leading-5 text-muted-foreground sm:mt-4 sm:text-sm sm:leading-7">
+          Your registration has been received successfully.
         </p>
 
-        <p className="mt-3 text-center leading-7 text-muted-foreground">
+        <p className="mt-2.5 text-center text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-7">
           An administrator is currently reviewing your account. You'll
           receive access as soon as your registration is approved.
         </p>
 
-        <Button
-          className="mt-8 w-full"
-          variant="outline"
-          onClick={() => signOut()}
-        > 
-          Sign Out
-          <LogOut className="mr-2 h-4 w-4" />
-         
-        </Button>
+        <div className="mt-6 flex justify-center sm:mt-8">
+          <Button
+            variant="outline"
+            className="h-9 px-4 text-xs sm:h-10 sm:px-5 sm:text-sm"
+            onClick={() => signOut()}
+          >
+            Sign Out
+            <LogOut className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

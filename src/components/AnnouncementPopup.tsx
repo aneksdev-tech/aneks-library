@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Megaphone, X } from "lucide-react";
+import { X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -110,47 +110,46 @@ export function AnnouncementPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex min-h-dvh items-center justify-center bg-background/70 p-3 backdrop-blur-sm sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="announcement-popup-title"
     >
-      <div className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-elegant">
+      <div className="relative max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border bg-card shadow-elegant sm:rounded-2xl">
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-4 top-4 z-10 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 sm:right-4 sm:top-4"
           aria-label="Close announcement"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </button>
 
-        <div className="p-6 sm:p-8">
-          <div className="flex items-start gap-4">
-
-            <div className="min-w-0 pr-8">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-gold">
+        <div className="p-4 sm:p-8">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="min-w-0 pr-7 sm:pr-8">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-gold sm:text-xs">
                 Announcement
               </p>
 
               <h2
                 id="announcement-popup-title"
-                className="mt-1 font-display text-xl font-semibold sm:text-2xl"
+                className="mt-1 font-display text-lg font-semibold sm:text-2xl"
               >
                 {announcement.title}
               </h2>
             </div>
           </div>
 
-          <div className="mt-6 whitespace-pre-wrap text-sm leading-7 text-muted-foreground sm:text-base">
+          <div className="mt-4 whitespace-pre-wrap text-xs leading-5 text-muted-foreground sm:mt-6 sm:text-base sm:leading-7">
             {fullContent}
           </div>
 
-          <div className="mt-7 flex justify-end">
+          <div className="mt-5 flex justify-end sm:mt-7">
             <Button
               type="button"
               onClick={handleClose}
-              className="bg-gradient-emerald text-primary-foreground"
+              className="h-9 bg-gradient-emerald px-3 text-xs text-primary-foreground sm:h-10 sm:px-4 sm:text-sm"
             >
               Got it
             </Button>
