@@ -202,7 +202,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh w-full bg-background text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex">
+      <aside className="hidden w-52 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
         <Link
           to="/dashboard"
           className="flex items-center gap-0.5 px-4 py-6"
