@@ -40,7 +40,7 @@ export function AnnouncementBanner() {
         >
           <div
             className="announcement-marquee flex whitespace-nowrap text-sm"
-            style={{ animationDuration: "18s" }}
+            style={{ animationDuration: "10s" }}
           >
             <div className="flex items-center gap-8 px-4">
               <span className="flex items-center gap-1.5">
