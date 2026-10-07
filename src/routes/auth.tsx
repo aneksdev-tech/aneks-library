@@ -975,7 +975,7 @@ function AuthPage() {
          */
         sessionStorage.setItem(
           GOOGLE_LOGIN_BLOCKED_MESSAGE_KEY,
-          "Account doesn't exist. Please select your role and continue with Google, or fill in the required fields to create an account with Email and password.",
+          "This account does not exist.",
         );
 
         /*
