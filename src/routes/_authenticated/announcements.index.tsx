@@ -363,7 +363,7 @@ function Announcements() {
                         announcementId:
                           announcement.id,
                       }}
-                      className="shrink-0 text-[10px] font-medium text-gold transition-colors hover:text-gold/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:text-xs"
+                      className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
                       onClick={() => {
                         if (!announcement.is_read) {
                           markAsRead.mutate(
