@@ -438,23 +438,23 @@ function LandingPage() {
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
 
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-5 sm:px-6 md:gap-6 md:px-4 md:py-4 lg:gap-8 lg:px-6 lg:py-8 xl:py-12 md:grid-cols-2">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-5 sm:px-6 md:gap-7 md:px-4 md:py-5 lg:gap-8 lg:px-6 lg:py-8 xl:py-12 md:grid-cols-2">
           <div className="flex flex-col justify-center">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft md:px-2.5 md:py-0.5 md:text-[10px] lg:px-3 lg:py-1 lg:text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-gold md:h-3 md:w-3 lg:h-3.5 lg:w-3.5" />
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft md:px-3 md:py-1 md:text-[11px] lg:px-3 lg:py-1 lg:text-xs">
+              <Sparkles className="h-3.5 w-3.5 text-gold md:h-3.5 md:w-3.5 lg:h-3.5 lg:w-3.5" />
               Designed for MOUAU Students
             </div>
 
-            <h1 className="mt-4 font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:mt-3 md:text-3xl lg:mt-4 lg:text-5xl">
+            <h1 className="mt-4 font-display text-3xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:mt-4 md:text-[3.15rem] lg:mt-4 lg:text-5xl">
               <span className="text-gold">Smart Digital Library,</span> built
               for Academic Excellence
             </h1>
 
-            <div className="mt-6 flex flex-wrap gap-3 md:mt-4 md:gap-2 lg:mt-6 lg:gap-3">
+            <div className="mt-6 flex flex-wrap gap-3 md:mt-5 md:gap-2.5 lg:mt-6 lg:gap-3">
               <Button
                 asChild
                 size="lg"
-                className="bg-gradient-emerald text-primary-foreground shadow-elegant md:h-9 md:px-3 md:text-xs lg:h-11 lg:px-4 lg:text-sm"
+                className="bg-gradient-emerald text-primary-foreground shadow-elegant md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
               >
                 <Link to="/auth" search={{ mode: "register" }}>
                   Get started{" "}
@@ -466,7 +466,7 @@ function LandingPage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="md:h-9 md:px-3 md:text-xs lg:h-11 lg:px-4 lg:text-sm"
+                className="md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
               >
                 <Link to="/library">Login</Link>
               </Button>
@@ -476,17 +476,17 @@ function LandingPage() {
               </Button> */}
             </div>
 
-            <dl className="mt-8 grid grid-cols-2 gap-3 md:mt-5 md:grid-cols-4 md:gap-2 lg:mt-8 lg:gap-3">
+            <dl className="mt-8 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-4 md:gap-2.5 lg:mt-8 lg:gap-3">
               {stats.map((s) => (
                 <div
                   key={s.label}
-                  className="rounded-xl border border-border/60 bg-card/60 p-3 shadow-soft sm:p-4 md:rounded-lg md:p-2.5 lg:rounded-xl lg:p-4"
+                  className="rounded-xl border border-border/60 bg-card/60 p-3 shadow-soft sm:p-4 md:rounded-lg md:p-3 lg:rounded-xl lg:p-4"
                 >
-                  <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground md:text-[9px] lg:text-xs">
+                  <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground md:text-[10px] lg:text-xs">
                     {s.label}
                   </dt>
 
-                  <dd className="mt-1 break-words font-display text-xl font-semibold md:text-lg lg:text-xl">
+                  <dd className="mt-1 break-words font-display text-xl font-semibold md:text-xl lg:text-xl">
                     {s.value}
                   </dd>
                 </div>
@@ -510,13 +510,13 @@ function LandingPage() {
             </div>
 
             {/* Floating Card */}
-            <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block md:bottom-4 md:left-4 md:max-w-[180px] md:rounded-lg md:p-3 lg:bottom-6 lg:left-6 lg:max-w-[220px] lg:rounded-xl lg:p-4">
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground md:text-[9px] lg:text-xs">
-                <Users className="h-3.5 w-3.5 text-primary md:h-3 md:w-3 lg:h-3.5 lg:w-3.5" />
+            <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block md:bottom-5 md:left-5 md:max-w-[190px] md:rounded-lg md:p-3.5 lg:bottom-6 lg:left-6 lg:max-w-[220px] lg:rounded-xl lg:p-4">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground md:text-[10px] lg:text-xs">
+                <Users className="h-3.5 w-3.5 text-primary md:h-3.5 md:w-3.5 lg:h-3.5 lg:w-3.5" />
                 Helped Students
               </div>
 
-              <div className="mt-1 font-display text-2xl font-semibold md:text-xl lg:text-2xl">
+              <div className="mt-1 font-display text-2xl font-semibold md:text-[1.35rem] lg:text-2xl">
                 10k+
               </div>
             </div>
@@ -526,17 +526,17 @@ function LandingPage() {
 
       {/* ABOUT */}
       <section id="about" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-1 max-w-7xl">
-            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
               ABOUT
             </p>
 
-            <h2 className="mt-3 mw-xs font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+            <h2 className="mt-3 mw-xs font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
               Centralizing Academic Resources for MOUAU
             </h2>
 
-            <p className="mt-8 text-lg leading-8 text-muted-foreground md:mt-5 md:text-sm md:leading-6 lg:mt-8 lg:text-lg lg:leading-8">
+            <p className="mt-8 text-lg leading-8 text-muted-foreground md:mt-6 md:text-sm md:leading-6.5 lg:mt-8 lg:text-lg lg:leading-8">
               Aneks Library is a modern academic knowledge management platform
               developed specifically for Michael Okpara University of
               Agriculture, Umudike (MOUAU). It centralizes lecture notes, past
@@ -547,7 +547,7 @@ function LandingPage() {
               for every college and department within the university.
             </p>
 
-            <p className="mt-6 text-lg leading-8 text-muted-foreground md:mt-4 md:text-sm md:leading-6 lg:mt-6 lg:text-lg lg:leading-8">
+            <p className="mt-6 text-lg leading-8 text-muted-foreground md:mt-5 md:text-sm md:leading-6.5 lg:mt-6 lg:text-lg lg:leading-8">
               Our mission is to improve learning efficiency, preserve valuable
               academic resources and build a trusted digital ecosystem that
               supports academic excellence across MOUAU, with future expansion
@@ -562,13 +562,13 @@ function LandingPage() {
         id="features"
         className="border-t border-border/60 bg-secondary/40"
       >
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
-          <div className="mb-14 max-w-1xl md:mb-8 lg:mb-14">
-            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
+          <div className="mb-14 max-w-1xl md:mb-9 lg:mb-14">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
               Features
             </p>
 
-            <h2 className="mt-3 mw-xs font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+            <h2 className="mt-3 mw-xs font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
               Built to Make Academic Resources Fast, Safe, and Accessible
             </h2>
           </div>
@@ -577,17 +577,17 @@ function LandingPage() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant md:rounded-xl md:p-4 lg:rounded-2xl lg:p-6"
+                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
               >
-                <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary md:h-8 md:w-8 md:rounded-md lg:h-10 lg:w-10 lg:rounded-lg">
-                  <f.icon className="h-5 w-5 md:h-4 md:w-4 lg:h-5 lg:w-5" />
+                <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary md:h-9 md:w-9 md:rounded-md lg:h-10 lg:w-10 lg:rounded-lg">
+                  <f.icon className="h-5 w-5 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5" />
                 </span>
 
                 <h3 className="mt-4 font-display text-lg font-semibold md:mt-3 md:text-base lg:mt-4 lg:text-lg">
                   {f.title}
                 </h3>
 
-                <p className="mt-1 text-sm text-muted-foreground md:text-xs lg:text-sm">
+                <p className="mt-1 text-sm text-muted-foreground md:text-sm lg:text-sm">
                   {f.desc}
                 </p>
               </div>
@@ -598,14 +598,14 @@ function LandingPage() {
 
       {/* CATEGORIES */}
       <section id="categories" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
-          <div className="mb-14 flex items-end justify-between gap-6 md:mb-8 md:gap-4 lg:mb-14 lg:gap-6">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
+          <div className="mb-14 flex items-end justify-between gap-6 md:mb-9 md:gap-4 lg:mb-14 lg:gap-6">
             <div className="max-w-1xl">
-              <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
                 Categories
               </p>
 
-              <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+              <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
                 Everything You Need to Excel Academically
               </h2>
             </div>
@@ -613,11 +613,11 @@ function LandingPage() {
             <Button
               asChild
               variant="ghost"
-              className="hidden sm:inline-flex md:h-8 md:px-2 md:text-xs lg:h-9 lg:px-3 lg:text-sm"
+              className="hidden sm:inline-flex md:h-9 md:px-2.5 md:text-sm lg:h-9 lg:px-3 lg:text-sm"
             >
               <Link to="/library">
                 Browse library{" "}
-                <ArrowRight className="ml-1 h-4 w-4 md:h-3 md:w-3 lg:h-4 lg:w-4" />
+                <ArrowRight className="ml-1 h-4 w-4 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4" />
               </Link>
             </Button>
           </div>
@@ -627,21 +627,21 @@ function LandingPage() {
               <Link
                 key={c.slug}
                 to="/library"
-                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant md:rounded-xl md:p-4 lg:rounded-2xl lg:p-6"
+                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
               >
-                <span className="inline-grid h-11 w-11 place-items-center rounded-xl bg-gradient-emerald text-primary-foreground md:h-9 md:w-9 md:rounded-lg lg:h-11 lg:w-11 lg:rounded-xl">
-                  <c.icon className="h-5 w-5 md:h-4 md:w-4 lg:h-5 lg:w-5" />
+                <span className="inline-grid h-11 w-11 place-items-center rounded-xl bg-gradient-emerald text-primary-foreground md:h-10 md:w-10 md:rounded-lg lg:h-11 lg:w-11 lg:rounded-xl">
+                  <c.icon className="h-5 w-5 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5" />
                 </span>
 
                 <h3 className="mt-4 font-display text-lg font-semibold md:mt-3 md:text-base lg:mt-4 lg:text-lg">
                   {c.name}
                 </h3>
 
-                <p className="mt-1 text-sm text-muted-foreground md:text-xs lg:text-sm">
+                <p className="mt-1 text-sm text-muted-foreground md:text-sm lg:text-sm">
                   {c.desc}
                 </p>
 
-                <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100 md:mt-3 md:text-[10px] lg:mt-4 lg:text-xs">
+                <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100 md:mt-3 md:text-[11px] lg:mt-4 lg:text-xs">
                   Browse <ArrowRight className="h-3 w-3" />
                 </span>
               </Link>
@@ -652,13 +652,13 @@ function LandingPage() {
 
       {/* HOW IT WORKS */}
       <section id="how" className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
-          <div className="mb-14 max-w-1xl md:mb-8 lg:mb-14">
-            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
+          <div className="mb-14 max-w-1xl md:mb-9 lg:mb-14">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
               How it works
             </p>
 
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
               Get Started in Minutes, Learn Without Limits
             </h2>
           </div>
@@ -667,10 +667,10 @@ function LandingPage() {
             {steps.map((s, i) => (
               <li
                 key={s.n}
-                className="relative rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:rounded-xl md:p-4 lg:rounded-2xl lg:p-6"
+                className="relative rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
               >
-                <div className="flex items-center gap-3 md:gap-2 lg:gap-3">
-                  <span className="font-display text-3xl font-semibold text-gold md:text-2xl lg:text-3xl">
+                <div className="flex items-center gap-3 md:gap-2.5 lg:gap-3">
+                  <span className="font-display text-3xl font-semibold text-gold md:text-[1.65rem] lg:text-3xl">
                     {s.n}
                   </span>
 
@@ -686,7 +686,7 @@ function LandingPage() {
                   {s.title}
                 </h3>
 
-                <p className="mt-1 text-sm text-muted-foreground md:text-xs lg:text-sm">
+                <p className="mt-1 text-sm text-muted-foreground md:text-sm lg:text-sm">
                   {s.desc}
                 </p>
               </li>
@@ -697,13 +697,13 @@ function LandingPage() {
 
       {/* TESTIMONIALS */}
       <section className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
-          <div className="mb-14 max-w-1xl md:mb-8 lg:mb-14">
-            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
+          <div className="mb-14 max-w-1xl md:mb-9 lg:mb-14">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
               Voices
             </p>
 
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
               Trusted by students, lecturers and researchers
             </h2>
           </div>
@@ -712,23 +712,23 @@ function LandingPage() {
             {testimonials.map((t) => (
               <figure
                 key={t.name}
-                className="rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:rounded-xl md:p-4 lg:rounded-2xl lg:p-6"
+                className="rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
               >
-                <blockquote className="text-sm leading-relaxed text-foreground md:text-xs lg:text-sm">
+                <blockquote className="text-sm leading-relaxed text-foreground md:text-sm lg:text-sm">
                   "{t.quote}"
                 </blockquote>
 
-                <figcaption className="mt-6 flex items-center gap-3 md:mt-4 md:gap-2 lg:mt-6 lg:gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-emerald text-sm font-medium text-primary-foreground md:h-8 md:w-8 md:text-xs lg:h-10 lg:w-10 lg:text-sm">
+                <figcaption className="mt-6 flex items-center gap-3 md:mt-5 md:gap-2.5 lg:mt-6 lg:gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-emerald text-sm font-medium text-primary-foreground md:h-9 md:w-9 md:text-xs lg:h-10 lg:w-10 lg:text-sm">
                     {t.name[0]}
                   </span>
 
                   <div>
-                    <div className="text-sm font-medium md:text-xs lg:text-sm">
+                    <div className="text-sm font-medium md:text-sm lg:text-sm">
                       {t.name}
                     </div>
 
-                    <div className="text-xs text-muted-foreground md:text-[10px] lg:text-xs">
+                    <div className="text-xs text-muted-foreground md:text-[11px] lg:text-xs">
                       {t.role}
                     </div>
                   </div>
@@ -741,13 +741,13 @@ function LandingPage() {
 
       {/* FAQ */}
       <section id="faq" className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
-          <div className="mb-10 text-left md:mb-7 lg:mb-10">
-            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+        <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
+          <div className="mb-10 text-left md:mb-8 lg:mb-10">
+            <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
               FAQ
             </p>
 
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
               Quich Answers to Common questions
             </h2>
           </div>
@@ -755,7 +755,7 @@ function LandingPage() {
           <Accordion
             type="single"
             collapsible
-            className="rounded-2xl border border-border/60 bg-card px-4 shadow-soft md:rounded-xl md:px-3 lg:rounded-2xl lg:px-4"
+            className="rounded-2xl border border-border/60 bg-card px-4 shadow-soft md:rounded-xl md:px-4 lg:rounded-2xl lg:px-4"
           >
             {faqs.map((f, i) => (
               <AccordionItem
@@ -767,7 +767,7 @@ function LandingPage() {
                   {f.q}
                 </AccordionTrigger>
 
-                <AccordionContent className="text-sm text-muted-foreground md:text-xs lg:text-sm">
+                <AccordionContent className="text-sm text-muted-foreground md:text-sm lg:text-sm">
                   {f.a}
                 </AccordionContent>
               </AccordionItem>
@@ -778,25 +778,25 @@ function LandingPage() {
 
       {/* CONTACT */}
       <section id="contact" className="border-t border-border/60">
-        <div className="mx-auto max-w-7xl px-4 py-18 text-left sm:px-6 md:px-4 md:py-10 lg:px-6 lg:py-18">
-          <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[10px] lg:text-sm">
+        <div className="mx-auto max-w-7xl px-4 py-18 text-left sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
+          <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
             Contact
           </p>
 
-          <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-2 md:text-2xl lg:mt-3 lg:text-4xl">
+          <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl md:mt-3 md:text-[1.7rem] lg:mt-3 lg:text-4xl">
             Questions, Feedback, or Support? Talk to Us
           </h2>
 
-          <p className="mt-3 text-muted-foreground md:text-xs lg:text-sm">
+          <p className="mt-3 text-muted-foreground md:text-sm lg:text-sm">
             Reach out on email or WhatsApp — we usually respond within a few
             hours.
           </p>
 
-          <div className="mt-8 flex flex-wrap justify-left gap-3 md:mt-5 md:gap-2 lg:mt-8 lg:gap-3">
+          <div className="mt-8 flex flex-wrap justify-left gap-3 md:mt-6 md:gap-2.5 lg:mt-8 lg:gap-3">
             <Button
               asChild
               size="lg"
-              className="bg-gradient-emerald text-primary-foreground shadow-elegant md:h-9 md:px-3 md:text-xs lg:h-11 lg:px-4 lg:text-sm"
+              className="bg-gradient-emerald text-primary-foreground shadow-elegant md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
             >
               <a href="mailto:hello@anekslibrary.com">
                 <Mail className="mr-2 h-4 w-4 md:mr-1.5 md:h-3.5 md:w-3.5 lg:mr-2 lg:h-4 lg:w-4" />
@@ -808,7 +808,7 @@ function LandingPage() {
               asChild
               size="lg"
               variant="outline"
-              className="md:h-9 md:px-3 md:text-xs lg:h-11 lg:px-4 lg:text-sm"
+              className="md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
             >
               <a
                 href="https://wa.me/2340000000000"
@@ -825,7 +825,7 @@ function LandingPage() {
 
       {/* FOOTER */}
       <footer className="border-t border-border/60 bg-secondary/40">
-        <div className="mx-auto grid max-w-7xl gap-10 px-1 py-14 sm:px-6 md:grid-cols-4 md:gap-6 md:px-4 md:py-10 lg:gap-10 lg:px-6 lg:py-14">
+        <div className="mx-auto grid max-w-7xl gap-10 px-1 py-14 sm:px-6 md:grid-cols-4 md:gap-6 md:px-4 md:py-12 lg:gap-10 lg:px-6 lg:py-14">
           <div>
             <div className="flex items-center gap-0.5">
               <img
@@ -839,7 +839,7 @@ function LandingPage() {
               </span>
             </div>
 
-            <p className="mt-3 text-sm text-muted-foreground md:mt-2 md:text-xs lg:mt-3 lg:text-sm">
+            <p className="mt-3 text-sm text-muted-foreground md:mt-2 md:text-sm lg:mt-3 lg:text-sm">
               The official digital academic library built for Michael Okpara
               University of Agriculture, Umudike (MOUAU). Helping students
               study smarter.
@@ -847,11 +847,11 @@ function LandingPage() {
           </div>
 
           <div>
-            <div className="mb-3 text-sm font-medium md:mb-2 md:text-xs lg:mb-3 lg:text-sm">
+            <div className="mb-3 text-sm font-medium md:mb-2 md:text-sm lg:mb-3 lg:text-sm">
               Company
             </div>
 
-            <ul className="space-y-2 text-sm text-muted-foreground md:space-y-1.5 md:text-xs lg:space-y-2 lg:text-sm">
+            <ul className="space-y-2 text-sm text-muted-foreground md:space-y-1.5 md:text-sm lg:space-y-2 lg:text-sm">
               <li>
                 <a href="#" className="hover:text-foreground">
                   Privacy Policy
@@ -876,11 +876,11 @@ function LandingPage() {
           </div>
 
           <div>
-            <div className="mb-3 text-sm font-medium md:mb-2 md:text-xs lg:mb-3 lg:text-sm">
+            <div className="mb-3 text-sm font-medium md:mb-2 md:text-sm lg:mb-3 lg:text-sm">
               Product
             </div>
 
-            <ul className="space-y-2 text-sm text-muted-foreground md:space-y-1.5 md:text-xs lg:space-y-2 lg:text-sm">
+            <ul className="space-y-2 text-sm text-muted-foreground md:space-y-1.5 md:text-sm lg:space-y-2 lg:text-sm">
               <li>
                 <Link to="/library" className="hover:text-foreground">
                   Library
@@ -914,11 +914,11 @@ function LandingPage() {
           </div>
 
           <div>
-            <div className="mb-3 text-sm font-medium md:mb-2 md:text-xs lg:mb-3 lg:text-sm">
+            <div className="mb-3 text-sm font-medium md:mb-2 md:text-sm lg:mb-3 lg:text-sm">
               Newsletter
             </div>
 
-            <p className="text-sm text-muted-foreground md:text-xs lg:text-sm">
+            <p className="text-sm text-muted-foreground md:text-sm lg:text-sm">
               Occasional updates on new categories and improvements.
             </p>
 
@@ -930,12 +930,12 @@ function LandingPage() {
                 type="email"
                 required
                 placeholder="you@university.edu"
-                className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring md:px-2 md:py-1.5 md:text-xs lg:px-3 lg:py-2 lg:text-sm"
+                className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring md:px-2.5 md:py-1.5 md:text-sm lg:px-3 lg:py-2 lg:text-sm"
               />
 
               <Button
                 type="submit"
-                className="w-full shrink-0 bg-gradient-emerald text-primary-foreground xl:w-auto md:h-8 md:text-xs lg:h-9 lg:text-sm"
+                className="w-full shrink-0 bg-gradient-emerald text-primary-foreground xl:w-auto md:h-9 md:text-sm lg:h-9 lg:text-sm"
               >
                 Join
               </Button>
@@ -944,8 +944,10 @@ function LandingPage() {
         </div>
 
         <div className="border-t border-border/60">
-          <div className="mx-auto flex max-w-8xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 md:px-4 md:py-4 lg:px-6 lg:py-6">
-            <p>© {new Date().getFullYear()} Aneks Library. All rights reserved.</p>
+          <div className="mx-auto flex max-w-8xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6 md:px-4 md:py-5 lg:px-6 lg:py-6">
+            <p>
+              © {new Date().getFullYear()} Aneks Library. All rights reserved.
+            </p>
             <p>Built by AneksDev Technologies.</p>
           </div>
         </div>
