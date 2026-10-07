@@ -21,6 +21,8 @@ import {
   canManageUsers,
 } from "@/lib/permissions";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ location }) => {
@@ -80,6 +82,32 @@ function AdminLayout() {
     roles.includes("admin") ||
     roles.includes("co-admin") ||
     roles.includes("staff");
+
+  const {
+    data: approvalCount = 0,
+  } = useQuery({
+    queryKey: [
+      "approval-attention-count",
+      user?.id,
+      roles,
+    ],
+    enabled: !!user,
+    queryFn: async () => {
+      const {
+        data,
+        error,
+      } = await supabase.rpc(
+        "get_approval_attention_count",
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      return data ?? 0;
+    },
+    refetchInterval: 30000,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -206,6 +234,18 @@ function AdminLayout() {
                 <span className="min-w-0 truncate">
                   {tab.label}
                 </span>
+
+                {tab.to === "/admin/approvals" &&
+                approvalCount > 0 ? (
+                  <span
+                    className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-gold px-1 text-[10px] font-semibold text-gold-foreground sm:ml-0"
+                    aria-label={`${approvalCount} pending approval items`}
+                  >
+                    {approvalCount > 99
+                      ? "99+"
+                      : approvalCount}
+                  </span>
+                ) : null}
               </Link>
             );
           })}

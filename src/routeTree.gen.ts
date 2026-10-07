@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminApprovalsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin.resources'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAnnouncementsIndexRouteImport } from './routes/_authenticated/announcements.index'
 import { Route as AuthenticatedAnnouncementsAnnouncementIdRouteImport } from './routes/_authenticated/announcements.$announcementId'
 import { Route as AuthenticatedPreviewResourceIdRouteImport } from './routes/_authenticated/preview.$resourceId'
 import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile.index'
@@ -185,6 +186,12 @@ const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAnnouncementsIndexRoute =
+  AuthenticatedAnnouncementsIndexRouteImport.update({
+    id: '/announcements/',
+    path: '/announcements/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAnnouncementsAnnouncementIdRoute =
   AuthenticatedAnnouncementsAnnouncementIdRouteImport.update({
     id: '/announcements/$announcementId',
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/academic/': typeof AuthenticatedAcademicIndexRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/profile/': typeof AuthenticatedProfileIndexRoute
   '/upload/': typeof AuthenticatedUploadIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
@@ -297,6 +305,7 @@ export interface FileRoutesByTo {
   '/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/academic': typeof AuthenticatedAcademicIndexRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/announcements': typeof AuthenticatedAnnouncementsIndexRoute
   '/profile': typeof AuthenticatedProfileIndexRoute
   '/upload': typeof AuthenticatedUploadIndexRoute
   '/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
@@ -335,6 +344,7 @@ export interface FileRoutesById {
   '/_authenticated/upload/$draftId': typeof AuthenticatedUploadDraftIdRoute
   '/_authenticated/academic/': typeof AuthenticatedAcademicIndexRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/announcements/': typeof AuthenticatedAnnouncementsIndexRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
   '/_authenticated/upload/': typeof AuthenticatedUploadIndexRoute
   '/_authenticated/admin/users/$userId': typeof AuthenticatedAdminUsersUserIdRoute
@@ -373,6 +383,7 @@ export interface FileRouteTypes {
     | '/upload/$draftId'
     | '/academic/'
     | '/admin/'
+    | '/announcements/'
     | '/profile/'
     | '/upload/'
     | '/admin/users/$userId'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/upload/$draftId'
     | '/academic'
     | '/admin'
+    | '/announcements'
     | '/profile'
     | '/upload'
     | '/admin/users/$userId'
@@ -442,6 +454,7 @@ export interface FileRouteTypes {
     | '/_authenticated/upload/$draftId'
     | '/_authenticated/academic/'
     | '/_authenticated/admin/'
+    | '/_authenticated/announcements/'
     | '/_authenticated/profile/'
     | '/_authenticated/upload/'
     | '/_authenticated/admin/users/$userId'
@@ -652,6 +665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/announcements/': {
+      id: '/_authenticated/announcements/'
+      path: '/announcements'
+      fullPath: '/announcements/'
+      preLoaderRoute: typeof AuthenticatedAnnouncementsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/announcements/$announcementId': {
       id: '/_authenticated/announcements/$announcementId'
       path: '/announcements/$announcementId'
@@ -788,6 +808,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnnouncementsAnnouncementIdRoute: typeof AuthenticatedAnnouncementsAnnouncementIdRoute
   AuthenticatedPreviewResourceIdRoute: typeof AuthenticatedPreviewResourceIdRoute
   AuthenticatedProfileUserIdRoute: typeof AuthenticatedProfileUserIdRoute
+  AuthenticatedAnnouncementsIndexRoute: typeof AuthenticatedAnnouncementsIndexRoute
   AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
 }
 
@@ -806,6 +827,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedAnnouncementsAnnouncementIdRoute,
   AuthenticatedPreviewResourceIdRoute: AuthenticatedPreviewResourceIdRoute,
   AuthenticatedProfileUserIdRoute: AuthenticatedProfileUserIdRoute,
+  AuthenticatedAnnouncementsIndexRoute: AuthenticatedAnnouncementsIndexRoute,
   AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
 }
 

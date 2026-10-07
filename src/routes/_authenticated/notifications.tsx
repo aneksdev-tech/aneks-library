@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   useMutation,
   useQuery,
@@ -6,12 +6,16 @@ import {
 } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Check, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  CheckCheck,
+  Loader2,
+} from "lucide-react";
 import { EmptyState } from "./dashboard";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/notifications")({
+export const Route = createFileRoute(
+  "/_authenticated/notifications",
+)({
   head: () => ({
     meta: [
       { title: "Notifications | Aneks Library" },
@@ -25,43 +29,73 @@ function Notifications() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["notifications", user?.id],
+  const {
+    data,
+    isLoading,
+  } = useQuery({
+    queryKey: [
+      "notifications",
+      user?.id,
+    ],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const {
+        data,
+        error,
+      } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
+        .order("created_at", {
+          ascending: false,
+        })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return data ?? [];
     },
   });
 
-  const unreadCount = data?.filter((n) => !n.read).length ?? 0;
+  const unreadCount =
+    data?.filter(
+      (n) => !n.read,
+    ).length ?? 0;
 
   const markRead = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
+    mutationFn: async (
+      notificationId: string,
+    ) => {
+      const {
+        error,
+      } = await supabase
         .from("notifications")
-        .update({ read: true })
+        .update({
+          read: true,
+        })
         .eq("id", notificationId)
         .eq("user_id", user!.id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
     },
 
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["notifications", user?.id],
+        queryKey: [
+          "notifications",
+          user?.id,
+        ],
       });
 
       qc.invalidateQueries({
-        queryKey: ["notif-count", user?.id],
+        queryKey: [
+          "notif-count",
+          user?.id,
+        ],
       });
     },
 
@@ -72,24 +106,38 @@ function Notifications() {
 
   const markAll = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
+      const {
+        error,
+      } = await supabase
         .from("notifications")
-        .update({ read: true })
+        .update({
+          read: true,
+        })
         .eq("user_id", user!.id)
         .eq("read", false);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
     },
 
     onSuccess: () => {
-      toast.success("All notifications marked as read.");
+      toast.success(
+        "All notifications marked as read.",
+      );
 
       qc.invalidateQueries({
-        queryKey: ["notifications", user?.id],
+        queryKey: [
+          "notifications",
+          user?.id,
+        ],
       });
 
       qc.invalidateQueries({
-        queryKey: ["notif-count", user?.id],
+        queryKey: [
+          "notif-count",
+          user?.id,
+        ],
       });
     },
 
@@ -98,14 +146,10 @@ function Notifications() {
     },
   });
 
-  const handleNotificationClick = (notificationId: string) => {
-    markRead.mutate(notificationId);
-  };
-
   return (
     <div className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+      <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-gold sm:text-xs">
             Notifications
@@ -122,149 +166,172 @@ function Notifications() {
               </span>
             )}
           </div>
+
+          <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+            Updates about your uploads, account, and activity.
+          </p>
         </div>
 
         {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={markAll.isPending}
-            onClick={() => markAll.mutate()}
-            className="h-8 self-start text-xs sm:h-9 sm:self-auto sm:text-sm"
+          <button
+            type="button"
+            className="mb-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
+            disabled={
+              markAll.isPending
+            }
+            onClick={() =>
+              markAll.mutate()
+            }
           >
-            <Check className="mr-1.5 h-3.5 w-3.5" />
-            {markAll.isPending ? "Marking…" : "Mark all read"}
-          </Button>
+            <CheckCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+
+            {markAll.isPending
+              ? "Marking…"
+              : "Mark all as read"}
+          </button>
         )}
       </div>
 
       {/* Notification list */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-        {isLoading ? (
-          <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
+      {isLoading ? (
+        <div className="grid min-h-[30vh] place-items-center">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+            <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
             Loading notifications…
           </div>
-        ) : data && data.length ? (
-          <ul className="divide-y divide-border">
-            {data.map((n) => {
-              const isRejected =
-                n.title === "Resource rejected" ||
-                n.title === "Upload rejected";
+        </div>
+      ) : data && data.length ? (
+        <div className="divide-y divide-border border-y border-border">
+          {data.map((n) => {
+            const isRejected =
+              n.title ===
+                "Resource rejected" ||
+              n.title ===
+                "Upload rejected";
 
-              const body = n.body ?? "";
+            const isApproved =
+              n.title ===
+                "Resource approved" ||
+              n.title ===
+                "Upload approved";
 
-              let mainMessage = body;
-              let rejectionReason: string | null = null;
+            const body =
+              n.body ?? "";
 
-              if (isRejected) {
-                const reasonMarker = " Reason: ";
-                const reasonIndex = body.indexOf(reasonMarker);
+            let mainMessage = body;
+            let rejectionReason:
+              | string
+              | null = null;
 
-                if (reasonIndex !== -1) {
-                  mainMessage = body.slice(0, reasonIndex);
-                  rejectionReason = body.slice(
-                    reasonIndex + reasonMarker.length,
+            if (isRejected) {
+              const reasonMarker =
+                " Reason: ";
+
+              const reasonIndex =
+                body.indexOf(
+                  reasonMarker,
+                );
+
+              if (reasonIndex !== -1) {
+                mainMessage =
+                  body.slice(
+                    0,
+                    reasonIndex,
                   );
-                }
-              }
 
-              const notificationContent = (
-                <div
-                  className={`p-3.5 transition-colors sm:p-5 ${
-                    n.read
-                      ? "opacity-65"
-                      : "bg-primary/[0.03] hover:bg-primary/[0.05]"
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="min-w-0">
-                      <p
-                        className={`text-sm sm:text-base ${
-                          !n.read ? "font-semibold" : "font-medium"
-                        }`}
-                      >
-                        {n.title}
-                      </p>
+                rejectionReason =
+                  body.slice(
+                    reasonIndex +
+                      reasonMarker.length,
+                  );
+              }
+            }
+
+            if (isApproved) {
+              mainMessage = body.replace(
+                /\.\s*$/,
+                " and added to the library.",
+              );
+            }
+
+            return (
+              <div
+                key={n.id}
+              >
+                <div className="group py-4 sm:py-5">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-baseline gap-2">
+                        <p
+                          className={`min-w-0 flex-1 font-display text-base leading-snug sm:text-lg ${
+                            !n.read
+                              ? "font-semibold"
+                              : "font-medium"
+                          }`}
+                        >
+                          {n.title}
+                        </p>
+
+                        {!n.read && (
+                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gold sm:text-xs">
+                            New
+                          </span>
+                        )}
+                      </div>
 
                       {mainMessage && (
-                        <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
+                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
                           {mainMessage}
                         </p>
                       )}
 
-                      {isRejected && rejectionReason && (
-                        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
-                          <span className="font-medium text-foreground">
-                            Reason:
-                          </span>{" "}
-                          {rejectionReason}
-                        </p>
-                      )}
-
-                      <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-                        {new Date(n.created_at).toLocaleString()}
-                      </p>
-                    </div>
-
-                    {(n.link || !n.read) && (
-                      <div className="mt-2.5 flex items-center gap-3 sm:mt-3">
-                        {n.link && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary sm:text-xs">
-                            Open notification
-                            <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </span>
+                      {isRejected &&
+                        rejectionReason && (
+                          <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+                            <span className="font-medium text-foreground">
+                              Reason:
+                            </span>{" "}
+                            {rejectionReason}
+                          </p>
                         )}
+
+                      <div className="mt-1.5 flex items-center justify-between gap-2 sm:mt-2">
+                        <p className="min-w-0 text-[10px] text-muted-foreground sm:text-xs">
+                          {new Date(
+                            n.created_at,
+                          ).toLocaleString()}
+                        </p>
 
                         {!n.read && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={markRead.isPending}
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              markRead.mutate(n.id);
-                            }}
-                            className="h-7 shrink-0 px-1.5 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
+                          <button
+                            type="button"
+                            className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
+                            disabled={
+                              markRead.isPending
+                            }
+                            onClick={() =>
+                              markRead.mutate(
+                                n.id,
+                              )
+                            }
                           >
-                            <Check className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            Read
-                          </Button>
+                            Mark as read
+                          </button>
                         )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              );
-
-              return (
-                <li key={n.id}>
-                  {n.link ? (
-                    <Link
-                      to={n.link}
-                      onClick={() => {
-                        if (!n.read) {
-                          handleNotificationClick(n.id);
-                        }
-                      }}
-                      className="block outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
-                    >
-                      {notificationContent}
-                    </Link>
-                  ) : (
-                    notificationContent
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <EmptyState
-            title="You're all caught up"
-            desc="Notifications about your uploads and account will appear here."
-          />
-        )}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState
+          title="You're all caught up"
+          desc="Notifications about your uploads and account will appear here."
+        />
+      )}
     </div>
   );
-  }
+}

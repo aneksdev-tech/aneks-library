@@ -19,6 +19,7 @@ import {
   User,
   GraduationCap,
   FileCheck2,
+  Megaphone,
   Shield,
   X,
 } from "lucide-react";
@@ -80,6 +81,11 @@ const NAV: NavItem[] = [
     to: "/notifications",
     icon: Bell,
     label: "Notifications",
+  },
+  {
+    to: "/announcements",
+    icon: Megaphone,
+    label: "Announcements",
   },
   {
     to: "/profile",
@@ -174,6 +180,68 @@ export function AppShell({
     refetchInterval: 30000,
   });
 
+  const {
+    data: notificationCount = 0,
+  } = useQuery({
+    queryKey: [
+      "notif-count",
+      user?.id,
+    ],
+    enabled: !!user,
+    queryFn: async () => {
+      const {
+        count,
+        error,
+      } = await supabase
+        .from("notifications")
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
+        .eq(
+          "user_id",
+          user!.id,
+        )
+        .eq(
+          "read",
+          false,
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      return count ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
+  const {
+    data: announcementCount = 0,
+  } = useQuery({
+    queryKey: [
+      "announcement-count",
+      user?.id,
+    ],
+    enabled: !!user,
+    queryFn: async () => {
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_unread_announcement_count",
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      return data ?? 0;
+    },
+    refetchInterval: 30000,
+  });
+
   const items =
     NAV.filter((n) => {
       if (n.admin) {
@@ -202,7 +270,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh w-full bg-background text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-46 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
+      <aside className="hidden w-50 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
         <Link
           to="/"
           className="flex items-center gap-0.5 px-4 py-6"
@@ -222,6 +290,12 @@ export function AppShell({
           items={items}
           pathname={pathname}
           attentionCount={attentionCount}
+          notificationCount={
+            notificationCount
+          }
+          announcementCount={
+            announcementCount
+          }
         />
       </aside>
 
@@ -235,40 +309,49 @@ export function AppShell({
             }
           />
 
-          <aside className="absolute inset-y-0 left-0 flex w-38 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant">
+          <aside className="absolute inset-y-0 left-0 flex w-46 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-elegant sm:w-[11.5rem]">
             <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-3">
-  <Link
-  to="/"
-  onClick={() => setMobileOpen(false)}
-  className="flex min-w-0 items-center"
->
-  <img
-    src={logo}
-    alt="Aneks Library"
-    className="h-5 w-5 shrink-0 rounded-lg object-contain"
-  />
+              <Link
+                to="/"
+                onClick={() =>
+                  setMobileOpen(false)
+                }
+                className="flex min-w-0 items-center"
+              >
+                <img
+                  src={logo}
+                  alt="Aneks Library"
+                  className="h-5 w-5 shrink-0 rounded-lg object-contain"
+                />
 
-  <span className="-ml-1 truncate font-display text-[9px] font-semibold tracking-tight">
-    <span className="text-gold">neks</span> Library
-  </span>
-</Link>
+                <span className="-ml-1 truncate font-display text-[9px] font-semibold tracking-tight">
+                  <span className="text-gold">neks</span>{" "}
+                  Library
+                </span>
+              </Link>
 
-  <button
-    onClick={() =>
-      setMobileOpen(false)
-    }
-    aria-label="Close menu"
-    className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-  >
-    <X className="h-5 w-5" />
-  </button>
-</div>
+              <button
+                onClick={() =>
+                  setMobileOpen(false)
+                }
+                aria-label="Close menu"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
 
             <SidebarNav
               items={items}
               pathname={pathname}
               attentionCount={
                 attentionCount
+              }
+              notificationCount={
+                notificationCount
+              }
+              announcementCount={
+                announcementCount
               }
               onNavigate={() =>
                 setMobileOpen(false)
@@ -292,7 +375,9 @@ export function AppShell({
           </button>
 
           <div className="ml-auto flex items-center gap-2">
-            <NotificationBell />
+            <NotificationBell
+              count={notificationCount}
+            />
 
             <button
               onClick={toggle}
@@ -387,11 +472,15 @@ function SidebarNav({
   pathname,
   onNavigate,
   attentionCount,
+  notificationCount,
+  announcementCount,
 }: {
   items: NavItem[];
   pathname: string;
   onNavigate?: () => void;
   attentionCount: number;
+  notificationCount: number;
+  announcementCount: number;
 }) {
   return (
     <nav className="flex-1 space-y-1 overflow-y-auto p-2 md:p-3">
@@ -414,6 +503,14 @@ function SidebarNav({
             item.academic) &&
           attentionCount > 0;
 
+        const showNotificationBadge =
+          item.to === "/notifications" &&
+          notificationCount > 0;
+
+        const showAnnouncementBadge =
+          item.to === "/announcements" &&
+          announcementCount > 0;
+
         return (
           <Link
             key={item.to}
@@ -428,7 +525,7 @@ function SidebarNav({
           >
             <item.icon className="h-4 w-4 shrink-0" />
 
-            <span className="min-w-0 flex-1 text-xs md:text-sm">
+            <span className="min-w-0 flex-1 text-xs">
               {item.label}
             </span>
 
@@ -442,6 +539,28 @@ function SidebarNav({
                   : attentionCount}
               </span>
             ) : null}
+
+            {showNotificationBadge ? (
+              <span
+                className="ml-auto grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[9px] font-semibold text-gold-foreground md:h-5 md:min-w-5 md:text-[10px]"
+                aria-label={`${notificationCount} unread notifications`}
+              >
+                {notificationCount > 99
+                  ? "99+"
+                  : notificationCount}
+              </span>
+            ) : null}
+
+            {showAnnouncementBadge ? (
+              <span
+                className="ml-auto grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[9px] font-semibold text-gold-foreground md:h-5 md:min-w-5 md:text-[10px]"
+                aria-label={`${announcementCount} unread announcements`}
+              >
+                {announcementCount > 99
+                  ? "99+"
+                  : announcementCount}
+              </span>
+            ) : null}
           </Link>
         );
       })}
@@ -449,45 +568,11 @@ function SidebarNav({
   );
 }
 
-function NotificationBell() {
-  const { user } =
-    useAuth();
-
-  const { data } =
-    useQuery({
-      queryKey: [
-        "notif-count",
-        user?.id,
-      ],
-      enabled: !!user,
-      queryFn: async () => {
-        const {
-          count,
-          error,
-        } = await supabase
-          .from("notifications")
-          .select("id", {
-            count: "exact",
-            head: true,
-          })
-          .eq(
-            "user_id",
-            user!.id,
-          )
-          .eq(
-            "read",
-            false,
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        return count ?? 0;
-      },
-      refetchInterval: 30000,
-    });
-
+function NotificationBell({
+  count,
+}: {
+  count: number;
+}) {
   return (
     <Link
       to="/notifications"
@@ -496,12 +581,11 @@ function NotificationBell() {
     >
       <Bell className="h-4 w-4" />
 
-      {data &&
-      data > 0 ? (
+      {count > 0 ? (
         <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-gold px-1 text-[10px] font-semibold text-gold-foreground">
-          {data > 9
+          {count > 9
             ? "9+"
-            : data}
+            : count}
         </span>
       ) : null}
     </Link>
