@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ExternalLink,
@@ -25,6 +25,7 @@ export const Route = createFileRoute(
 
 function AnnouncementDetailsPage() {
   const { announcementId } = Route.useParams();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["announcement", announcementId],
@@ -78,11 +79,27 @@ function AnnouncementDetailsPage() {
           "Failed to mark announcement as read:",
           error,
         );
+
+        return;
       }
+
+      await queryClient.invalidateQueries({
+        queryKey: [
+          "announcements",
+          user.id,
+        ],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: [
+          "announcement-count",
+          user.id,
+        ],
+      });
     };
 
     markAsRead();
-  }, [data]);
+  }, [data, queryClient]);
 
   if (isLoading) {
     return (
@@ -144,8 +161,8 @@ function AnnouncementDetailsPage() {
           </div>
 
           <h1 className="mt-2 font-display text-base font-semibold leading-tight sm:mt-3 sm:text-2xl">
-          {data.title}
-        </h1>
+            {data.title}
+          </h1>
 
           <p className="mt-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
             {data.body}
