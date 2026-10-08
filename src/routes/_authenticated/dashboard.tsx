@@ -2,14 +2,20 @@ import {
   createFileRoute,
   Link,
 } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import {
   ArrowUpRight,
   Bookmark,
   Download,
+  Edit3,
   FileCheck2,
+  Loader2,
+  Trash2,
   Upload,
   TrendingUp,
 } from "lucide-react";
@@ -22,6 +28,18 @@ import {
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { AnnouncementPopup } from "@/components/AnnouncementPopup";
 import type { ReactNode } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute(
   "/_authenticated/dashboard",
@@ -52,6 +70,18 @@ type RecentUpload = {
 function DashboardPage() {
   const { profile, user, roles } =
     useAuth();
+
+  const queryClient =
+    useQueryClient();
+
+  const [pendingDelete, setPendingDelete] =
+    useState<{
+      id: string;
+      title: string;
+    } | null>(null);
+
+  const [deletingDraftId, setDeletingDraftId] =
+    useState<string | null>(null);
 
   const { data: stats } =
     useQuery({
@@ -169,6 +199,137 @@ function DashboardPage() {
           []) as unknown as RecentUpload[];
       },
     });
+
+  const handleDeleteDraft =
+    async () => {
+      if (
+        !user ||
+        !pendingDelete
+      ) {
+        return;
+      }
+
+      const draftId =
+        pendingDelete.id;
+
+      setDeletingDraftId(
+        draftId,
+      );
+
+      try {
+        const {
+          data: draft,
+          error: draftError,
+        } = await supabase
+          .from("resources")
+          .select(
+            "id, file_path",
+          )
+          .eq("id", draftId)
+          .eq(
+            "uploader_id",
+            user.id,
+          )
+          .eq("status", "draft")
+          .maybeSingle();
+
+        if (draftError) {
+          throw draftError;
+        }
+
+        if (!draft) {
+          throw new Error(
+            "Draft not found.",
+          );
+        }
+
+        if (draft.file_path) {
+          const {
+            error: storageError,
+          } =
+            await supabase.storage
+              .from("resources")
+              .remove([
+                draft.file_path,
+              ]);
+
+          if (storageError) {
+            throw storageError;
+          }
+        }
+
+        const {
+          data: deletedDraft,
+          error: deleteError,
+        } =
+          await supabase
+            .from("resources")
+            .delete()
+            .eq("id", draftId)
+            .eq(
+              "uploader_id",
+              user.id,
+            )
+            .eq("status", "draft")
+            .select("id")
+            .maybeSingle();
+
+        if (deleteError) {
+          throw deleteError;
+        }
+
+        if (!deletedDraft) {
+          throw new Error(
+            "Draft could not be deleted. It may no longer exist or may have changed.",
+          );
+        }
+
+        await Promise.all([
+          queryClient.invalidateQueries(
+            {
+              queryKey: [
+                "recent-uploads",
+                user.id,
+              ],
+            },
+          ),
+          queryClient.invalidateQueries(
+            {
+              queryKey: [
+                "dash-stats",
+                user.id,
+              ],
+            },
+          ),
+          queryClient.invalidateQueries(
+            {
+              queryKey: [
+                "my-uploads",
+                user.id,
+              ],
+            },
+          ),
+        ]);
+
+        toast.success(
+          "Draft deleted successfully.",
+        );
+
+        setPendingDelete(
+          null,
+        );
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to delete draft.",
+        );
+      } finally {
+        setDeletingDraftId(
+          null,
+        );
+      }
+    };
 
   const contributor =
     getContributorLevel(
@@ -334,50 +495,91 @@ function DashboardPage() {
                   }`}
                 >
                   <div className="flex items-start gap-3 sm:gap-4">
-  <div className="min-w-0 flex-1">
-    <div className="mb-1.5">
-      <StatusPill
-        status={r.status}
-      />
-    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5">
+                        <StatusPill
+                          status={r.status}
+                        />
+                      </div>
 
-    <p className="truncate text-sm font-medium sm:text-base">
-      {r.title}
-    </p>
+                      <p className="truncate text-sm font-medium sm:text-base">
+                        {r.title}
+                      </p>
 
-    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground sm:text-xs">
-      <span>
-        {categoryName}
-      </span>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground sm:text-xs">
+                        <span>
+                          {categoryName}
+                        </span>
 
-      <span>·</span>
+                        <span>·</span>
 
-      <span>
-        {r.download_count}{" "}
-        downloads
-      </span>
+                        <span>
+                          {r.download_count}{" "}
+                          downloads
+                        </span>
 
-      <span>·</span>
+                        <span>·</span>
 
-      <span>
-        {new Date(
-          r.created_at,
-        ).toLocaleDateString()}
-      </span>
-    </div>
+                        <span>
+                          {new Date(
+                            r.created_at,
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
 
-    {r.status ===
-      "rejected" &&
-      r.rejection_reason && (
-        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
-          <span className="font-medium text-foreground">
-            Reason:
-          </span>{" "}
-          {r.rejection_reason}
-        </p>
-      )}
-  </div>
-</div>
+                      {r.status ===
+                        "rejected" &&
+                        r.rejection_reason && (
+                          <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+                            <span className="font-medium text-foreground">
+                              Reason:
+                            </span>{" "}
+                            {r.rejection_reason}
+                          </p>
+                        )}
+                    </div>
+
+                    {r.status ===
+                      "draft" && (
+                      <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:gap-2">
+                        <Link
+                          to="/upload/$draftId"
+                          params={{
+                            draftId:
+                              r.id,
+                          }}
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          Edit draft
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPendingDelete(
+                              {
+                                id: r.id,
+                                title: r.title,
+                              },
+                            )
+                          }
+                          disabled={
+                            deletingDraftId ===
+                            r.id
+                          }
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+
+                          {deletingDraftId ===
+                          r.id
+                            ? "Deleting…"
+                            : "Delete draft"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </li>
               );
             })}
@@ -401,6 +603,69 @@ function DashboardPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={
+          pendingDelete !== null
+        }
+        onOpenChange={(open) => {
+          if (
+            !open &&
+            !deletingDraftId
+          ) {
+            setPendingDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete draft?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-sm">
+              Delete{" "}
+              <strong>
+                {pendingDelete?.title}
+              </strong>
+              ? This will permanently
+              remove the draft and its
+              attached file. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel
+              disabled={
+                deletingDraftId !==
+                null
+              }
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleDeleteDraft();
+              }}
+              disabled={
+                deletingDraftId !==
+                null
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingDraftId !==
+                null && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
+              )}
+
+              Delete draft
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -411,13 +676,13 @@ export function StatusPill({
   status: string;
 }) {
   const styles: Record<string, string> = {
-  approved: "text-emerald-500",
-  pending: "text-amber-500",
-  rejected: "text-red-500",
-  draft: "text-muted-foreground",
-  archived: "text-red-500",
-  deleted: "text-red-500",
-};
+    approved: "text-emerald-500",
+    pending: "text-amber-500",
+    rejected: "text-red-500",
+    draft: "text-muted-foreground",
+    archived: "text-red-500",
+    deleted: "text-red-500",
+  };
 
   const labels: Record<
     string,
@@ -433,12 +698,13 @@ export function StatusPill({
 
   return (
     <span
-  className={`text-xs font-medium ${
-    styles[status] ?? "text-muted-foreground"
-  }`}
->
-  {labels[status] ?? status}
-</span>
+      className={`text-xs font-medium ${
+        styles[status] ??
+        "text-muted-foreground"
+      }`}
+    >
+      {labels[status] ?? status}
+    </span>
   );
 }
 
