@@ -774,7 +774,7 @@ function Approvals() {
                 {pendingUsers &&
                   pendingUsers.length >
                     0 && (
-                    <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-muted px-1 py-0.5 text-[9px] font-semibold text-muted-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]">
+                    <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]">
                       {
                         pendingUsers.length
                       }
@@ -807,7 +807,7 @@ function Approvals() {
 
               {data &&
                 data.length > 0 && (
-                  <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-muted px-1 py-0.5 text-[9px] font-semibold text-muted-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]">
+                  <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]">
                     {data.length}
                   </span>
                 )}
@@ -820,21 +820,6 @@ function Approvals() {
           "users" &&
           canApproveUsers && (
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
-              <div className="border-b border-border px-3.5 py-3.5 sm:px-5 sm:py-4">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <UserRound className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-
-                  <div>
-                    <h2 className="text-xs font-semibold text-foreground sm:text-sm">
-                      Pending User Accounts
-                    </h2>
-
-                    <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
-                      Review newly registered accounts before granting access.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {pendingUsersLoading ? (
                 <div className="p-7 text-center text-xs text-muted-foreground sm:p-8 sm:text-sm">

@@ -3,7 +3,11 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   useMutation,
   useQuery,
@@ -13,10 +17,11 @@ import {
   Check,
   CheckCircle2,
   Clock3,
-  GraduationCap,
   Eye,
   FileText,
+  GraduationCap,
   Loader2,
+  Search,
   X,
   XCircle,
 } from "lucide-react";
@@ -37,6 +42,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  colleges,
+  levels,
+  semesters,
+  getDepartments,
+  ALL_OPTION,
+} from "@/lib/academicData";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute(
   "/_authenticated/academic/",
@@ -116,13 +135,16 @@ type Resource = {
   file_name: string;
   file_size: number;
   course_code: string | null;
+  college: string | null;
   department: string | null;
   level: string | null;
+  semester: string | null;
   year: number | null;
   created_at: string;
   status: ResourceStatus;
   uploader_id: string;
   category?: {
+    id?: string | null;
     name?: string;
     deleted_at?: string | null;
   } | null;
@@ -169,6 +191,29 @@ function AcademicApprovals() {
 
   const [decisionReason, setDecisionReason] =
     useState("");
+
+  const [searchQuery, setSearchQuery] =
+    useState("");
+
+  const [collegeFilter, setCollegeFilter] =
+    useState(ALL_OPTION);
+
+  const [departmentFilter, setDepartmentFilter] =
+    useState(ALL_OPTION);
+
+  const [levelFilter, setLevelFilter] =
+    useState(ALL_OPTION);
+
+  const [semesterFilter, setSemesterFilter] =
+    useState(ALL_OPTION);
+
+  const [categoryFilter, setCategoryFilter] =
+    useState(ALL_OPTION);
+
+  const departments =
+    collegeFilter === ALL_OPTION
+      ? []
+      : getDepartments(collegeFilter);
 
   /*
    * Keep the page reactive if the lecturer's role
@@ -228,13 +273,15 @@ function AcademicApprovals() {
             file_name,
             file_size,
             course_code,
+            college,
             department,
             level,
+            semester,
             year,
             created_at,
             status,
             uploader_id,
-            category:categories(name, deleted_at)
+            category:categories(id, name, deleted_at)
           `,
         )
         .eq(
@@ -308,6 +355,144 @@ function AcademicApprovals() {
       );
     },
   });
+
+  const {
+    data: cats,
+  } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const {
+        data: categories,
+        error,
+      } = await supabase
+        .from("categories")
+        .select("id, name, slug")
+        .is("deleted_at", null)
+        .order("sort_order");
+
+      if (error) {
+        throw error;
+      }
+
+      return categories ?? [];
+    },
+  });
+
+  const filteredResources = useMemo(() => {
+    const normalizedSearch =
+      searchQuery.trim().toLowerCase();
+
+    return (data ?? []).filter(
+      (resource) => {
+        const categoryId =
+          resource.category?.id ??
+          ALL_OPTION;
+
+        const categoryName =
+          resource.category
+            ?.deleted_at == null
+            ? resource.category?.name?.trim() ??
+              ""
+            : "";
+
+        const matchesSearch =
+          !normalizedSearch ||
+          [
+            resource.title,
+            resource.file_name,
+            resource.description,
+            resource.course_code,
+            resource.college,
+            resource.department,
+            resource.level,
+            resource.semester,
+            resource.year,
+            categoryName,
+            resource.uploader
+              ?.full_name,
+            resource.uploader
+              ?.email,
+          ]
+            .filter(
+              (value) =>
+                value !== null &&
+                value !== undefined &&
+                value !== "",
+            )
+            .some((value) =>
+              String(value)
+                .toLowerCase()
+                .includes(
+                  normalizedSearch,
+                ),
+            );
+
+        const matchesCollege =
+          collegeFilter ===
+            ALL_OPTION ||
+          resource.college ===
+            collegeFilter;
+
+        const matchesDepartment =
+          departmentFilter ===
+            ALL_OPTION ||
+          resource.department ===
+            departmentFilter;
+
+        const matchesLevel =
+          levelFilter ===
+            ALL_OPTION ||
+          resource.level ===
+            levelFilter;
+
+        const matchesSemester =
+          semesterFilter ===
+            ALL_OPTION ||
+          resource.semester ===
+            semesterFilter;
+
+        const matchesCategory =
+          categoryFilter ===
+            ALL_OPTION ||
+          categoryId ===
+            categoryFilter;
+
+        return (
+          matchesSearch &&
+          matchesCollege &&
+          matchesDepartment &&
+          matchesLevel &&
+          matchesSemester &&
+          matchesCategory
+        );
+      },
+    );
+  }, [
+    data,
+    searchQuery,
+    collegeFilter,
+    departmentFilter,
+    levelFilter,
+    semesterFilter,
+    categoryFilter,
+  ]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    collegeFilter !== ALL_OPTION ||
+    departmentFilter !== ALL_OPTION ||
+    levelFilter !== ALL_OPTION ||
+    semesterFilter !== ALL_OPTION ||
+    categoryFilter !== ALL_OPTION;
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCollegeFilter(ALL_OPTION);
+    setDepartmentFilter(ALL_OPTION);
+    setLevelFilter(ALL_OPTION);
+    setSemesterFilter(ALL_OPTION);
+    setCategoryFilter(ALL_OPTION);
+  };
 
   const decide = useMutation({
     mutationFn: async (v: {
@@ -524,42 +709,287 @@ function AcademicApprovals() {
     <>
       <section className="space-y-5 sm:space-y-6">
         {/* Header */}
-        <div>
-          <div className="mb-2.5 flex items-center gap-1.5 text-xs text-muted-foreground sm:mb-3 sm:gap-2 sm:text-sm">
-            <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span>Academic Workspace</span>
-          </div>
+        <section>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold sm:text-xs sm:tracking-[0.22em]">
+            Academic
+          </p>
 
-          <div className="mt-1.5 sm:mt-2">
-            <h1 className="text-lg font-semibold tracking-tight sm:text-3xl">
-              Resource Approvals
-            </h1>
+          <h1 className="mt-1 font-display text-lg font-semibold tracking-tight sm:mt-2 sm:text-3xl">
+            Resource Approvals
+          </h1>
 
-            <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-base sm:leading-normal">
-              Review academic resources submitted to Aneks Library and
-              approve or reject them based on their content and quality.
-            </p>
-          </div>
-        </div>
+          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-base sm:leading-normal">
+            Review academic resources submitted to Aneks Library and
+            approve or reject them based on their content and quality.
+          </p>
+        </section>
 
-        {/* Queue summary */}
+        {/* Pending resources */}
         <div className="flex items-center gap-2.5 border-b border-border pb-3 sm:gap-3 sm:pb-4">
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-muted sm:h-9 sm:w-9">
             <Clock3 className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
           </div>
 
           <div className="min-w-0">
-            <p className="text-xs font-semibold sm:text-sm">
-              Pending Resources
-            </p>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <p className="text-xs font-semibold sm:text-sm">
+                Pending Resources
+              </p>
+
+              <span
+                className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5"
+                aria-label={`${data?.length ?? 0} pending resources`}
+              >
+                {(data?.length ?? 0) > 99
+                  ? "99+"
+                  : data?.length ?? 0}
+              </span>
+            </div>
 
             <p className="text-[10px] text-muted-foreground sm:text-xs">
-              {data?.length ?? 0} resource
-              {(data?.length ?? 0) === 1
-                ? ""
-                : "s"} awaiting review
+              Resources awaiting academic review
             </p>
           </div>
+        </div>
+
+        {/* Filters */}
+        <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+          <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {/* Search */}
+            <div className="relative md:col-span-2 xl:col-span-3">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+
+              <Input
+                placeholder="Search title, course code, description…"
+                value={searchQuery}
+                onChange={(event) =>
+                  setSearchQuery(
+                    event.target.value,
+                  )
+                }
+                aria-label="Search pending resources"
+                className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+              />
+            </div>
+
+            {/* College */}
+            <Select
+              value={collegeFilter}
+              onValueChange={(value) => {
+                setCollegeFilter(value);
+                setDepartmentFilter(
+                  ALL_OPTION,
+                );
+              }}
+            >
+              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                <SelectValue placeholder="College" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem
+                  value={ALL_OPTION}
+                >
+                  All Colleges
+                </SelectItem>
+
+                {colleges.map(
+                  (college) => (
+                    <SelectItem
+                      key={college.id}
+                      value={college.id}
+                    >
+                      <>
+                        <span className="sm:hidden">
+                          {college.id}
+                        </span>
+
+                        <span className="hidden sm:inline">
+                          {college.name} (
+                          {college.id})
+                        </span>
+                      </>
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Department */}
+            <Select
+              value={departmentFilter}
+              onValueChange={
+                setDepartmentFilter
+              }
+            >
+              <SelectTrigger
+                className={`h-9 text-xs sm:h-10 sm:text-sm ${
+                  collegeFilter ===
+                  ALL_OPTION
+                    ? "opacity-60"
+                    : ""
+                }`}
+              >
+                <span>
+                  {departmentFilter ===
+                  ALL_OPTION
+                    ? "All Departments"
+                    : departmentFilter}
+                </span>
+              </SelectTrigger>
+
+              <SelectContent>
+                {collegeFilter ===
+                ALL_OPTION ? (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    Select College first
+                  </div>
+                ) : (
+                  <>
+                    <SelectItem
+                      value={ALL_OPTION}
+                    >
+                      All Departments
+                    </SelectItem>
+
+                    {departments.map(
+                      (department) => (
+                        <SelectItem
+                          key={department}
+                          value={department}
+                        >
+                          {department}
+                        </SelectItem>
+                      ),
+                    )}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Level */}
+            <Select
+              value={levelFilter}
+              onValueChange={
+                setLevelFilter
+              }
+            >
+              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                <SelectValue placeholder="Level" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem
+                  value={ALL_OPTION}
+                >
+                  All Levels
+                </SelectItem>
+
+                {levels.map(
+                  (item) => (
+                    <SelectItem
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Semester */}
+            <Select
+              value={semesterFilter}
+              onValueChange={
+                setSemesterFilter
+              }
+            >
+              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                <SelectValue placeholder="Semester" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem
+                  value={ALL_OPTION}
+                >
+                  All Semesters
+                </SelectItem>
+
+                {semesters.map(
+                  (item) => (
+                    <SelectItem
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Category */}
+            <Select
+              value={categoryFilter}
+              onValueChange={
+                setCategoryFilter
+              }
+            >
+              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem
+                  value={ALL_OPTION}
+                >
+                  All Categories
+                </SelectItem>
+
+                {cats?.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                  >
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {hasActiveFilters && (
+            <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">
+                Showing{" "}
+                <span className="font-medium text-foreground">
+                  {
+                    filteredResources.length
+                  }
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-foreground">
+                  {data?.length ?? 0}
+                </span>{" "}
+                pending{" "}
+                {(data?.length ?? 0) ===
+                1
+                  ? "resource"
+                  : "resources"}
+              </p>
+
+              <button
+                type="button"
+                onClick={
+                  clearFilters
+                }
+                className="shrink-0 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-xs"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Resource queue */}
@@ -571,10 +1001,10 @@ function AcademicApprovals() {
                 Loading review queue…
               </div>
             </div>
-          ) : data &&
-            data.length > 0 ? (
+          ) : filteredResources.length >
+            0 ? (
             <ul className="divide-y divide-border">
-              {data.map(
+              {filteredResources.map(
                 (resource) => {
                   const isProcessing =
                     decisionLoading &&
@@ -906,6 +1336,11 @@ function AcademicApprovals() {
                 },
               )}
             </ul>
+          ) : hasActiveFilters ? (
+            <EmptyState
+              title="No matching resources"
+              desc="No pending resources match the selected filters."
+            />
           ) : (
             <EmptyState
               title="No pending resources"
