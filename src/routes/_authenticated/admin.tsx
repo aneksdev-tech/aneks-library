@@ -225,7 +225,7 @@ function AdminLayout() {
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`group flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:flex-1 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
+                className={`group flex min-h-9 min-w-0 items-center justify-start gap-1 rounded-md px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:flex-1 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                   active
                     ? "bg-gradient-emerald text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
