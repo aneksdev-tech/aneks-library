@@ -205,7 +205,13 @@ function AdminLayout() {
         aria-label="Administration navigation"
         className="rounded-lg border border-border bg-card p-1 shadow-soft sm:p-1.5"
       >
-        <div className="flex gap-1">
+        <div
+          className={`grid gap-1 ${
+            tabs.length === 3
+              ? "grid-cols-3"
+              : "grid-cols-2"
+          } sm:flex sm:flex-wrap`}
+        >
           {tabs.map((tab) => {
             const active =
               tab.to === "/admin"
@@ -219,7 +225,7 @@ function AdminLayout() {
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`group flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
+                className={`group flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:flex-1 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                   active
                     ? "bg-gradient-emerald text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
