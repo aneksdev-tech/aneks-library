@@ -168,8 +168,8 @@ function AdminLayout() {
   if (user && !hasAdminWorkspaceAccess) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+          <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
           Redirecting...
         </div>
       </div>
@@ -177,24 +177,24 @@ function AdminLayout() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Admin Header */}
       <section>
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold sm:text-xs sm:tracking-[0.22em]">
             Administration
           </p>
 
-          <span className="rounded-md border border-border bg-muted/40 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <span className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-muted-foreground sm:px-2 sm:py-1 sm:text-[10px]">
             {roles[0] ?? "Member"}
           </span>
         </div>
 
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-1 font-display text-xl font-semibold tracking-tight sm:mt-2 sm:text-3xl">
           Control Room
         </h1>
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+        <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
           Manage library operations, review submissions, and maintain
           the platform from one central workspace.
         </p>
@@ -203,9 +203,9 @@ function AdminLayout() {
       {/* Admin Navigation */}
       <nav
         aria-label="Administration navigation"
-        className="rounded-lg border border-border bg-card p-1.5 shadow-soft"
+        className="rounded-lg border border-border bg-card p-1 shadow-soft sm:p-1.5"
       >
-        <div className="grid grid-cols-2 gap-1 sm:flex sm:flex-wrap">
+        <div className="flex gap-1">
           {tabs.map((tab) => {
             const active =
               tab.to === "/admin"
@@ -219,14 +219,14 @@ function AdminLayout() {
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`group flex min-h-11 min-w-0 items-center justify-start gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 sm:flex-1 sm:justify-center sm:px-4 ${
+                className={`group flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                   active
                     ? "bg-gradient-emerald text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                 }`}
               >
                 <Icon
-                  className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                  className={`h-3 w-3 shrink-0 transition-transform duration-200 sm:h-4 sm:w-4 ${
                     active ? "" : "group-hover:scale-105"
                   }`}
                 />
@@ -238,7 +238,7 @@ function AdminLayout() {
                 {tab.to === "/admin/approvals" &&
                 approvalCount > 0 ? (
                   <span
-                    className="ml-auto grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-gold px-1 text-[10px] font-semibold text-gold-foreground sm:ml-0"
+                    className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[8px] font-semibold text-gold-foreground sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
                     aria-label={`${approvalCount} pending approval items`}
                   >
                     {approvalCount > 99
