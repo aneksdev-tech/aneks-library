@@ -156,16 +156,14 @@ function AnnouncementDetailsPage() {
         className="inline-flex items-center text-xs font-medium text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
       >
         <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        Back to Announcements
+        Back
       </Link>
 
       <article className="mt-4 border-y border-border sm:mt-6">
         <div className="py-3.5 sm:py-6">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-primary sm:gap-2 sm:text-xs">
             <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            {data.is_active
-              ? "Current Announcement"
-              : "Announcement"}
+              Announcement
           </div>
 
           <h1 className="mt-2 font-display text-base font-semibold leading-tight sm:mt-3 sm:text-2xl">
