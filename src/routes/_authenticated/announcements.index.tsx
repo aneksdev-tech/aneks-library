@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   useMutation,
   useQuery,
@@ -27,7 +27,6 @@ export const Route = createFileRoute(
 
 function Announcements() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const {
     data: {
@@ -140,20 +139,88 @@ function Announcements() {
         error,
       } = await supabase
         .from("announcement_reads")
-        .insert({
-          announcement_id:
-            announcementId,
-          user_id: user.id,
-        });
+        .upsert(
+          {
+            announcement_id:
+              announcementId,
+            user_id: user.id,
+          },
+          {
+            onConflict:
+              "announcement_id,user_id",
+            ignoreDuplicates: true,
+          },
+        );
 
-      if (
-        error &&
-        error.code !== "23505"
-      ) {
+      if (error) {
         throw error;
       }
     },
-    onSuccess: () => {
+
+    onMutate: async (
+      announcementId,
+    ) => {
+      await queryClient.cancelQueries({
+        queryKey: [
+          "announcements",
+          user?.id,
+        ],
+      });
+
+      const previousAnnouncements =
+        queryClient.getQueryData(
+          [
+            "announcements",
+            user?.id,
+          ],
+        );
+
+      queryClient.setQueryData(
+        [
+          "announcements",
+          user?.id,
+        ],
+        (
+          current:
+            | typeof data
+            | undefined,
+        ) =>
+          current?.map(
+            (announcement) =>
+              announcement.id ===
+              announcementId
+                ? {
+                    ...announcement,
+                    is_read: true,
+                  }
+                : announcement,
+          ),
+      );
+
+      return {
+        previousAnnouncements,
+      };
+    },
+
+    onError: (
+      _error,
+      _announcementId,
+      context,
+    ) => {
+      if (
+        context?.previousAnnouncements
+      ) {
+        queryClient.setQueryData(
+          [
+            "announcements",
+            user?.id,
+          ],
+          context.previousAnnouncements,
+        );
+      }
+    },
+
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [
           "announcements",
@@ -184,7 +251,9 @@ function Announcements() {
             !announcement.is_read,
         ) ?? [];
 
-      if (!unreadAnnouncements.length) {
+      if (
+        !unreadAnnouncements.length
+      ) {
         return;
       }
 
@@ -192,7 +261,7 @@ function Announcements() {
         error,
       } = await supabase
         .from("announcement_reads")
-        .insert(
+        .upsert(
           unreadAnnouncements.map(
             (announcement) => ({
               announcement_id:
@@ -200,16 +269,76 @@ function Announcements() {
               user_id: user.id,
             }),
           ),
+          {
+            onConflict:
+              "announcement_id,user_id",
+            ignoreDuplicates: true,
+          },
         );
 
-      if (
-        error &&
-        error.code !== "23505"
-      ) {
+      if (error) {
         throw error;
       }
     },
-    onSuccess: () => {
+
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: [
+          "announcements",
+          user?.id,
+        ],
+      });
+
+      const previousAnnouncements =
+        queryClient.getQueryData(
+          [
+            "announcements",
+            user?.id,
+          ],
+        );
+
+      queryClient.setQueryData(
+        [
+          "announcements",
+          user?.id,
+        ],
+        (
+          current:
+            | typeof data
+            | undefined,
+        ) =>
+          current?.map(
+            (announcement) => ({
+              ...announcement,
+              is_read: true,
+            }),
+          ),
+      );
+
+      return {
+        previousAnnouncements,
+      };
+    },
+
+    onError: (
+      _error,
+      _variables,
+      context,
+    ) => {
+      if (
+        context?.previousAnnouncements
+      ) {
+        queryClient.setQueryData(
+          [
+            "announcements",
+            user?.id,
+          ],
+          context.previousAnnouncements,
+        );
+      }
+    },
+
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [
           "announcements",
@@ -231,29 +360,6 @@ function Announcements() {
       (announcement) =>
         !announcement.is_read,
     ) ?? false;
-
-  const handleAnnouncementView = async (
-    event: React.MouseEvent<HTMLAnchorElement>,
-    announcementId: string,
-    isRead: boolean,
-  ) => {
-    if (isRead) {
-      return;
-    }
-
-    event.preventDefault();
-
-    await markAsRead.mutateAsync(
-      announcementId,
-    );
-
-    await navigate({
-      to: "/announcements/$announcementId",
-      params: {
-        announcementId,
-      },
-    });
-  };
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -325,7 +431,9 @@ function Announcements() {
 
             const truncatedPreview =
               preview.length > 180
-                ? `${preview.slice(0, 180).trimEnd()}…`
+                ? `${preview
+                    .slice(0, 180)
+                    .trimEnd()}…`
                 : preview;
 
             return (
@@ -346,13 +454,15 @@ function Announcements() {
                       announcement.id,
                   }}
                   className="block min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
-                  onClick={(event) =>
-                    handleAnnouncementView(
-                      event,
-                      announcement.id,
-                      announcement.is_read,
-                    )
-                  }
+                  onClick={() => {
+                    if (
+                      !announcement.is_read
+                    ) {
+                      markAsRead.mutate(
+                        announcement.id,
+                      );
+                    }
+                  }}
                 >
                   <div className="flex min-w-0 items-baseline gap-2">
                     <h2 className="min-w-0 flex-1 font-display text-[13px] font-semibold leading-snug sm:text-lg">
@@ -388,13 +498,15 @@ function Announcements() {
                           announcement.id,
                       }}
                       className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
-                      onClick={(event) =>
-                        handleAnnouncementView(
-                          event,
-                          announcement.id,
-                          announcement.is_read,
-                        )
-                      }
+                      onClick={() => {
+                        if (
+                          !announcement.is_read
+                        ) {
+                          markAsRead.mutate(
+                            announcement.id,
+                          );
+                        }
+                      }}
                     >
                       View &gt;
                     </Link>
