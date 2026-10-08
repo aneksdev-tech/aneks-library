@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   ArrowLeft,
   ExternalLink,
@@ -28,17 +31,22 @@ function AnnouncementDetailsPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["announcement", announcementId],
+    queryKey: [
+      "announcement",
+      announcementId,
+    ],
     queryFn: async () => {
-      const { data: announcement, error: announcementError } =
-        await supabase
-          .from("announcements")
-          .select(
-            "id, title, body, content, link, is_active, deleted_at",
-          )
-          .eq("id", announcementId)
-          .is("deleted_at", null)
-          .maybeSingle();
+      const {
+        data: announcement,
+        error: announcementError,
+      } = await supabase
+        .from("announcements")
+        .select(
+          "id, title, body, content, link, is_active, deleted_at",
+        )
+        .eq("id", announcementId)
+        .is("deleted_at", null)
+        .maybeSingle();
 
       if (announcementError) {
         throw announcementError;
@@ -64,17 +72,17 @@ function AnnouncementDetailsPage() {
         return;
       }
 
-      const { error } = await supabase
-        .from("announcement_reads")
-        .insert({
-          announcement_id: data.id,
-          user_id: user.id,
-        });
+      const {
+        error,
+      } = await supabase.rpc(
+        "mark_announcement_as_read",
+        {
+          _announcement_id:
+            data.id,
+        },
+      );
 
-      if (
-        error &&
-        error.code !== "23505"
-      ) {
+      if (error) {
         console.error(
           "Failed to mark announcement as read:",
           error,
@@ -83,14 +91,14 @@ function AnnouncementDetailsPage() {
         return;
       }
 
-      await queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: [
           "announcements",
           user.id,
         ],
       });
 
-      await queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: [
           "announcement-count",
           user.id,
