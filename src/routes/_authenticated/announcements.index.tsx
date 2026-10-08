@@ -137,20 +137,13 @@ function Announcements() {
 
       const {
         error,
-      } = await supabase
-        .from("announcement_reads")
-        .upsert(
-          {
-            announcement_id:
-              announcementId,
-            user_id: user.id,
-          },
-          {
-            onConflict:
-              "announcement_id,user_id",
-            ignoreDuplicates: true,
-          },
-        );
+      } = await supabase.rpc(
+        "mark_announcement_as_read",
+        {
+          _announcement_id:
+            announcementId,
+        },
+      );
 
       if (error) {
         throw error;
@@ -220,17 +213,19 @@ function Announcements() {
       }
     },
 
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "announcement-count",
+          user?.id,
+        ],
+      });
+    },
+
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [
           "announcements",
-          user?.id,
-        ],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [
-          "announcement-count",
           user?.id,
         ],
       });
@@ -257,27 +252,21 @@ function Announcements() {
         return;
       }
 
-      const {
-        error,
-      } = await supabase
-        .from("announcement_reads")
-        .upsert(
-          unreadAnnouncements.map(
-            (announcement) => ({
-              announcement_id:
-                announcement.id,
-              user_id: user.id,
-            }),
-          ),
+      for (const announcement of
+        unreadAnnouncements) {
+        const {
+          error,
+        } = await supabase.rpc(
+          "mark_announcement_as_read",
           {
-            onConflict:
-              "announcement_id,user_id",
-            ignoreDuplicates: true,
+            _announcement_id:
+              announcement.id,
           },
         );
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
       }
     },
 
@@ -338,17 +327,19 @@ function Announcements() {
       }
     },
 
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "announcement-count",
+          user?.id,
+        ],
+      });
+    },
+
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: [
           "announcements",
-          user?.id,
-        ],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [
-          "announcement-count",
           user?.id,
         ],
       });
