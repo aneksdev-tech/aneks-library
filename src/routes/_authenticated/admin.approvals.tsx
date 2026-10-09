@@ -774,7 +774,7 @@ function Approvals() {
                 {pendingUsers &&
                   pendingUsers.length >
                     0 && (
-                    <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]">
+                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
                       {
                         pendingUsers.length
                       }
@@ -807,7 +807,7 @@ function Approvals() {
 
               {data &&
                 data.length > 0 && (
-                  <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]">
+                  <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
                     {data.length}
                   </span>
                 )}
