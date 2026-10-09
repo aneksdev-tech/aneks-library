@@ -736,13 +736,12 @@ function AcademicApprovals() {
                 Pending Resources
               </p>
 
-              <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-2 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]"
-                aria-label={`${data?.length ?? 0} pending resources`}
-              >
-                {(data?.length ?? 0) > 99
-                  ? "99+"
-                  : data?.length ?? 0}
-              </span>
+              <span
+  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]"
+  aria-label={`${data?.length ?? 0} pending resources`}
+>
+  {(data?.length ?? 0) > 99 ? "99+" : data?.length ?? 0}
+</span>
             </div>
 
             <p className="text-[10px] text-muted-foreground sm:text-xs">
