@@ -19,7 +19,6 @@ import {
   Clock3,
   Eye,
   FileText,
-  GraduationCap,
   Loader2,
   Search,
   X,
@@ -736,13 +735,15 @@ function AcademicApprovals() {
                 Pending Resources
               </p>
 
-              <span
-  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]"
-  aria-label={`${data?.length ?? 0} pending resources`}
->
-  {(data?.length ?? 0) > 99 ? "99+" : data?.length ?? 0}
-</span>
-            </div>
+                            <span
+                 className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]"
+                aria-label={`${data?.length ?? 0} pending resources`}
+              >
+                {(data?.length ?? 0) > 99
+                  ? "99+"
+                  : data?.length ?? 0}
+              </span>
+              </div>
 
             <p className="text-[10px] text-muted-foreground sm:text-xs">
               Resources awaiting academic review
@@ -769,6 +770,35 @@ function AcademicApprovals() {
                 className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
               />
             </div>
+
+            {/* Category */}
+            <Select
+              value={categoryFilter}
+              onValueChange={
+                setCategoryFilter
+              }
+            >
+              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem
+                  value={ALL_OPTION}
+                >
+                  All Categories
+                </SelectItem>
+
+                {cats?.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                  >
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* College */}
             <Select
@@ -926,35 +956,6 @@ function AcademicApprovals() {
                 )}
               </SelectContent>
             </Select>
-
-            {/* Category */}
-            <Select
-              value={categoryFilter}
-              onValueChange={
-                setCategoryFilter
-              }
-            >
-              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem
-                  value={ALL_OPTION}
-                >
-                  All Categories
-                </SelectItem>
-
-                {cats?.map((category) => (
-                  <SelectItem
-                    key={category.id}
-                    value={category.id}
-                  >
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {hasActiveFilters && (
@@ -991,7 +992,7 @@ function AcademicApprovals() {
         </div>
 
         {/* Resource queue */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-card sm:rounded-lg">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
           {isLoading ? (
             <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
               <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -1001,7 +1002,7 @@ function AcademicApprovals() {
             </div>
           ) : filteredResources.length >
             0 ? (
-            <ul className="divide-y divide-border">
+            <ul>
               {filteredResources.map(
                 (resource) => {
                   const isProcessing =
@@ -1029,7 +1030,7 @@ function AcademicApprovals() {
                       key={
                         resource.id
                       }
-                      className="group p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
+                      className="group border-b-2 border-border/70 p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
                     >
                       <div className="flex flex-col gap-3.5 sm:gap-4">
                         <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1041,7 +1042,7 @@ function AcademicApprovals() {
                                 }
                               />
 
-                              <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:text-[10px]">
+                              <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
                                 {
                                   categoryName
                                 }
@@ -1067,157 +1068,45 @@ function AcademicApprovals() {
                                 </p>
                               )}
                             </div>
-
-                            <div className="mt-2 flex flex-col gap-1 text-[10px] text-muted-foreground sm:mt-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
-                              <span>
-                                {formatFileSize(
-                                  resource.file_size,
-                                )}
-                              </span>
-
-                              {resource.course_code && (
-                                <>
-                                  <span className="hidden text-border sm:inline">
-                                    •
-                                  </span>
-
-                                  <span>
-                                    {
-                                      resource.course_code
-                                    }
-                                  </span>
-                                </>
-                              )}
-
-                              {resource.department && (
-                                <>
-                                  <span className="hidden text-border sm:inline">
-                                    •
-                                  </span>
-
-                                  <span>
-                                    {
-                                      resource.department
-                                    }
-                                  </span>
-                                </>
-                              )}
-
-                              {resource.level && (
-                                <>
-                                  <span className="hidden text-border sm:inline">
-                                    •
-                                  </span>
-
-                                  <span>
-                                    {
-                                      resource.level
-                                    }
-                                  </span>
-                                </>
-                              )}
-
-                              {resource.year && (
-                                <>
-                                  <span className="hidden text-border sm:inline">
-                                    •
-                                  </span>
-
-                                  <span>
-                                    {
-                                      resource.year
-                                    }
-                                  </span>
-                                </>
-                              )}
                             </div>
-                          </div>
-
-                          {/* Desktop actions */}
-                          <div className="hidden shrink-0 flex-wrap items-center gap-2 lg:flex lg:justify-end">
-                            {canPreview && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  decisionLoading
-                                }
-                                onClick={() =>
-                                  setPreviewResource(
-                                    {
-                                      id: resource.id,
-                                      title:
-                                        resource.title,
-                                      file_path:
-                                        resource.file_path,
-                                    },
-                                  )
-                                }
-                                className="h-9 text-xs"
-                              >
-                                <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                Preview
-                              </Button>
-                            )}
-
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                decisionLoading
-                              }
-                              onClick={() =>
-                                requestReject(
-                                  resource.id,
-                                  resource.file_path,
-                                  resource.title,
-                                )
-                              }
-                              className="h-9 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-                            >
-                              {isProcessing &&
-                              !decide
-                                .variables
-                                ?.approve ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <X className="mr-1.5 h-3.5 w-3.5" />
-                              )}
-
-                              Reject
-                            </Button>
-
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                decisionLoading
-                              }
-                              onClick={() =>
-                                requestApprove(
-                                  resource.id,
-                                  resource.file_path,
-                                  resource.title,
-                                )
-                              }
-                              className="h-9 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
-                            >
-                              {isProcessing &&
-                              decide
-                                .variables
-                                ?.approve ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Check className="mr-1.5 h-3.5 w-3.5" />
-                              )}
-
-                              Approve
-                            </Button>
-                          </div>
                         </div>
+
+<div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
+  <AuditItem
+    label="File size"
+    value={formatFileSize(resource.file_size)}
+  />
+
+  <AuditItem
+    label="Course code"
+    value={resource.course_code || "Not provided"}
+  />
+
+  <AuditItem
+    label="College"
+    value={resource.college || "Not provided"}
+  />
+
+  <AuditItem
+    label="Department"
+    value={resource.department || "Not provided"}
+  />
+
+  <AuditItem
+    label="Level"
+    value={resource.level || "Not provided"}
+  />
+
+  <AuditItem
+    label="Semester"
+    value={resource.semester || "Not provided"}
+  />
+
+  <AuditItem
+    label="Year"
+    value={resource.year?.toString() || "Not provided"}
+  />
+</div>
 
                         {/* Resource metadata */}
                         <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
@@ -1244,41 +1133,32 @@ function AcademicApprovals() {
                           />
                         </div>
 
-                        {/* Mobile/tablet actions */}
-                        <div className="flex flex-wrap items-center gap-1.5 lg:hidden">
+
+                        {/* Resource actions */}
+                        <div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-3 sm:gap-3 sm:pt-4">
                           {canPreview && (
                             <Button
                               type="button"
-                              size="sm"
                               variant="outline"
-                              disabled={
-                                decisionLoading
-                              }
+                              disabled={decisionLoading}
                               onClick={() =>
-                                setPreviewResource(
-                                  {
-                                    id: resource.id,
-                                    title:
-                                      resource.title,
-                                    file_path:
-                                      resource.file_path,
-                                  },
-                                )
+                                setPreviewResource({
+                                  id: resource.id,
+                                  title: resource.title,
+                                  file_path: resource.file_path,
+                                })
                               }
-                              className="h-8 text-[10px] sm:h-9 sm:text-xs"
+                              className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
                             >
-                              <Eye className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                              <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                               Preview
                             </Button>
                           )}
 
                           <Button
                             type="button"
-                            size="sm"
                             variant="outline"
-                            disabled={
-                              decisionLoading
-                            }
+                            disabled={decisionLoading}
                             onClick={() =>
                               requestReject(
                                 resource.id,
@@ -1286,27 +1166,21 @@ function AcademicApprovals() {
                                 resource.title,
                               )
                             }
-                            className="h-8 text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:text-xs"
+                            className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
                           >
                             {isProcessing &&
-                            !decide
-                              .variables
-                              ?.approve ? (
-                              <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                            !decide.variables?.approve ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
                             ) : (
-                              <X className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                              <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                             )}
-
                             Reject
                           </Button>
 
                           <Button
                             type="button"
-                            size="sm"
                             variant="outline"
-                            disabled={
-                              decisionLoading
-                            }
+                            disabled={decisionLoading}
                             onClick={() =>
                               requestApprove(
                                 resource.id,
@@ -1314,17 +1188,14 @@ function AcademicApprovals() {
                                 resource.title,
                               )
                             }
-                            className="h-8 text-[10px] text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:text-xs"
+                            className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
                           >
                             {isProcessing &&
-                            decide
-                              .variables
-                              ?.approve ? (
-                              <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                            decide.variables?.approve ? (
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
                             ) : (
-                              <Check className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                              <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                             )}
-
                             Approve
                           </Button>
                         </div>
@@ -1553,7 +1424,7 @@ function StatusPill({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:text-[10px]`}
+      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${item.className}`}
     >
       <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
       {item.label}
@@ -1576,12 +1447,12 @@ function AuditItem({
         {label}
       </p>
 
-      <p className="mt-0.5 font-medium text-foreground sm:mt-1">
+      <p className="mt-0.5 text-[10px] font-medium text-foreground sm:mt-1 sm:text-xs">
         {value}
       </p>
 
       {detail && (
-        <p className="mt-0.5 text-muted-foreground">
+        <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
           {detail}
         </p>
       )}

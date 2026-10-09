@@ -3,7 +3,7 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useMutation,
   useQuery,
@@ -18,12 +18,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ALL_OPTION,
+  colleges,
+  getDepartments,
+  levels,
+  semesters,
+} from "@/lib/academicData";
+import {
   Check,
   CheckCircle2,
   Clock3,
   Eye,
   FileText,
   Loader2,
+  Search,
   UserRound,
   X,
   XCircle,
@@ -129,13 +144,16 @@ type Resource = {
   file_name: string;
   file_size: number;
   course_code: string | null;
+  college: string | null;
   department: string | null;
   level: string | null;
+  semester: string | null;
   year: number | null;
   created_at: string;
   status: ResourceStatus;
   uploader_id: string;
-  category?: {
+    category?: {
+    id?: string | null;
     name?: string;
     deleted_at?: string | null;
   } | null;
@@ -280,13 +298,15 @@ function Approvals() {
             file_name,
             file_size,
             course_code,
+            college,
             department,
             level,
+            semester,
             year,
             created_at,
             status,
             uploader_id,
-            category:categories(name, deleted_at)
+            category:categories(id, name, deleted_at)
           `,
         )
         .eq(
@@ -399,6 +419,138 @@ function Approvals() {
       return (data ?? []) as PendingUser[];
     },
   });
+
+    const { data: cats } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data: categories, error } =
+        await supabase
+          .from("categories")
+          .select("id, name, slug")
+          .is("deleted_at", null)
+          .order("sort_order");
+
+      if (error) {
+        throw error;
+      }
+
+      return categories ?? [];
+    },
+  });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [collegeFilter, setCollegeFilter] =
+    useState(ALL_OPTION);
+  const [departmentFilter, setDepartmentFilter] =
+    useState(ALL_OPTION);
+  const [levelFilter, setLevelFilter] =
+    useState(ALL_OPTION);
+  const [semesterFilter, setSemesterFilter] =
+    useState(ALL_OPTION);
+  const [categoryFilter, setCategoryFilter] =
+    useState(ALL_OPTION);
+
+  const departments =
+    collegeFilter === ALL_OPTION
+      ? []
+      : getDepartments(collegeFilter);
+
+  const filteredResources = useMemo(() => {
+    const normalizedSearch =
+      searchQuery.trim().toLowerCase();
+
+    return (data ?? []).filter((resource) => {
+      const categoryId =
+        resource.category?.id ?? ALL_OPTION;
+
+      const categoryName =
+        resource.category?.deleted_at == null
+          ? resource.category?.name?.trim() ?? ""
+          : "";
+
+      const matchesSearch =
+        !normalizedSearch ||
+        [
+          resource.title,
+          resource.file_name,
+          resource.description,
+          resource.course_code,
+          resource.college,
+          resource.department,
+          resource.level,
+          resource.semester,
+          resource.year,
+          categoryName,
+          resource.uploader?.full_name,
+          resource.uploader?.email,
+        ]
+          .filter(
+            (value) =>
+              value !== null &&
+              value !== undefined &&
+              value !== "",
+          )
+          .some((value) =>
+            String(value)
+              .toLowerCase()
+              .includes(normalizedSearch),
+          );
+
+      const matchesCollege =
+        collegeFilter === ALL_OPTION ||
+        resource.college === collegeFilter;
+
+      const matchesDepartment =
+        departmentFilter === ALL_OPTION ||
+        resource.department === departmentFilter;
+
+      const matchesLevel =
+        levelFilter === ALL_OPTION ||
+        resource.level === levelFilter;
+
+      const matchesSemester =
+        semesterFilter === ALL_OPTION ||
+        resource.semester === semesterFilter;
+
+      const matchesCategory =
+        categoryFilter === ALL_OPTION ||
+        categoryId === categoryFilter;
+
+      return (
+        matchesSearch &&
+        matchesCollege &&
+        matchesDepartment &&
+        matchesLevel &&
+        matchesSemester &&
+        matchesCategory
+      );
+    });
+  }, [
+    data,
+    searchQuery,
+    collegeFilter,
+    departmentFilter,
+    levelFilter,
+    semesterFilter,
+    categoryFilter,
+  ]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    collegeFilter !== ALL_OPTION ||
+    departmentFilter !== ALL_OPTION ||
+    levelFilter !== ALL_OPTION ||
+    semesterFilter !== ALL_OPTION ||
+    categoryFilter !== ALL_OPTION;
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCollegeFilter(ALL_OPTION);
+    setDepartmentFilter(ALL_OPTION);
+    setLevelFilter(ALL_OPTION);
+    setSemesterFilter(ALL_OPTION);
+    setCategoryFilter(ALL_OPTION);
+  };
 
   const decide = useMutation({
     mutationFn: async (v: {
@@ -804,14 +956,12 @@ function Approvals() {
             >
               <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Resources
-
-              {data &&
-                data.length > 0 && (
-                  <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
-                    {data.length}
-                  </span>
-                )}
-            </button>
+              {data && data.length > 0 && (
+                <span  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
+                  {data.length}
+                </span>
+              )}
+              </button>
           </div>
         </div>
 
@@ -887,149 +1037,85 @@ function Approvals() {
                                 </div>
                               </div>
 
-                              <div className="hidden shrink-0 flex-wrap items-center gap-2 lg:flex lg:justify-end">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={
-                                    userDecisionLoading
-                                  }
-                                  onClick={() =>
-                                    requestRejectUser(
-                                      pendingUser.id,
-                                      displayName,
-                                      email,
-                                    )
-                                  }
-                                  className="h-9 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-                                >
-                                  {isProcessing &&
-                                  pendingUserDecision?.type ===
-                                    "reject" ? (
-                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <X className="mr-1.5 h-3.5 w-3.5" />
-                                  )}
-
-                                  Reject
-                                </Button>
-
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={
-                                    userDecisionLoading
-                                  }
-                                  onClick={() =>
-                                    requestApproveUser(
-                                      pendingUser.id,
-                                      displayName,
-                                      email,
-                                    )
-                                  }
-                                  className="h-9 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
-                                >
-                                  {isProcessing &&
-                                  pendingUserDecision?.type ===
-                                    "approve" ? (
-                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <Check className="mr-1.5 h-3.5 w-3.5" />
-                                  )}
-
-                                  Approve
-                                </Button>
-                              </div>
                             </div>
 
-                            {detailItems.length >
-                              0 && (
-                              <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-4">
-                                {detailItems.map(
-                                  (item) => (
-                                    <AuditItem
-                                      key={
-                                        item.label
-                                      }
-                                      label={
-                                        item.label
-                                      }
-                                      value={
-                                        item.value
-                                      }
-                                    />
-                                  ),
-                                )}
-                              </div>
-                            )}
 
-                            <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:gap-2 sm:text-xs">
-                              <AuditItem
-                                label="Registered"
-                                value="Pending approval"
-                                detail={formatDateTime(
-                                  pendingUser.created_at,
-                                )}
-                              />
-                            </div>
+{/* Account metadata */}
+{pendingUser.college?.trim() && (
+  <AuditItem
+    label="College"
+    value={pendingUser.college.trim()}
+  />
+)}
 
-                            <div className="flex flex-wrap items-center gap-1.5 lg:hidden sm:gap-2">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  userDecisionLoading
-                                }
-                                onClick={() =>
-                                  requestRejectUser(
-                                    pendingUser.id,
-                                    displayName,
-                                    email,
-                                  )
-                                }
-                                className="h-8 px-2 text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:px-3 sm:text-xs"
-                              >
-                                {isProcessing &&
-                                pendingUserDecision?.type ===
-                                  "reject" ? (
-                                  <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                                ) : (
-                                  <X className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                )}
+{pendingUser.department?.trim() && (
+  <AuditItem
+    label="Department"
+    value={pendingUser.department.trim()}
+  />
+)}
 
-                                Reject
-                              </Button>
+{pendingUser.primary_role === "student" &&
+  pendingUser.level?.trim() && (
+    <AuditItem
+      label="Level"
+      value={pendingUser.level.trim()}
+    />
+  )}
 
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  userDecisionLoading
-                                }
-                                onClick={() =>
-                                  requestApproveUser(
-                                    pendingUser.id,
-                                    displayName,
-                                    email,
-                                  )
-                                }
-                                className="h-8 px-2 text-[10px] text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:px-3 sm:text-xs"
-                              >
-                                {isProcessing &&
-                                pendingUserDecision?.type ===
-                                  "approve" ? (
-                                  <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                                ) : (
-                                  <Check className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                )}
+<AuditItem
+  label="Registered"
+  value="Pending approval"
+  detail={formatDateTime(pendingUser.created_at)}
+/>
 
-                                Approve
-                              </Button>
-                            </div>
+
+{/* Account actions */}
+<div className="grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:gap-3 sm:pt-4">
+  <Button
+    type="button"
+    variant="outline"
+    disabled={userDecisionLoading}
+    onClick={() =>
+      requestRejectUser(
+        pendingUser.id,
+        displayName,
+        email,
+      )
+    }
+    className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+  >
+    {isProcessing &&
+    pendingUserDecision?.type === "reject" ? (
+      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+    ) : (
+      <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+    )}
+    Reject
+  </Button>
+
+  <Button
+    type="button"
+    variant="outline"
+    disabled={userDecisionLoading}
+    onClick={() =>
+      requestApproveUser(
+        pendingUser.id,
+        displayName,
+        email,
+      )
+    }
+    className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
+  >
+    {isProcessing &&
+    pendingUserDecision?.type === "approve" ? (
+      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+    ) : (
+      <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+    )}
+    Approve
+  </Button>
+</div>
                           </div>
                         </li>
                       );
@@ -1049,6 +1135,193 @@ function Approvals() {
         {activeSection ===
           "resources" && (
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+            {!isLoading && data && data.length > 0 && (
+              <div className="border-b border-border p-3 sm:p-4">
+                <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="relative md:col-span-2 xl:col-span-3">
+                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+
+                    <Input
+                      placeholder="Search title, course code, description…"
+                      value={searchQuery}
+                      onChange={(event) =>
+                        setSearchQuery(event.target.value)
+                      }
+                      aria-label="Search pending resources"
+                      className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+                    />
+                  </div>
+                  <Select
+                    value={categoryFilter}
+                    onValueChange={setCategoryFilter}
+                  >
+                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value={ALL_OPTION}>
+                        All Categories
+                      </SelectItem>
+
+                      {cats?.map((category) => (
+                        <SelectItem
+                          key={category.id}
+                          value={category.id}
+                        >
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={collegeFilter}
+                    onValueChange={(value) => {
+                      setCollegeFilter(value);
+                      setDepartmentFilter(ALL_OPTION);
+                    }}
+                  >
+                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                      <SelectValue placeholder="College" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value={ALL_OPTION}>
+                        All Colleges
+                      </SelectItem>
+
+                      {colleges.map((college) => (
+                        <SelectItem
+                          key={college.id}
+                          value={college.id}
+                        >
+                          <>
+                            <span className="sm:hidden">
+                              {college.id}
+                            </span>
+                            <span className="hidden sm:inline">
+                              {college.name} ({college.id})
+                            </span>
+                          </>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={departmentFilter}
+                    onValueChange={setDepartmentFilter}
+                  >
+                    <SelectTrigger
+                      className={`h-9 text-xs sm:h-10 sm:text-sm ${
+                        collegeFilter === ALL_OPTION
+                          ? "opacity-60"
+                          : ""
+                      }`}
+                    >
+                      <span>
+                        {departmentFilter === ALL_OPTION
+                          ? "All Departments"
+                          : departmentFilter}
+                      </span>
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {collegeFilter === ALL_OPTION ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          Select College first
+                        </div>
+                      ) : (
+                        <>
+                          <SelectItem value={ALL_OPTION}>
+                            All Departments
+                          </SelectItem>
+
+                          {departments.map((department) => (
+                            <SelectItem
+                              key={department}
+                              value={department}
+                            >
+                              {department}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={levelFilter}
+                    onValueChange={setLevelFilter}
+                  >
+                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                      <SelectValue placeholder="Level" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value={ALL_OPTION}>
+                        All Levels
+                      </SelectItem>
+
+                      {levels.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={semesterFilter}
+                    onValueChange={setSemesterFilter}
+                  >
+                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                      <SelectValue placeholder="Semester" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value={ALL_OPTION}>
+                        All Semesters
+                      </SelectItem>
+
+                      {semesters.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {hasActiveFilters && (
+                  <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
+                    <p className="text-[10px] text-muted-foreground sm:text-xs">
+                      Showing{" "}
+                      <span className="font-medium text-foreground">
+                        {filteredResources.length}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-medium text-foreground">
+                        {data.length}
+                      </span>{" "}
+                      pending{" "}
+                      {data.length === 1
+                        ? "resource"
+                        : "resources"}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="shrink-0 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-xs"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             {isLoading ? (
               <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
                 <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -1056,11 +1329,9 @@ function Approvals() {
                   Loading review queue…
                 </div>
               </div>
-            ) : data &&
-              data.length >
-                0 ? (
+              ) : filteredResources.length > 0 ? (
               <ul className="divide-y-0">
-                {data.map(
+                {filteredResources.map(
                   (resource) => {
                     const isProcessing =
                       decisionLoading &&
@@ -1111,6 +1382,10 @@ function Approvals() {
                                   }
                                 </p>
 
+                                <p className="mt-1 break-all text-[10px] text-muted-foreground sm:text-xs">
+                                  {resource.file_name || "Unnamed file"}
+                                </p>
+
                                 {resource.description && (
                                   <p className="mt-2 max-w-4xl line-clamp-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
                                     {
@@ -1120,151 +1395,45 @@ function Approvals() {
                                 )}
                               </div>
 
-                              <div className="mt-1.5 flex flex-col gap-1 text-[10px] text-muted-foreground sm:mt-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
-                                <span>
-                                  {formatFileSize(
-                                    resource.file_size,
-                                  )}
-                                </span>
 
-                                {resource.course_code && (
-                                  <>
-                                    <span className="hidden text-border sm:inline">
-                                      •
-                                    </span>
-                                    <span>
-                                      {
-                                        resource.course_code
-                                      }
-                                    </span>
-                                  </>
-                                )}
+<div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
+  <AuditItem
+    label="File size"
+    value={formatFileSize(resource.file_size)}
+  />
 
-                                {resource.department && (
-                                  <>
-                                    <span className="hidden text-border sm:inline">
-                                      •
-                                    </span>
-                                    <span>
-                                      {
-                                        resource.department
-                                      }
-                                    </span>
-                                  </>
-                                )}
+  <AuditItem
+    label="Course code"
+    value={resource.course_code || "Not provided"}
+  />
 
-                                {resource.level && (
-                                  <>
-                                    <span className="hidden text-border sm:inline">
-                                      •
-                                    </span>
-                                    <span>
-                                      {
-                                        resource.level
-                                      }
-                                    </span>
-                                  </>
-                                )}
+  <AuditItem
+    label="College"
+    value={resource.college || "Not provided"}
+  />
 
-                                {resource.year && (
-                                  <>
-                                    <span className="hidden text-border sm:inline">
-                                      •
-                                    </span>
-                                    <span>
-                                      {
-                                        resource.year
-                                      }
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
+  <AuditItem
+    label="Department"
+    value={resource.department || "Not provided"}
+  />
 
-                            <div className="hidden shrink-0 flex-wrap items-center gap-2 lg:flex lg:justify-end">
-                              {canPreview && (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={
-                                    decisionLoading
-                                  }
-                                  onClick={() =>
-                                    setPreviewResource(
-                                      {
-                                        id: resource.id,
-                                        title:
-                                          resource.title,
-                                        file_path:
-                                          resource.file_path,
-                                      },
-                                    )
-                                  }
-                                  className="h-9 text-xs transition-colors"
-                                >
-                                  <Eye className="mr-1.5 h-3.5 w-3.5" />
-                                  Preview
-                                </Button>
-                              )}
+  <AuditItem
+    label="Level"
+    value={resource.level || "Not provided"}
+  />
 
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  decisionLoading
-                                }
-                                onClick={() =>
-                                  requestReject(
-                                    resource.id,
-                                    resource.file_path,
-                                    resource.title,
-                                  )
-                                }
-                                className="h-9 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-                              >
-                                {isProcessing &&
-                                !decide
-                                  .variables
-                                  ?.approve ? (
-                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <X className="mr-1.5 h-3.5 w-3.5" />
-                                )}
+  <AuditItem
+    label="Semester"
+    value={resource.semester || "Not provided"}
+  />
 
-                                Reject
-                              </Button>
-
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  decisionLoading
-                                }
-                                onClick={() =>
-                                  requestApprove(
-                                    resource.id,
-                                    resource.file_path,
-                                    resource.title,
-                                  )
-                                }
-                                className="h-9 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5"
-                              >
-                                {isProcessing &&
-                                decide
-                                  .variables
-                                  ?.approve ? (
-                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <Check className="mr-1.5 h-3.5 w-3.5" />
-                                )}
-
-                                Approve
-                              </Button>
-                            </div>
-                          </div>
+  <AuditItem
+    label="Year"
+    value={resource.year?.toString() || "Not provided"}
+  />
+</div>
+</div>
+</div>
 
                           <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
                             <AuditItem
@@ -1290,95 +1459,80 @@ function Approvals() {
                             />
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-1.5 lg:hidden sm:gap-2">
-                            {canPreview && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  decisionLoading
-                                }
-                                onClick={() =>
-                                  setPreviewResource(
-                                    {
-                                      id: resource.id,
-                                      title:
-                                        resource.title,
-                                      file_path:
-                                        resource.file_path,
-                                    },
-                                  )
-                                }
-                                className="h-8 px-2 text-[10px] transition-colors sm:h-9 sm:px-3 sm:text-xs"
-                              >
-                                <Eye className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                Preview
-                              </Button>
-                            )}
+{/* Resource actions */}
+<div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-3 sm:gap-3 sm:pt-4">
+  {canPreview && (
+    <Button
+      type="button"
+      variant="outline"
+      disabled={decisionLoading}
+      onClick={() =>
+        setPreviewResource({
+          id: resource.id,
+          title: resource.title,
+          file_path: resource.file_path,
+        })
+      }
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+    >
+      <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+      Preview
+    </Button>
+  )}
 
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                decisionLoading
-                              }
-                              onClick={() =>
-                                requestReject(
-                                  resource.id,
-                                  resource.file_path,
-                                  resource.title,
-                                )
-                              }
-                              className="h-8 px-2 text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:px-3 sm:text-xs"
-                            >
-                              {isProcessing &&
-                              !decide
-                                .variables
-                                ?.approve ? (
-                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                              ) : (
-                                <X className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              )}
+  <Button
+    type="button"
+    variant="outline"
+    disabled={decisionLoading}
+    onClick={() =>
+      requestReject(
+        resource.id,
+        resource.file_path,
+        resource.title,
+      )
+    }
+    className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+  >
+    {isProcessing && !decide.variables?.approve ? (
+      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+    ) : (
+      <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+    )}
+    Reject
+  </Button>
 
-                              Reject
-                            </Button>
-
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                decisionLoading
-                              }
-                              onClick={() =>
-                                requestApprove(
-                                  resource.id,
-                                  resource.file_path,
-                                  resource.title,
-                                )
-                              }
-                              className="h-8 px-2 text-[10px] text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-9 sm:px-3 sm:text-xs"
-                            >
-                              {isProcessing &&
-                              decide
-                                .variables
-                                ?.approve ? (
-                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                              ) : (
-                                <Check className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              )}
-
-                              Approve
-                            </Button>
-                          </div>
+  <Button
+    type="button"
+    variant="outline"
+    disabled={decisionLoading}
+    onClick={() =>
+      requestApprove(
+        resource.id,
+        resource.file_path,
+        resource.title,
+      )
+    }
+    className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
+  >
+    {isProcessing && decide.variables?.approve ? (
+      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+    ) : (
+      <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+    )}
+    Approve
+  </Button>
+</div>
                         </div>
                       </li>
                     );
                   },
                 )}
               </ul>
+              ) : hasActiveFilters ? (
+              <EmptyState
+                title="No matching resources"
+                desc="No pending resources match the selected filters."
+              />
             ) : (
               <EmptyState
                 title="No pending resources"
@@ -1685,6 +1839,15 @@ function Approvals() {
       )}
     </>
   );
+}
+
+function getResourceCategoryName(
+  resource: Resource,
+): string {
+  return resource.category?.deleted_at == null &&
+    resource.category?.name?.trim()
+    ? resource.category.name.trim()
+    : "Uncategorized";
 }
 
 function getPendingUserDetails(

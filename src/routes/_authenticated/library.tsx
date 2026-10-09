@@ -19,6 +19,7 @@ import {
   Bookmark,
   Download,
   Search,
+  Filter,
   Eye,
   Loader2,
 } from "lucide-react";
@@ -202,6 +203,16 @@ function LibraryPage() {
         </p>
       </div>
 
+      {/* Filters */}
+      <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
+      
+          <p className="text-xs font-semibold sm:text-sm">
+            Find resources
+          </p>
+        </div>
+
       <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
         <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
           {/* Search */}
@@ -218,6 +229,32 @@ function LibraryPage() {
               className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
             />
           </div>
+
+          {/* Category */}
+
+          <Select
+            value={category}
+            onValueChange={setCategory}
+          >
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">
+                All Categories
+              </SelectItem>
+
+              {cats?.map((c) => (
+                <SelectItem
+                  key={c.id}
+                  value={c.id}
+                >
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* College */}
 
@@ -352,34 +389,8 @@ function LibraryPage() {
             </SelectContent>
           </Select>
 
-          {/* Category */}
-
-          <Select
-            value={category}
-            onValueChange={setCategory}
-          >
-            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="all">
-                All Categories
-              </SelectItem>
-
-              {cats?.map((c) => (
-                <SelectItem
-                  key={c.id}
-                  value={c.id}
-                >
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
           {/* Sort */}
-
           <Select
             value={sort}
             onValueChange={(v) =>
@@ -405,6 +416,7 @@ function LibraryPage() {
             </SelectContent>
           </Select>
         </div>
+      </div>
       </div>
 
       {isLoading ? (

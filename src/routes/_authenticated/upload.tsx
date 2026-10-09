@@ -740,262 +740,267 @@ export function UploadPage({ draftId }: UploadPageProps) {
                 className="mt-1.5 text-xs sm:text-sm"
               />
             </div>
-
-            <div>
-              <Label className="text-xs sm:text-sm">
-                Category
-              </Label>
-
-              <Select
-                value={form.category_id}
-                onValueChange={(value) => {
-                  const selectedCategory = cats?.find(
-                    (category) => category.id === value,
-                  );
-
-                  const publication =
-                    selectedCategory?.name === "Publications";
-
-                  setForm({
-                    ...form,
-                    category_id: value,
-                    ...(publication
-                      ? {
-                          college: "",
-                          department: "",
-                          level: "",
-                          course_code: "",
-                        }
-                      : {}),
-                  });
-                }}
-              >
-                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                  <SelectValue placeholder="Choose one" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {cats?.map((category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.id}
-                      className="text-xs sm:text-sm"
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {!isPublication && (
-              <div>
-                <Label className="text-xs sm:text-sm">
-                  College
-                </Label>
-
-                <Select
-                  value={form.college}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      college: value,
-                      department: "",
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                    <SelectValue placeholder="Choose College" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {colleges.map((college) => (
-                      <SelectItem
-                        key={college.id}
-                        value={college.id}
-                        className="text-xs sm:text-sm"
-                      >
-                        <>
-                          <span className="sm:hidden">
-                            {college.id}
-                          </span>
-
-                          <span className="hidden sm:inline">
-                            {college.name} ({college.id})
-                          </span>
-                        </>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!isPublication && !isSGS && (
-              <div>
-                <Label className="text-xs sm:text-sm">
-                  Department
-                </Label>
-
-                <Select
-                  value={form.department}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      department: value,
-                    })
-                  }
-                  disabled={!form.college}
-                >
-                  <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                    <SelectValue
-                      placeholder={
-                        form.college
-                          ? "Choose Department"
-                          : "Select College first"
-                      }
-                    />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {departments.map(
-                      (department) => (
-                        <SelectItem
-                          key={department}
-                          value={department}
-                          className="text-xs sm:text-sm"
-                        >
-                          {department}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!isPublication && (
-              <div>
-                <Label className="text-xs sm:text-sm">
-                  Level
-                </Label>
-
-                <Select
-                  value={form.level}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      level: value,
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                    <SelectValue placeholder="Choose Level" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {levels.map((level) => (
-                      <SelectItem
-                        key={level}
-                        value={level}
-                        className="text-xs sm:text-sm"
-                      >
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {!isPublication && (
-              <div>
-                <Label htmlFor="course" className="text-xs sm:text-sm">
-                  Course Code
-                </Label>
-
-                <Input
-                  id="course"
-                  placeholder="e.g. CSC 301"
-                  value={form.course_code}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      course_code:
-                        event.target.value,
-                    })
-                  }
-                  className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label className="text-xs sm:text-sm">
-                Semester
-              </Label>
-
-              <Select
-                value={form.semester}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    semester: value,
-                  })
-                }
-              >
-                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                  <SelectValue placeholder="Choose Semester" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {semesters.map(
-                    (semester) => (
-                      <SelectItem
-                        key={semester}
-                        value={semester}
-                        className="text-xs sm:text-sm"
-                      >
-                        {semester}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-xs sm:text-sm">
-                Year
-              </Label>
-
-              <Select
-                value={form.year}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    year: value,
-                  })
-                }
-              >
-                <SelectTrigger className="mt-1.5 h-9 text-xs sm:h-10 sm:text-sm">
-                  <SelectValue placeholder="Choose Year" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem
-                      key={year}
-                      value={year.toString()}
-                      className="text-xs sm:text-sm"
-                    >
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
+{/* Category */}
+<div className="space-y-2">
+  <Label className="text-xs sm:text-sm">
+    Category
+  </Label>
+
+  <Select
+    value={form.category_id}
+    onValueChange={(value) => {
+      const selectedCategory = cats?.find(
+        (category) => category.id === value,
+      );
+
+      const publication =
+        selectedCategory?.name === "Publications";
+
+      setForm({
+        ...form,
+        category_id: value,
+        ...(publication
+          ? {
+              college: "",
+              department: "",
+              level: "",
+              course_code: "",
+            }
+          : {}),
+      });
+    }}
+  >
+    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+      <SelectValue placeholder="Choose one" />
+    </SelectTrigger>
+
+    <SelectContent>
+      {cats?.map((category) => (
+        <SelectItem
+          key={category.id}
+          value={category.id}
+          className="text-xs sm:text-sm"
+        >
+          {category.name}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+{/* College and Department */}
+{!isPublication && (
+  <div
+    className={`grid grid-cols-1 gap-4 ${
+      isSGS ? "sm:grid-cols-1" : "sm:grid-cols-2"
+    }`}
+  >
+    <div className="space-y-2">
+      <Label className="text-xs sm:text-sm">
+        College
+      </Label>
+
+      <Select
+        value={form.college}
+        onValueChange={(value) =>
+          setForm({
+            ...form,
+            college: value,
+            department: "",
+          })
+        }
+      >
+        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+          <SelectValue placeholder="Choose College" />
+        </SelectTrigger>
+
+        <SelectContent>
+          {colleges.map((college) => (
+            <SelectItem
+              key={college.id}
+              value={college.id}
+              className="text-xs sm:text-sm"
+            >
+              <>
+                <span className="sm:hidden">
+                  {college.id}
+                </span>
+
+                <span className="hidden sm:inline">
+                  {college.name} ({college.id})
+                </span>
+              </>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+
+    {!isSGS && (
+      <div className="space-y-2">
+        <Label className="text-xs sm:text-sm">
+          Department
+        </Label>
+
+        <Select
+          value={form.department}
+          onValueChange={(value) =>
+            setForm({
+              ...form,
+              department: value,
+            })
+          }
+          disabled={!form.college}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue
+              placeholder={
+                form.college
+                  ? "Choose Department"
+                  : "Select College first"
+              }
+            />
+          </SelectTrigger>
+
+          <SelectContent>
+            {departments.map((department) => (
+              <SelectItem
+                key={department}
+                value={department}
+                className="text-xs sm:text-sm"
+              >
+                {department}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )}
+  </div>
+)}
+
+{/* Level, Course Code, Semester and Upload Year */}
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+  {!isPublication && (
+    <div className="space-y-2">
+      <Label className="text-xs sm:text-sm">
+        Level
+      </Label>
+
+      <Select
+        value={form.level}
+        onValueChange={(value) =>
+          setForm({
+            ...form,
+            level: value,
+          })
+        }
+      >
+        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+          <SelectValue placeholder="Choose Level" />
+        </SelectTrigger>
+
+        <SelectContent>
+          {levels.map((level) => (
+            <SelectItem
+              key={level}
+              value={level}
+              className="text-xs sm:text-sm"
+            >
+              {level}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )}
+
+  {!isPublication && (
+    <div className="space-y-2">
+      <Label htmlFor="course" className="text-xs sm:text-sm">
+        Course Code
+      </Label>
+
+      <Input
+        id="course"
+        placeholder="e.g. CSC 301"
+        value={form.course_code}
+        onChange={(event) =>
+          setForm({
+            ...form,
+            course_code: event.target.value,
+          })
+        }
+        className="h-9 text-xs sm:h-10 sm:text-sm"
+      />
+    </div>
+  )}
+
+  <div className="space-y-2">
+    <Label className="text-xs sm:text-sm">
+      Semester
+    </Label>
+
+    <Select
+      value={form.semester}
+      onValueChange={(value) =>
+        setForm({
+          ...form,
+          semester: value,
+        })
+      }
+    >
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Choose Semester" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {semesters.map((semester) => (
+          <SelectItem
+            key={semester}
+            value={semester}
+            className="text-xs sm:text-sm"
+          >
+            {semester}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div className="space-y-2">
+    <Label className="text-xs sm:text-sm">
+      Upload Year
+    </Label>
+
+    <Select
+      value={form.year}
+      onValueChange={(value) =>
+        setForm({
+          ...form,
+          year: value,
+        })
+      }
+    >
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Choose Year" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {years.map((year) => (
+          <SelectItem
+            key={year}
+            value={year.toString()}
+            className="text-xs sm:text-sm"
+          >
+            {year}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+</div>
 
           {progress > 0 && (
             <Progress value={progress} />

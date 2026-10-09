@@ -28,7 +28,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useAccess } from "@/hooks/useAccess";
@@ -42,6 +43,13 @@ import {
 } from "@/lib/academicData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -320,16 +328,24 @@ function ResourcesPage() {
     }
   }, [user, roles, navigate]);
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] =
-    useState<"all" | ResourceStatus>("all");
-  const [category, setCategory] =
-    useState("all");
+const ALL_OPTION = "all";
 
-  const [sortOrder, setSortOrder] =
-    useState<"newest" | "oldest">(
-      "newest",
-    );
+const [search, setSearch] = useState("");
+const [status, setStatus] =
+  useState<"all" | ResourceStatus>("all");
+const [category, setCategory] = useState("all");
+const [college, setCollege] = useState(ALL_OPTION);
+const [department, setDepartment] = useState(ALL_OPTION);
+const [level, setLevel] = useState("all");
+const [semester, setSemester] = useState("all");
+
+const [sortOrder, setSortOrder] =
+  useState<"newest" | "oldest">("newest");
+
+const departments = useMemo(
+  () => college !== ALL_OPTION ? getDepartments(college) : [],
+  [college],
+);
 
   const [previewResource, setPreviewResource] =
     useState<{
@@ -730,6 +746,7 @@ function ResourcesPage() {
   const latestEditMap = useMemo(() => {
     const map = new Map<
       string,
+      
       ResourceEditAudit
     >();
 
@@ -1125,9 +1142,30 @@ function ResourcesPage() {
               }
             }
 
+           
+            const matchesCollege =
+              college === ALL_OPTION ||
+              resource.college === college;
+
+            const matchesDepartment =
+              department === ALL_OPTION ||
+              resource.department === department;
+
+            const matchesLevel =
+              level === ALL_OPTION ||
+              resource.level === level;
+
+            const matchesSemester =
+              semester === ALL_OPTION ||
+              resource.semester === semester;
+
             if (
               !matchesStatus ||
-              !matchesCategory
+              !matchesCategory ||
+              !matchesCollege ||
+              !matchesDepartment ||
+              !matchesLevel ||
+              !matchesSemester
             ) {
               return false;
             }
@@ -1188,6 +1226,10 @@ function ResourcesPage() {
       search,
       status,
       category,
+      college,
+      department,
+      level,
+      semester,
       sortOrder,
     ]);
 
@@ -1391,12 +1433,18 @@ function ResourcesPage() {
         )
       : false;
 
-    const availableDepartments =
-    editForm.college
-      ? getDepartments(
-          editForm.college,
-        )
-      : [];
+    
+const isPublication =
+  categories?.find(
+    (category) => category.id === editForm.category_id,
+  )?.name === "Publications";
+
+const isSGS = editForm.college === "SGS";
+
+const availableDepartments =
+  isSGS || !editForm.college
+    ? []
+    : getDepartments(editForm.college);
 
   if (
     user &&
@@ -1416,151 +1464,223 @@ function ResourcesPage() {
   return (
     <section className="space-y-5 sm:space-y-6">
 
-      {/* Filters */}
-      <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:rounded-lg sm:p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
+{/* Filters */}
+<div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+  <div className="mb-3 flex items-center gap-2">
+    <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
-          <p className="text-xs font-semibold sm:text-sm">
-            Find resources
-          </p>
-        </div>
+    <p className="text-xs font-semibold sm:text-sm">
+      Find resources
+    </p>
+  </div>
 
-        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-[minmax(220px,1fr)_150px_170px_150px] lg:grid-cols-[minmax(0,1fr)_180px_200px_180px]">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+  <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
+    {/* Search */}
+    <div className="relative md:col-span-2 xl:col-span-3">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
-            <Input
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value,
-                )
-              }
-              placeholder="Search resource title, file name, uploader…"
-              className="h-9 pl-8 text-xs sm:h-10 sm:pl-9 sm:text-sm"
-            />
+      <Input
+        placeholder="Search resource title, file name, uploader…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+      />
+    </div>
+
+    {/* Status */}
+    <Select
+      value={status}
+      onValueChange={(value) =>
+        setStatus(value as "all" | ResourceStatus)
+      }
+    >
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Status" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {STATUS_OPTIONS.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Category */}
+    <Select value={category} onValueChange={setCategory}>
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Category" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">All Categories</SelectItem>
+
+        <SelectItem value={UNCATEGORIZED_FILTER}>
+          Uncategorized
+        </SelectItem>
+
+        {(categories ?? []).map((item) => (
+          <SelectItem key={item.id} value={item.id}>
+            {item.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* College */}
+    <Select
+      value={college}
+      onValueChange={(value) => {
+        setCollege(value);
+        setDepartment(ALL_OPTION);
+      }}
+    >
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="College" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value={ALL_OPTION}>All Colleges</SelectItem>
+
+        {colleges.map((item) => (
+          <SelectItem key={item.id} value={item.id}>
+            <>
+              <span className="sm:hidden">{item.id}</span>
+              <span className="hidden sm:inline">
+                {item.name} ({item.id})
+              </span>
+            </>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Department */}
+    <Select
+      value={department}
+      onValueChange={setDepartment}
+    >
+      <SelectTrigger
+        className={`h-9 text-xs sm:h-10 sm:text-sm ${
+          college === ALL_OPTION ? "opacity-60" : ""
+        }`}
+      >
+        <span>
+          {department === ALL_OPTION
+            ? "All Departments"
+            : department}
+        </span>
+      </SelectTrigger>
+
+      <SelectContent>
+        {college === ALL_OPTION ? (
+          <div className="px-3 py-2 text-sm text-muted-foreground">
+            Select College first
           </div>
+        ) : (
+          <>
+            <SelectItem value={ALL_OPTION}>
+              All Departments
+            </SelectItem>
 
-          <select
-            value={status}
-            onChange={(e) =>
-              setStatus(
-                e.target.value as
-                  | "all"
-                  | ResourceStatus,
-              )
-            }
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-            aria-label="Filter by status"
-          >
-            {STATUS_OPTIONS.map(
-              (option) => (
-                <option
-                  key={
-                    option.value
-                  }
-                  value={
-                    option.value
-                  }
-                >
-                  {option.label}
-                </option>
-              ),
-            )}
-          </select>
-
-          <select
-            value={category}
-            onChange={(e) =>
-              setCategory(
-                e.target.value,
-              )
-            }
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-            aria-label="Filter by category"
-          >
-            <option value="all">
-              All categories
-            </option>
-
-            <option
-              value={
-                UNCATEGORIZED_FILTER
-              }
-            >
-              Uncategorized
-            </option>
-
-            {(categories ?? []).map(
-              (item) => (
-                <option
-                  key={item.id}
-                  value={item.id}
-                >
-                  {item.name}
-                </option>
-              ),
-            )}
-          </select>
-
-          <select
-            value={sortOrder}
-            onChange={(e) =>
-              setSortOrder(
-                e.target.value as
-                  | "newest"
-                  | "oldest",
-              )
-            }
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-            aria-label="Sort resources"
-          >
-            <option value="newest">
-              Newest first
-            </option>
-            <option value="oldest">
-              Oldest first
-            </option>
-          </select>
-        </div>
-
-        {(search ||
-          status !== "all" ||
-          category !== "all" ||
-          sortOrder !==
-            "newest") && (
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">
-              Showing{" "}
-              {
-                filteredResources.length
-              }{" "}
-              of{" "}
-              {resources?.length ??
-                0}{" "}
-              resources
-            </p>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setSearch("");
-                setStatus("all");
-                setCategory("all");
-                setSortOrder(
-                  "newest",
-                );
-              }}
-              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
-            >
-              Clear filters
-            </Button>
-          </div>
+            {departments.map((dept) => (
+              <SelectItem key={dept} value={dept}>
+                {dept}
+              </SelectItem>
+            ))}
+          </>
         )}
-      </div>
+      </SelectContent>
+    </Select>
+
+    {/* Level */}
+    <Select value={level} onValueChange={setLevel}>
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Level" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">All Levels</SelectItem>
+
+        {levels.map((item) => (
+          <SelectItem key={item} value={item}>
+            {item}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Semester */}
+    <Select value={semester} onValueChange={setSemester}>
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Semester" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">All Semesters</SelectItem>
+
+        {semesters.map((item) => (
+          <SelectItem key={item} value={item}>
+            {item}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {/* Sort */}
+    <Select
+      value={sortOrder}
+      onValueChange={(value) =>
+        setSortOrder(value as "newest" | "oldest")
+      }
+    >
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="newest">Newest first</SelectItem>
+        <SelectItem value="oldest">Oldest first</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  {(search ||
+    status !== "all" ||
+    category !== "all" ||
+    college !== ALL_OPTION ||
+    department !== ALL_OPTION ||
+    level !== "all" ||
+    semester !== "all" ||
+    sortOrder !== "newest") && (
+    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+      <p className="text-[10px] text-muted-foreground sm:text-xs">
+        Showing {filteredResources.length} of{" "}
+        {resources?.length ?? 0} resources
+      </p>
+
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={() => {
+          setSearch("");
+          setStatus("all");
+          setCategory("all");
+          setCollege(ALL_OPTION);
+          setDepartment(ALL_OPTION);
+          setLevel("all");
+          setSemester("all");
+          setSortOrder("newest");
+        }}
+        className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+      >
+        Clear filters
+      </Button>
+    </div>
+  )}
+</div>
 
       {/* Resource list */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
@@ -1697,178 +1817,58 @@ function ResourcesPage() {
                             )}
                           </div>
 
-                          <div className="mt-2 flex flex-col gap-1 text-[10px] text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
-                            <span>
-                              {formatFileSize(
-                                resource.file_size,
-                              )}
-                            </span>
+                          
+{/* Resource metadata */}
+<div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
+  <AuditItem
+    label="File size"
+    value={formatFileSize(resource.file_size)}
+  />
 
-                            {resource.course_code && (
-                              <>
-                                <span className="hidden text-border sm:inline">
-                                  •
-                                </span>
-                                <span>
-                                  {
-                                    resource.course_code
-                                  }
-                                </span>
-                              </>
-                            )}
+  {resource.course_code?.trim() && (
+    <AuditItem
+      label="Course code"
+      value={resource.course_code.trim()}
+    />
+  )}
 
-                            {resource.department && (
-                              <>
-                                <span className="hidden text-border sm:inline">
-                                  •
-                                </span>
-                                <span>
-                                  {
-                                    resource.department
-                                  }
-                                </span>
-                              </>
-                            )}
+  {resource.college?.trim() && (
+    <AuditItem
+      label="College"
+      value={resource.college.trim()}
+    />
+  )}
 
-                            {resource.level && (
-                              <>
-                                <span className="hidden text-border sm:inline">
-                                  •
-                                </span>
-                                <span>
-                                  {
-                                    resource.level
-                                  }
-                                </span>
-                              </>
-                            )}
+  {resource.department?.trim() && (
+    <AuditItem
+      label="Department"
+      value={resource.department.trim()}
+    />
+  )}
 
-                            {resource.year && (
-                              <>
-                                <span className="hidden text-border sm:inline">
-                                  •
-                                </span>
-                                <span>
-                                  {
-                                    resource.year
-                                  }
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+  {resource.level?.trim() && (
+    <AuditItem
+      label="Level"
+      value={resource.level.trim()}
+    />
+  )}
 
-                        {/* Actions */}
-                        <div className="hidden shrink-0 flex-wrap items-center gap-2 lg:flex lg:justify-end">
-                          {canPreview && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                editResource.isPending ||
-                                deleteResource.isPending ||
-                                Boolean(
-                                  downloadingResourceId,
-                                )
-                              }
-                              onClick={() =>
-                                setPreviewResource(
-                                  {
-                                    id: resource.id,
-                                    title:
-                                      resource.title,
-                                    file_path:
-                                      resource.file_path,
-                                  },
-                                )
-                              }
-                            >
-                              <Eye className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
-                              Preview
-                            </Button>
-                          )}
+  {resource.semester?.trim() && (
+    <AuditItem
+      label="Semester"
+      value={resource.semester.trim()}
+    />
+  )}
 
-                          {canDownload && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                editResource.isPending ||
-                                deleteResource.isPending ||
-                                Boolean(
-                                  downloadingResourceId,
-                                )
-                              }
-                              onClick={() =>
-                                handleDownload(
-                                  resource,
-                                )
-                              }
-                            >
-                              {isDownloading ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Download className="mr-1.5 h-3.5 w-3.5" />
-                              )}
-                              Download
-                            </Button>
-                          )}
-
-                          {canEdit && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                editResource.isPending ||
-                                deleteResource.isPending ||
-                                Boolean(
-                                  downloadingResourceId,
-                                )
-                              }
-                              onClick={() =>
-                                openEdit(
-                                  resource,
-                                )
-                              }
-                            >
-                              {isEditing ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Edit3 className="mr-1.5 h-3.5 w-3.5" />
-                              )}
-                              Edit
-                            </Button>
-                          )}
-
-                          {canDelete && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                editResource.isPending ||
-                                deleteResource.isPending ||
-                                Boolean(
-                                  downloadingResourceId,
-                                )
-                              }
-                              onClick={() =>
-                                handleDelete(
-                                  resource,
-                                )
-                              }
-                              className="text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive"
-                            >
-                              {isDeleting ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                              )}
-
-                              Delete
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+  {resource.year && (
+    <AuditItem
+      label="Year"
+      value={String(resource.year)}
+    />
+  )}
+</div>
+</div>
+</div>
 
                       {/* Usage metrics */}
                       <div className="grid grid-cols-2 gap-2">
@@ -2113,59 +2113,48 @@ function ResourcesPage() {
                         )}
                       </div>
 
-                      {/* Responsive actions */}
-<div className="flex flex-wrap items-center gap-2 lg:hidden">
+                      
+{/* Resource actions */}
+<div className="grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:grid-cols-4 sm:gap-3 sm:pt-4">
   {canPreview && (
     <Button
-      size="sm"
+      type="button"
       variant="outline"
       disabled={
         editResource.isPending ||
         deleteResource.isPending ||
-        Boolean(
-          downloadingResourceId,
-        )
+        Boolean(downloadingResourceId)
       }
       onClick={() =>
-        setPreviewResource(
-          {
-            id: resource.id,
-            title:
-              resource.title,
-            file_path:
-              resource.file_path,
-          },
-        )
+        setPreviewResource({
+          id: resource.id,
+          title: resource.title,
+          file_path: resource.file_path,
+        })
       }
-      className="h-8 px-2.5 text-[10px] sm:h-9 sm:px-3 sm:text-xs"
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
     >
-      <Eye className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+      <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
       Preview
     </Button>
   )}
 
   {canDownload && (
     <Button
-      size="sm"
+      type="button"
       variant="outline"
       disabled={
         editResource.isPending ||
         deleteResource.isPending ||
-        Boolean(
-          downloadingResourceId,
-        )
+        Boolean(downloadingResourceId)
       }
-      onClick={() =>
-        handleDownload(
-          resource,
-        )
-      }
-      className="h-8 px-2.5 text-[10px] sm:h-9 sm:px-3 sm:text-xs"
+      onClick={() => handleDownload(resource)}
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
     >
       {isDownloading ? (
-        <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+        <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
       ) : (
-        <Download className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+        <Download className="mr-1.5 h-3.5 w-3.5 shrink-0" />
       )}
       Download
     </Button>
@@ -2173,26 +2162,20 @@ function ResourcesPage() {
 
   {canEdit && (
     <Button
-      size="sm"
+      type="button"
       variant="outline"
       disabled={
         editResource.isPending ||
         deleteResource.isPending ||
-        Boolean(
-          downloadingResourceId,
-        )
+        Boolean(downloadingResourceId)
       }
-      onClick={() =>
-        openEdit(
-          resource,
-        )
-      }
-      className="h-8 px-2.5 text-[10px] sm:h-9 sm:px-3 sm:text-xs"
+      onClick={() => openEdit(resource)}
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
     >
       {isEditing ? (
-        <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+        <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
       ) : (
-        <Edit3 className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+        <Edit3 className="mr-1.5 h-3.5 w-3.5 shrink-0" />
       )}
       Edit
     </Button>
@@ -2200,28 +2183,21 @@ function ResourcesPage() {
 
   {canDelete && (
     <Button
-      size="sm"
+      type="button"
       variant="outline"
       disabled={
         editResource.isPending ||
         deleteResource.isPending ||
-        Boolean(
-          downloadingResourceId,
-        )
+        Boolean(downloadingResourceId)
       }
-      onClick={() =>
-        handleDelete(
-          resource,
-        )
-      }
-      className="h-8 px-2.5 text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:px-3 sm:text-xs"
+      onClick={() => handleDelete(resource)}
+      className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
     >
       {isDeleting ? (
-        <Loader2 className="mr-1 h-3 w-3 animate-spin sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+        <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
       ) : (
-        <Trash2 className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+        <Trash2 className="mr-1.5 h-3.5 w-3.5 shrink-0" />
       )}
-
       Delete
     </Button>
   )}
@@ -2282,353 +2258,290 @@ function ResourcesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="grid gap-3 sm:gap-4">
-            <FormField
-              label="Resource title"
-              required
-            >
-              <Input
-                value={editForm.title}
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      title:
-                        event.target.value,
-                    }),
-                  )
-                }
-                placeholder="Resource title"
-                disabled={
-                  editResource.isPending
-                }
-                className="h-9 text-xs sm:h-10 sm:text-sm"
-              />
-            </FormField>
+          
+<div className="grid gap-4">
+  {/* Resource title */}
+  <div className="space-y-2">
+    <Label htmlFor="edit-resource-title">
+      Resource title
+    </Label>
+    <Input
+      id="edit-resource-title"
+      value={editForm.title}
+      onChange={(event) =>
+        setEditForm((current) => ({
+          ...current,
+          title: event.target.value,
+        }))
+      }
+      placeholder="Enter resource title"
+      disabled={editResource.isPending}
+    />
+  </div>
 
-            <FormField label="Description">
-              <textarea
-                value={
-                  editForm.description
-                }
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      description:
-                        event.target.value,
-                    }),
-                  )
-                }
-                placeholder="Resource description"
-                disabled={
-                  editResource.isPending
-                }
-                rows={4}
-                className="flex min-h-20 w-full rounded-md border border-input bg-background px-2.5 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
-              />
-            </FormField>
+  {/* Description */}
+  <div className="space-y-2">
+    <Label htmlFor="edit-resource-description">
+      Description
+    </Label>
+    <Textarea
+      id="edit-resource-description"
+      value={editForm.description}
+      onChange={(event) =>
+        setEditForm((current) => ({
+          ...current,
+          description: event.target.value,
+        }))
+      }
+      placeholder="Describe the resource"
+      rows={4}
+      disabled={editResource.isPending}
+    />
+  </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField label="Category">
-                <select
-                  value={
-                    editForm.category_id
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        category_id:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <option value="">
-                    Uncategorized
-                  </option>
+  {/* Category */}
+  <div className="space-y-2">
+    <Label htmlFor="edit-resource-category">
+      Category
+    </Label>
+    <Select
+      value={editForm.category_id || "uncategorized"}
+      onValueChange={(value) => {
+        const categoryId =
+          value === "uncategorized" ? "" : value;
 
-                  {(
-                    categories ?? []
-                  ).map((item) => (
-                    <option
-                      key={item.id}
-                      value={item.id}
-                    >
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
+        const selectedCategory = categories?.find(
+          (category) => category.id === categoryId,
+        );
 
-              <FormField label="Course code">
-                <Input
-                  value={
-                    editForm.course_code
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        course_code:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  placeholder="e.g. CSC 499"
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 text-xs sm:h-10 sm:text-sm"
-                />
-              </FormField>
-            </div>
+        const publication =
+          selectedCategory?.name === "Publications";
 
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField label="College">
-                <select
-                  value={
-                    editForm.college
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        college:
-                          event.target.value,
-                        department:
-                          "",
-                      }),
-                    )
-                  }
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <option value="">
-                    Select college
-                  </option>
+        setEditForm((current) => ({
+          ...current,
+          category_id: categoryId,
+          ...(publication
+            ? {
+                college: "",
+                department: "",
+                level: "",
+                course_code: "",
+              }
+            : {}),
+        }));
+      }}
+      disabled={editResource.isPending}
+    >
+      <SelectTrigger id="edit-resource-category">
+        <SelectValue placeholder="Select category" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="uncategorized">
+          Uncategorized
+        </SelectItem>
+        {(categories ?? []).map((category) => (
+          <SelectItem key={category.id} value={category.id}>
+            {category.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
 
-                  {colleges.map((college) => (
-                    <option
-                      key={college.id}
-                      value={college.id}
-                    >
-                      {college.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
+  {/* College and Department */}
+  {!isPublication && (
+    <div
+  className={`grid grid-cols-1 gap-4 ${
+    isSGS ? "sm:grid-cols-1" : "sm:grid-cols-2"
+  }`}
+>
+      <div className="space-y-2">
+        <Label htmlFor="edit-resource-college">
+          College
+        </Label>
+        <Select
+          value={editForm.college || "none"}
+          onValueChange={(value) =>
+            setEditForm((current) => ({
+              ...current,
+              college: value === "none" ? "" : value,
+              department: "",
+            }))
+          }
+          disabled={editResource.isPending}
+        >
+          <SelectTrigger id="edit-resource-college">
+            <SelectValue placeholder="Select college" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">
+              Select college
+            </SelectItem>
+            {colleges.map((college) => (
+              <SelectItem key={college.id} value={college.id}>
+                {college.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-              <FormField label="Department">
-                <select
-                  value={
-                    editForm.department
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        department:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  disabled={
-                    editResource.isPending ||
-                    !editForm.college
-                  }
-                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <option value="">
-                    {editForm.college
-                      ? "Select department"
-                      : "Select college first"}
-                  </option>
+      {!isSGS && (
+        <div className="space-y-2">
+          <Label htmlFor="edit-resource-department">
+            Department
+          </Label>
+          <Select
+            value={editForm.department || "none"}
+            onValueChange={(value) =>
+              setEditForm((current) => ({
+                ...current,
+                department: value === "none" ? "" : value,
+              }))
+            }
+            disabled={
+              editResource.isPending || !editForm.college
+            }
+          >
+            <SelectTrigger id="edit-resource-department">
+              <SelectValue placeholder="Select department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">
+                {editForm.college
+                  ? "Select department"
+                  : "Select college first"}
+              </SelectItem>
+              {availableDepartments.map((department) => (
+                <SelectItem key={department} value={department}>
+                  {department}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </div>
+  )}
 
-                  {availableDepartments.map(
-                    (department) => (
-                      <option
-                        key={department}
-                        value={
-                          department
-                        }
-                      >
-                        {
-                          department
-                        }
-                      </option>
-                    ),
-                  )}
-                </select>
-              </FormField>
-            </div>
+{/* Level, Semester and Upload Year */}
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    {!isPublication && (
+      <div className="space-y-2">
+        <Label htmlFor="edit-resource-level">
+          Level
+        </Label>
+        <Select
+          value={editForm.level || "none"}
+          onValueChange={(value) =>
+            setEditForm((current) => ({
+              ...current,
+              level: value === "none" ? "" : value,
+            }))
+          }
+          disabled={editResource.isPending}
+        >
+          <SelectTrigger id="edit-resource-level">
+            <SelectValue placeholder="Select level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">
+              Select level
+            </SelectItem>
+            {levels.map((level) => (
+              <SelectItem key={level} value={level}>
+                {level}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )}
+    
+  {/* Course code */}
+  {!isPublication && (
+    <div className="space-y-2">
+      <Label htmlFor="edit-resource-course-code">
+        Course code
+      </Label>
+      <Input
+        id="edit-resource-course-code"
+        value={editForm.course_code}
+        onChange={(event) =>
+          setEditForm((current) => ({
+            ...current,
+            course_code: event.target.value,
+          }))
+        }
+        placeholder="e.g. CSC 499"
+        disabled={editResource.isPending}
+      />
+    </div>
+  )}
 
-            <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-              <FormField label="Level">
-                <select
-                  value={
-                    editForm.level
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        level:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <option value="">
-                    Select level
-                  </option>
+  
 
-                  {levels.map(
-                    (level) => (
-                      <option
-                        key={level}
-                        value={level}
-                      >
-                        {level}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </FormField>
+    <div className="space-y-2">
+      <Label htmlFor="edit-resource-semester">
+        Semester
+      </Label>
+      <Select
+        value={editForm.semester || "none"}
+        onValueChange={(value) =>
+          setEditForm((current) => ({
+            ...current,
+            semester: value === "none" ? "" : value,
+          }))
+        }
+        disabled={editResource.isPending}
+      >
+        <SelectTrigger id="edit-resource-semester">
+          <SelectValue placeholder="Select semester" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">
+            Select semester
+          </SelectItem>
+          {semesters.map((semester) => (
+            <SelectItem key={semester} value={semester}>
+              {semester}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
 
-              <FormField label="Semester">
-                <select
-                  value={
-                    editForm.semester
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        semester:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <option value="">
-                    Select semester
-                  </option>
-
-                  {semesters.map(
-                    (semester) => (
-                      <option
-                        key={semester}
-                        value={semester}
-                      >
-                        {semester}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </FormField>
-
-              <FormField label="Year">
-                <select
-                  value={
-                    editForm.year
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        year:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <option value="">
-                    Select year
-                  </option>
-
-                  {years.map(
-                    (year) => (
-                      <option
-                        key={String(year)}
-                        value={String(
-                          year,
-                        )}
-                      >
-                        {year}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </FormField>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField label="Author">
-                <Input
-                  value={
-                    editForm.author
-                  }
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        author:
-                          event.target.value,
-                      }),
-                    )
-                  }
-                  placeholder="Author"
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 text-xs sm:h-10 sm:text-sm"
-                />
-              </FormField>
-
-              <FormField label="Tags">
-                <Input
-                  value={editForm.tags}
-                  onChange={(event) =>
-                    setEditForm(
-                      (current) => ({
-                        ...current,
-                        tags: event.target.value,
-                      }),
-                    )
-                  }
-                  placeholder="e.g. exam, lecture, revision"
-                  disabled={
-                    editResource.isPending
-                  }
-                  className="h-9 text-xs sm:h-10 sm:text-sm"
-                />
-
-                <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-                  Separate multiple tags with commas.
-                </p>
-              </FormField>
-            </div>
-          </div>
+    <div className="space-y-2">
+      <Label htmlFor="edit-resource-year">
+        Year of Upload
+      </Label>
+      <Select
+        value={editForm.year || "none"}
+        onValueChange={(value) =>
+          setEditForm((current) => ({
+            ...current,
+            year: value === "none" ? "" : value,
+          }))
+        }
+        disabled={editResource.isPending}
+      >
+        <SelectTrigger id="edit-resource-year">
+          <SelectValue placeholder="Select year" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">
+            Select year
+          </SelectItem>
+          {years.map((year) => (
+            <SelectItem key={String(year)} value={String(year)}>
+              {year}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+</div>
 
           <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
             <AlertDialogCancel
