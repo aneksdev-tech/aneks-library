@@ -736,8 +736,7 @@ function AcademicApprovals() {
                 Pending Resources
               </p>
 
-              <span
-                className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5"
+              <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-gold px-1 py-0.5 text-[10px] font-semibold text-gold-foreground sm:min-w-5 sm:px-1.5 sm:text-[10px]"
                 aria-label={`${data?.length ?? 0} pending resources`}
               >
                 {(data?.length ?? 0) > 99
