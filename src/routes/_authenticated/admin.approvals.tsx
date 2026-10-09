@@ -1151,29 +1151,33 @@ function Approvals() {
                       className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
                     />
                   </div>
-                  <Select
-                    value={categoryFilter}
-                    onValueChange={setCategoryFilter}
-                  >
-                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
 
-                    <SelectContent>
-                      <SelectItem value={ALL_OPTION}>
-                        All Categories
+                  {/* Category */}
+              <div className="md:col-span-2 xl:col-span-3">
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
+                  <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value={ALL_OPTION}>
+                      All Categories
+                    </SelectItem>
+
+                    {cats?.map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.id}
+                      >
+                        {category.name}
                       </SelectItem>
-
-                      {cats?.map((category) => (
-                        <SelectItem
-                          key={category.id}
-                          value={category.id}
-                        >
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
                   <Select
                     value={collegeFilter}

@@ -121,44 +121,44 @@ function AdminLayout() {
   }, [user, hasAdminWorkspaceAccess, navigate]);
 
 const tabs = [
-  {
-    to: "/admin",
-    label: "Overview",
-    icon: LayoutDashboard,
-  },
-  {
-    to: "/admin/approvals",
-    label: "Approvals",
-    icon: ClipboardCheck,
-  },
-  ...(canManageAnnouncementAccess
-    ? [
-        {
-          to: "/admin/announcements",
-          label: "Announcements",
-          icon: Megaphone,
-        },
-      ]
-    : []),
-  ...(canManagePlatform
-    ? [
-        {
-          to: "/admin/categories",
-          label: "Categories",
-          icon: Tags,
-        },
-        {
-          to: "/admin/resources",
-          label: "Resources",
-          icon: Files,
-        },
-        {
-          to: "/admin/users",
-          label: "Users",
-          icon: Users,
-        },
-      ]
-    : []),
+{
+to: "/admin",
+label: "Overview",
+icon: LayoutDashboard,
+},
+...(canManageAnnouncementAccess
+? [
+{
+to: "/admin/announcements",
+label: "Announcements",
+icon: Megaphone,
+},
+]
+: []),
+{
+to: "/admin/approvals",
+label: "Approvals",
+icon: ClipboardCheck,
+},
+...(canManagePlatform
+? [
+{
+to: "/admin/categories",
+label: "Categories",
+icon: Tags,
+},
+{
+to: "/admin/resources",
+label: "Resources",
+icon: Files,
+},
+{
+to: "/admin/users",
+label: "Users",
+icon: Users,
+},
+]
+: []),
 ];
 
   if (user && !hasAdminWorkspaceAccess) {
