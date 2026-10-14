@@ -16,12 +16,14 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+
 import {
   colleges,
   levels,
   semesters,
   years,
   getDepartments,
+  ALL_OPTION,
 } from "@/lib/academicData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -206,13 +208,24 @@ export function UploadPage({ draftId }: UploadPageProps) {
     setDraftLoaded(true);
   }, [draft, draftId, draftLoading, nav, user]);
 
-  const isSGS = form.college === "SGS";
+  
+const isSGS = form.college === "SGS";
 
-  const isPublication =
-    cats?.find((category) => category.id === form.category_id)
-      ?.name === "Publications";
+const selectedCategoryName = cats
+  ?.find((category) => category.id === form.category_id)
+  ?.name;
 
-  const departments = isSGS
+const isPublication =
+  selectedCategoryName === "Publications";
+
+const isLectureTimetable =
+  selectedCategoryName === "Lecture Timetables";
+
+const isGlobalCategory =
+  isPublication || isLectureTimetable;
+
+const departments =
+  form.college === ALL_OPTION
     ? []
     : getDepartments(form.college);
 
@@ -290,7 +303,11 @@ export function UploadPage({ draftId }: UploadPageProps) {
       throw new Error("Choose a college");
     }
 
-    if (!isPublication && !isSGS && !form.department) {
+    if (
+      !isPublication &&
+      (!isSGS || isGlobalCategory || departments.length > 0) &&
+      !form.department
+    ) {
       throw new Error("Choose a department");
     }
 
@@ -302,7 +319,10 @@ export function UploadPage({ draftId }: UploadPageProps) {
       throw new Error("Choose a semester");
     }
 
-    if (!isPublication && !form.course_code.trim()) {
+    if (
+      !isGlobalCategory &&
+      !form.course_code.trim()
+    ) {
       throw new Error("Course code is required");
     }
 
@@ -749,27 +769,39 @@ export function UploadPage({ draftId }: UploadPageProps) {
 
   <Select
     value={form.category_id}
-    onValueChange={(value) => {
-      const selectedCategory = cats?.find(
-        (category) => category.id === value,
-      );
+    
+onValueChange={(value) => {
+  const selectedCategory = cats?.find(
+    (category) => category.id === value,
+  );
 
-      const publication =
-        selectedCategory?.name === "Publications";
+  const selectedIsGlobalCategory =
+    selectedCategory?.name === "Publications" ||
+    selectedCategory?.name === "Lecture Timetables";
 
-      setForm({
-        ...form,
-        category_id: value,
-        ...(publication
-          ? {
-              college: "",
-              department: "",
-              level: "",
-              course_code: "",
-            }
-          : {}),
-      });
-    }}
+  const currentIsGlobalCategory =
+    cats?.some(
+      (category) =>
+        category.id === form.category_id &&
+        (category.name === "Publications" ||
+          category.name === "Lecture Timetables"),
+    ) ?? false;
+
+  setForm((current) => ({
+    ...current,
+    category_id: value,
+    ...(selectedIsGlobalCategory ||
+    currentIsGlobalCategory
+      ? {
+          college: "",
+          department: "",
+          level: "",
+          course_code: "",
+        }
+      : {}),
+  }));
+}}
+
   >
     <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
       <SelectValue placeholder="Choose one" />
@@ -790,12 +822,8 @@ export function UploadPage({ draftId }: UploadPageProps) {
 </div>
 
 {/* College and Department */}
-{!isPublication && (
-  <div
-    className={`grid grid-cols-1 gap-4 ${
-      isSGS ? "sm:grid-cols-1" : "sm:grid-cols-2"
-    }`}
-  >
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    {/* College */}
     <div className="space-y-2">
       <Label className="text-xs sm:text-sm">
         College
@@ -804,11 +832,11 @@ export function UploadPage({ draftId }: UploadPageProps) {
       <Select
         value={form.college}
         onValueChange={(value) =>
-          setForm({
-            ...form,
+          setForm((current) => ({
+            ...current,
             college: value,
             department: "",
-          })
+          }))
         }
       >
         <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
@@ -816,6 +844,15 @@ export function UploadPage({ draftId }: UploadPageProps) {
         </SelectTrigger>
 
         <SelectContent>
+          {isGlobalCategory && (
+            <SelectItem
+              value={ALL_OPTION}
+              className="text-xs sm:text-sm"
+            >
+              All Colleges
+            </SelectItem>
+          )}
+
           {colleges.map((college) => (
             <SelectItem
               key={college.id}
@@ -837,33 +874,43 @@ export function UploadPage({ draftId }: UploadPageProps) {
       </Select>
     </div>
 
-    {!isSGS && (
+    {/* Department */}
+    {(!isSGS || isGlobalCategory || departments.length > 0) && (
       <div className="space-y-2">
         <Label className="text-xs sm:text-sm">
           Department
         </Label>
 
         <Select
-          value={form.department}
-          onValueChange={(value) =>
-            setForm({
-              ...form,
-              department: value,
-            })
-          }
-          disabled={!form.college}
-        >
-          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-            <SelectValue
-              placeholder={
-                form.college
-                  ? "Choose Department"
-                  : "Select College first"
-              }
-            />
-          </SelectTrigger>
+            value={form.department}
+            onValueChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                department: value,
+              }))
+            }
+            disabled={!form.college}
+          >
+            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+              <SelectValue
+                placeholder={
+                  form.college
+                    ? "Choose Department"
+                    : "Select College first"
+                }
+              />
+            </SelectTrigger>
 
           <SelectContent>
+            {(isGlobalCategory || isSGS) && (
+              <SelectItem
+                value={ALL_OPTION}
+                className="text-xs sm:text-sm"
+              >
+                All Departments
+              </SelectItem>
+            )}
+
             {departments.map((department) => (
               <SelectItem
                 key={department}
@@ -878,45 +925,54 @@ export function UploadPage({ draftId }: UploadPageProps) {
       </div>
     )}
   </div>
-)}
 
 {/* Level, Course Code, Semester and Upload Year */}
 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-  {!isPublication && (
-    <div className="space-y-2">
-      <Label className="text-xs sm:text-sm">
-        Level
-      </Label>
+  
+{!isPublication || isGlobalCategory ? (
+  <div className="space-y-2">
+    <Label className="text-xs sm:text-sm">
+      Level
+    </Label>
 
-      <Select
-        value={form.level}
-        onValueChange={(value) =>
-          setForm({
-            ...form,
-            level: value,
-          })
-        }
-      >
-        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-          <SelectValue placeholder="Choose Level" />
-        </SelectTrigger>
+    <Select
+      value={form.level}
+      onValueChange={(value) =>
+        setForm((current) => ({
+          ...current,
+          level: value,
+        }))
+      }
+    >
+      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+        <SelectValue placeholder="Choose Level" />
+      </SelectTrigger>
 
-        <SelectContent>
-          {levels.map((level) => (
-            <SelectItem
-              key={level}
-              value={level}
-              className="text-xs sm:text-sm"
-            >
-              {level}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <SelectContent>
+        {isGlobalCategory && (
+          <SelectItem
+            value={ALL_OPTION}
+            className="text-xs sm:text-sm"
+          >
+            All Levels
+          </SelectItem>
+        )}
+
+        {levels.map((level) => (
+          <SelectItem
+            key={level}
+            value={level}
+            className="text-xs sm:text-sm"
+          >
+            {level}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
     </div>
-  )}
+) : null}
 
-  {!isPublication && (
+  {!isGlobalCategory && (
     <div className="space-y-2">
       <Label htmlFor="course" className="text-xs sm:text-sm">
         Course Code

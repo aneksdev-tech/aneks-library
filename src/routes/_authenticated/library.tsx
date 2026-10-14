@@ -4,7 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccess } from "@/hooks/useAccess";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -22,6 +22,7 @@ import {
   Filter,
   Eye,
   Loader2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,49 +37,40 @@ import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
 import { ResourceTypeBadge } from "@/components/ResourceTypeBadge";
 
-export const Route = createFileRoute(
-  "/_authenticated/library",
-)({
+export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
     meta: [
-      {
-        title: "Library | Aneks Library",
-      },
-      {
-        name: "robots",
-        content: "noindex",
-      },
+      { title: "Library | Aneks Library" },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: LibraryPage,
 });
 
+const PAGE_SIZE = 20;
+
 function LibraryPage() {
   const [q, setQ] = useState("");
-  const [category, setCategory] =
-    useState<string>("all");
+  const [category, setCategory] = useState<string>(ALL_OPTION);
   const [sort, setSort] = useState<
     "newest" | "downloads" | "bookmarks"
   >("newest");
 
-  const [college, setCollege] =
-    useState(ALL_OPTION);
-
-  const [department, setDepartment] =
-    useState(ALL_OPTION);
-
-  const [level, setLevel] =
-    useState(ALL_OPTION);
-
-  const [semester, setSemester] =
-    useState(ALL_OPTION);
+  const [college, setCollege] = useState(ALL_OPTION);
+  const [department, setDepartment] = useState(ALL_OPTION);
+  const [level, setLevel] = useState(ALL_OPTION);
+  const [semester, setSemester] = useState(ALL_OPTION);
+  const [page, setPage] = useState(1);
 
   const departments =
-    college === ALL_OPTION
-      ? []
-      : getDepartments(college);
+    college === ALL_OPTION ? [] : getDepartments(college);
 
   const { canDownload } = useAccess();
+
+  // Reset pagination whenever a filter or sort option changes.
+  useEffect(() => {
+    setPage(1);
+  }, [q, category, college, department, level, semester, sort]);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -89,15 +81,16 @@ function LibraryPage() {
         .is("deleted_at", null)
         .order("sort_order");
 
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return data ?? [];
     },
   });
 
-  const { data, isLoading } = useQuery({
+  const {
+    data: libraryResult,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: [
       "library",
       q,
@@ -107,84 +100,65 @@ function LibraryPage() {
       level,
       semester,
       sort,
+      page,
+      PAGE_SIZE,
     ],
     queryFn: async () => {
-      let query = supabase
-        .from("public_resources")
-        .select(`
-          id,
-          title,
-          description,
-          course_code,
-          college,
-          department,
-          level,
-          semester,
-          year,
-          tags,
-          category_id,
-          download_count,
-          bookmark_count,
-          created_at,
-          file_type,
-          category_name,
-          category_slug
-        `);
+      const { data, error } = await supabase.rpc(
+        "get_library_resources",
+        {
+          p_search: q.trim(),
+          p_category_id: category,
+          p_college: college,
+          p_department: department,
+          p_level: level,
+          p_semester: semester,
+          p_sort: sort,
+          p_page_size: PAGE_SIZE,
+          p_page: page,
+        },
+      );
 
-      if (category !== ALL_OPTION) {
-        query = query.eq("category_id", category);
-      }
+      if (error) throw error;
 
-      if (college !== ALL_OPTION) {
-        query = query.eq("college", college);
-      }
+      const result = data as unknown as {
+        totalCount: number;
+        resources: ResourceRow[];
+      };
 
-      if (department !== ALL_OPTION) {
-        query = query.eq(
-          "department",
-          department,
-        );
-      }
-
-      if (level !== ALL_OPTION) {
-        query = query.eq("level", level);
-      }
-
-      if (semester !== ALL_OPTION) {
-        query = query.eq(
-          "semester",
-          semester,
-        );
-      }
-
-      if (q.trim()) {
-        query = query.or(
-          `title.ilike.%${q}%,description.ilike.%${q}%,course_code.ilike.%${q}%`,
-        );
-      }
-
-      const orderCol =
-        sort === "newest"
-          ? "created_at"
-          : sort === "downloads"
-            ? "download_count"
-            : "bookmark_count";
-
-      query = query
-        .order(orderCol, {
-          ascending: false,
-        })
-        .limit(60);
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      return data ?? [];
+      return {
+        resources: Array.isArray(result?.resources)
+          ? result.resources
+          : [],
+        totalCount: Number(result?.totalCount ?? 0),
+      };
     },
   });
+
+  const data = libraryResult?.resources ?? [];
+  const totalCount = libraryResult?.totalCount ?? 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const firstResult =
+    totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastResult = Math.min(page * PAGE_SIZE, totalCount);
+
+  const hasActiveFilters =
+    q.trim() !== "" ||
+    category !== ALL_OPTION ||
+    college !== ALL_OPTION ||
+    department !== ALL_OPTION ||
+    level !== ALL_OPTION ||
+    semester !== ALL_OPTION;
+
+  const clearFilters = () => {
+    setQ("");
+    setCategory(ALL_OPTION);
+    setCollege(ALL_OPTION);
+    setDepartment(ALL_OPTION);
+    setLevel(ALL_OPTION);
+    setSemester(ALL_OPTION);
+  };
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -207,49 +181,34 @@ function LibraryPage() {
       <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
         <div className="mb-3 flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-      
           <p className="text-xs font-semibold sm:text-sm">
             Find resources
           </p>
         </div>
 
-      <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
         <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
           {/* Search */}
-
           <div className="relative md:col-span-2 xl:col-span-3">
             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
-
             <Input
               placeholder="Search title, course code, description…"
               value={q}
-              onChange={(e) =>
-                setQ(e.target.value)
-              }
+              onChange={(e) => setQ(e.target.value)}
               className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
             />
           </div>
 
           {/* Category */}
-
-          <Select
-            value={category}
-            onValueChange={setCategory}
-          >
+          <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-
             <SelectContent>
-              <SelectItem value="all">
+              <SelectItem value={ALL_OPTION}>
                 All Categories
               </SelectItem>
-
               {cats?.map((c) => (
-                <SelectItem
-                  key={c.id}
-                  value={c.id}
-                >
+                <SelectItem key={c.id} value={c.id}>
                   {c.name}
                 </SelectItem>
               ))}
@@ -257,7 +216,6 @@ function LibraryPage() {
           </Select>
 
           {/* College */}
-
           <Select
             value={college}
             onValueChange={(value) => {
@@ -268,24 +226,16 @@ function LibraryPage() {
             <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="College" />
             </SelectTrigger>
-
             <SelectContent>
-              <SelectItem value="all">
+              <SelectItem value={ALL_OPTION}>
                 All Colleges
               </SelectItem>
-
-              {colleges.map((college) => (
-                <SelectItem
-                  key={college.id}
-                  value={college.id}
-                >
+              {colleges.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
                   <>
-                    <span className="sm:hidden">
-                      {college.id}
-                    </span>
-
+                    <span className="sm:hidden">{item.id}</span>
                     <span className="hidden sm:inline">
-                      {college.name} ({college.id})
+                      {item.name} ({item.id})
                     </span>
                   </>
                 </SelectItem>
@@ -294,69 +244,39 @@ function LibraryPage() {
           </Select>
 
           {/* Department */}
-
           <Select
             value={department}
             onValueChange={setDepartment}
+            disabled={college === ALL_OPTION}
           >
             <SelectTrigger
               className={`h-9 text-xs sm:h-10 sm:text-sm ${
-                college === ALL_OPTION
-                  ? "opacity-60"
-                  : ""
+                college === ALL_OPTION ? "opacity-60" : ""
               }`}
             >
-              <span>
-                {department === ALL_OPTION
-                  ? "All Departments"
-                  : department}
-              </span>
+              <SelectValue placeholder="Department" />
             </SelectTrigger>
-
             <SelectContent>
-              {college === ALL_OPTION ? (
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  Select College first
-                </div>
-              ) : (
-                <>
-                  <SelectItem value={ALL_OPTION}>
-                    All Departments
-                  </SelectItem>
-
-                  {departments.map((dept) => (
-                    <SelectItem
-                      key={dept}
-                      value={dept}
-                    >
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </>
-              )}
+              <SelectItem value={ALL_OPTION}>
+                All Departments
+              </SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
           {/* Level */}
-
-          <Select
-            value={level}
-            onValueChange={setLevel}
-          >
+          <Select value={level} onValueChange={setLevel}>
             <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="Level" />
             </SelectTrigger>
-
             <SelectContent>
-              <SelectItem value="all">
-                All Levels
-              </SelectItem>
-
+              <SelectItem value={ALL_OPTION}>All Levels</SelectItem>
               {levels.map((item) => (
-                <SelectItem
-                  key={item}
-                  value={item}
-                >
+                <SelectItem key={item} value={item}>
                   {item}
                 </SelectItem>
               ))}
@@ -364,78 +284,105 @@ function LibraryPage() {
           </Select>
 
           {/* Semester */}
-
-          <Select
-            value={semester}
-            onValueChange={setSemester}
-          >
+          <Select value={semester} onValueChange={setSemester}>
             <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue placeholder="Semester" />
             </SelectTrigger>
-
             <SelectContent>
-              <SelectItem value="all">
+              <SelectItem value={ALL_OPTION}>
                 All Semesters
               </SelectItem>
-
               {semesters.map((item) => (
-                <SelectItem
-                  key={item}
-                  value={item}
-                >
+                <SelectItem key={item} value={item}>
                   {item}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-
           {/* Sort */}
           <Select
             value={sort}
-            onValueChange={(v) =>
-              setSort(v as typeof sort)
+            onValueChange={(value) =>
+              setSort(value as typeof sort)
             }
           >
             <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
               <SelectValue />
             </SelectTrigger>
-
             <SelectContent>
-              <SelectItem value="newest">
-                Newest first
-              </SelectItem>
-
-              <SelectItem value="downloads">
-                Most downloaded
-              </SelectItem>
-
-              <SelectItem value="bookmarks">
-                Most bookmarked
-              </SelectItem>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="downloads">Most downloaded</SelectItem>
+              <SelectItem value="bookmarks">Most bookmarked</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </div>
+
+        {/* Result count and clear filters */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            {isLoading ? (
+              "Loading resource count…"
+            ) : totalCount === 0 ? (
+              <>
+                Showing{" "}
+                <span className="font-semibold text-foreground">
+                  0
+                </span>{" "}
+                resources
+              </>
+            ) : (
+              <>
+                Showing{" "}
+                <span className="font-semibold text-foreground">
+                  {firstResult}–{lastResult}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-foreground">
+                  {totalCount}
+                </span>{" "}
+                {totalCount === 1 ? "resource" : "resources"}
+              </>
+            )}
+          </p>
+
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-8 gap-1.5 px-2 text-xs sm:text-sm"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map(
-            (_, i) => (
-              <div
-                key={i}
-                className="h-40 animate-pulse rounded-2xl border border-border bg-card sm:h-48"
-              />
-            ),
-          )}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-40 animate-pulse rounded-2xl border border-border bg-card sm:h-48"
+            />
+          ))}
         </div>
-      ) : data && data.length > 0 ? (
+      ) : isError ? (
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <EmptyState
+            title="Unable to load resources"
+            desc="Please try again. If the problem continues, refresh the page."
+          />
+        </div>
+      ) : data.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {data.map((r) => (
+          {data.map((resource) => (
             <ResourceCard
-              key={r.id}
-              r={r as unknown as ResourceRow}
+              key={resource.id}
+              r={resource as unknown as ResourceRow}
               canDownload={canDownload}
             />
           ))}
@@ -446,6 +393,43 @@ function LibraryPage() {
             title="No resources found"
             desc="Try a different search or clear the filters."
           />
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && !isError && totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            Page {page} of {totalPages}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() =>
+                setPage((current) => Math.max(1, current - 1))
+              }
+            >
+              Previous
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() =>
+                setPage((current) =>
+                  Math.min(totalPages, current + 1),
+                )
+              }
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -482,24 +466,23 @@ export function ResourceCard({
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const [previewing, setPreviewing] =
-    useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   const collegeShort =
-    r.college?.match(/\((.*?)\)/)?.[1] ??
-    r.college;
+    r.college?.match(/\((.*?)\)/)?.[1] ?? r.college;
 
   const { data: bookmarked } = useQuery({
     queryKey: ["bookmarked", r.id, user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("bookmarks")
         .select("id")
         .eq("resource_id", r.id)
         .eq("user_id", user!.id)
         .maybeSingle();
 
+      if (error) throw error;
       return !!data;
     },
   });
@@ -517,9 +500,7 @@ export function ResourceCard({
           .eq("resource_id", r.id)
           .eq("user_id", user.id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from("bookmarks")
@@ -528,16 +509,13 @@ export function ResourceCard({
             user_id: user.id,
           });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: ["bookmarked", r.id],
       });
-
       qc.invalidateQueries({
         queryKey: ["library"],
       });
@@ -552,8 +530,7 @@ export function ResourceCard({
   });
 
   const categoryName =
-    r.category_name?.trim() ||
-    "Uncategorized";
+    r.category_name?.trim() || "Uncategorized";
 
   return (
     <article className="group flex flex-col rounded-2xl border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
@@ -561,14 +538,9 @@ export function ResourceCard({
         <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-primary sm:text-xs">
           {categoryName}
         </span>
-
         <div className="shrink-0">
           <ResourceTypeBadge
-            filePath={
-              r.file_type
-                ? `.${r.file_type}`
-                : ""
-            }
+            filePath={r.file_type ? `.${r.file_type}` : ""}
           />
         </div>
       </div>
@@ -602,24 +574,14 @@ export function ResourceCard({
           </div>
         )}
 
-        {r.level && (
-          <div>
-            🎓 {r.level}
-          </div>
-        )}
+        {r.level && <div>🎓 {r.level}</div>}
 
-        {r.semester && (
-          <div>
-            📅 {r.semester}
-          </div>
-        )}
+        {r.semester && <div>📅 {r.semester}</div>}
       </div>
 
       <div className="mt-auto flex items-center justify-between pt-4 text-[10px] text-muted-foreground sm:pt-5 sm:text-xs">
         <span>
-          {new Date(
-            r.created_at,
-          ).toLocaleDateString()}
+          {new Date(r.created_at).toLocaleDateString()}
         </span>
 
         <span className="inline-flex items-center gap-2.5 sm:gap-3">
@@ -627,7 +589,6 @@ export function ResourceCard({
             <Download className="h-3 w-3" />
             {r.download_count}
           </span>
-
           <span className="inline-flex items-center gap-1">
             <Bookmark className="h-3 w-3" />
             {r.bookmark_count}
@@ -646,18 +607,13 @@ export function ResourceCard({
           >
             <Link
               to="/preview/$resourceId"
-              params={{
-                resourceId: r.id,
-              }}
-              onClick={() =>
-                setPreviewing(true)
-              }
+              params={{ resourceId: r.id }}
+              onClick={() => setPreviewing(true)}
               className="flex items-center justify-center"
             >
               {previewing ? (
                 <>
                   <Loader2 className="hidden h-3.5 w-3.5 animate-spin max-[320px]:block" />
-
                   <span className="block max-[320px]:hidden">
                     Previewing...
                   </span>
@@ -665,7 +621,6 @@ export function ResourceCard({
               ) : (
                 <>
                   <Eye className="hidden h-3.5 w-3.5 max-[320px]:block" />
-
                   <span className="block max-[320px]:hidden">
                     Preview
                   </span>
@@ -679,9 +634,7 @@ export function ResourceCard({
           className="h-8 shrink-0 px-2 sm:h-9"
           variant="outline"
           size="sm"
-          onClick={() =>
-            toggleBookmark.mutate()
-          }
+          onClick={() => toggleBookmark.mutate()}
           disabled={toggleBookmark.isPending}
           aria-label="Bookmark"
         >
@@ -691,11 +644,7 @@ export function ResourceCard({
                 ? "text-yellow-500"
                 : "text-muted-foreground"
             }`}
-            fill={
-              bookmarked
-                ? "currentColor"
-                : "none"
-            }
+            fill={bookmarked ? "currentColor" : "none"}
           />
         </Button>
       </div>

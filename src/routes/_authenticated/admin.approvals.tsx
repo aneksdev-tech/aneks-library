@@ -1,9 +1,10 @@
+
 import {
   createFileRoute,
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useMutation,
   useQuery,
@@ -35,6 +36,8 @@ import {
   Check,
   CheckCircle2,
   Clock3,
+  ChevronLeft,
+  ChevronRight,
   Eye,
   FileText,
   Loader2,
@@ -125,6 +128,8 @@ export const Route = createFileRoute(
   component: Approvals,
 });
 
+const PAGE_SIZE = 20;
+
 type ResourceStatus =
   | "pending"
   | "approved"
@@ -152,7 +157,7 @@ type Resource = {
   created_at: string;
   status: ResourceStatus;
   uploader_id: string;
-    category?: {
+  category?: {
     id?: string | null;
     name?: string;
     deleted_at?: string | null;
@@ -161,6 +166,12 @@ type Resource = {
     full_name?: string | null;
     email?: string | null;
   } | null;
+};
+
+type PendingResourcesResponse = {
+  resources: Resource[];
+  totalCount: number;
+  pendingCount: number;
 };
 
 type PendingDecision =
@@ -277,107 +288,69 @@ function Approvals() {
   const [userDecisionReason, setUserDecisionReason] =
     useState("");
 
+  // Resource filters and pagination.
+  const [searchQuery, setSearchQuery] =
+    useState("");
+
+  const [collegeFilter, setCollegeFilter] =
+    useState(ALL_OPTION);
+
+  const [departmentFilter, setDepartmentFilter] =
+    useState(ALL_OPTION);
+
+  const [levelFilter, setLevelFilter] =
+    useState(ALL_OPTION);
+
+  const [semesterFilter, setSemesterFilter] =
+    useState(ALL_OPTION);
+
+  const [categoryFilter, setCategoryFilter] =
+    useState(ALL_OPTION);
+
+  const [page, setPage] = useState(1);
+
+  // Fetch only the requested page of filtered pending resources.
   const {
     data,
     isLoading,
+    isError,
+    refetch,
   } = useQuery({
-    queryKey: ["pending-resources"],
+    queryKey: [
+      "pending-resources",
+      searchQuery.trim(),
+      categoryFilter,
+      collegeFilter,
+      departmentFilter,
+      levelFilter,
+      semesterFilter,
+      page,
+      PAGE_SIZE,
+    ],
 
     queryFn: async () => {
       const {
-        data: resources,
+        data: response,
         error,
-      } = await supabase
-        .from("resources")
-        .select(
-          `
-            id,
-            title,
-            description,
-            file_path,
-            file_name,
-            file_size,
-            course_code,
-            college,
-            department,
-            level,
-            semester,
-            year,
-            created_at,
-            status,
-            uploader_id,
-            category:categories(id, name, deleted_at)
-          `,
-        )
-        .eq(
-          "status",
-          "pending",
-        )
-        .order(
-          "created_at",
-          {
-            ascending: true,
-          },
-        );
+      } = await supabase.rpc(
+        "get_academic_pending_resources",
+        {
+          p_search: searchQuery.trim(),
+          p_category_id: categoryFilter,
+          p_college: collegeFilter,
+          p_department: departmentFilter,
+          p_level: levelFilter,
+          p_semester: semesterFilter,
+          p_page_size: PAGE_SIZE,
+          p_page: page,
+        },
+      );
 
       if (error) {
         throw error;
       }
 
-      const rows =
-        (resources ?? []) as unknown as Resource[];
-
-      const uploaderIds = [
-        ...new Set(
-          rows
-            .map(
-              (resource) =>
-                resource.uploader_id,
-            )
-            .filter(Boolean),
-        ),
-      ];
-
-      if (uploaderIds.length === 0) {
-        return rows;
-      }
-
-      const {
-        data: uploaderProfiles,
-        error: uploaderError,
-      } = await supabase
-        .from("private_profiles")
-        .select("id, full_name, email")
-        .in("id", uploaderIds);
-
-      if (uploaderError) {
-        throw uploaderError;
-      }
-
-      const uploaderMap =
-        new Map(
-          (
-            uploaderProfiles ?? []
-          ).map((uploader) => [
-            uploader.id,
-            {
-              full_name:
-                uploader.full_name,
-              email:
-                uploader.email,
-            },
-          ]),
-        );
-
-      return rows.map(
-        (resource) => ({
-          ...resource,
-          uploader:
-            uploaderMap.get(
-              resource.uploader_id,
-            ) ?? null,
-        }),
-      );
+      return response as unknown as PendingResourcesResponse;
     },
   });
 
@@ -420,15 +393,17 @@ function Approvals() {
     },
   });
 
-    const { data: cats } = useQuery({
+  const { data: cats } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data: categories, error } =
-        await supabase
-          .from("categories")
-          .select("id, name, slug")
-          .is("deleted_at", null)
-          .order("sort_order");
+      const {
+        data: categories,
+        error,
+      } = await supabase
+        .from("categories")
+        .select("id, name, slug")
+        .is("deleted_at", null)
+        .order("sort_order");
 
       if (error) {
         throw error;
@@ -438,102 +413,44 @@ function Approvals() {
     },
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [collegeFilter, setCollegeFilter] =
-    useState(ALL_OPTION);
-  const [departmentFilter, setDepartmentFilter] =
-    useState(ALL_OPTION);
-  const [levelFilter, setLevelFilter] =
-    useState(ALL_OPTION);
-  const [semesterFilter, setSemesterFilter] =
-    useState(ALL_OPTION);
-  const [categoryFilter, setCategoryFilter] =
-    useState(ALL_OPTION);
+  const filteredResources =
+    data?.resources ?? [];
+
+  const totalCount =
+    data?.totalCount ?? 0;
+
+  const pendingCount =
+    data?.pendingCount ?? 0;
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalCount / PAGE_SIZE),
+  );
+
+  // Start from the first page whenever the filters change.
+  useEffect(() => {
+    setPage(1);
+  }, [
+    searchQuery,
+    categoryFilter,
+    collegeFilter,
+    departmentFilter,
+    levelFilter,
+    semesterFilter,
+  ]);
+
+  // If a decision or changed result set reduces the number of pages,
+  // move back to the last page that still exists.
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const departments =
     collegeFilter === ALL_OPTION
       ? []
       : getDepartments(collegeFilter);
-
-  const filteredResources = useMemo(() => {
-    const normalizedSearch =
-      searchQuery.trim().toLowerCase();
-
-    return (data ?? []).filter((resource) => {
-      const categoryId =
-        resource.category?.id ?? ALL_OPTION;
-
-      const categoryName =
-        resource.category?.deleted_at == null
-          ? resource.category?.name?.trim() ?? ""
-          : "";
-
-      const matchesSearch =
-        !normalizedSearch ||
-        [
-          resource.title,
-          resource.file_name,
-          resource.description,
-          resource.course_code,
-          resource.college,
-          resource.department,
-          resource.level,
-          resource.semester,
-          resource.year,
-          categoryName,
-          resource.uploader?.full_name,
-          resource.uploader?.email,
-        ]
-          .filter(
-            (value) =>
-              value !== null &&
-              value !== undefined &&
-              value !== "",
-          )
-          .some((value) =>
-            String(value)
-              .toLowerCase()
-              .includes(normalizedSearch),
-          );
-
-      const matchesCollege =
-        collegeFilter === ALL_OPTION ||
-        resource.college === collegeFilter;
-
-      const matchesDepartment =
-        departmentFilter === ALL_OPTION ||
-        resource.department === departmentFilter;
-
-      const matchesLevel =
-        levelFilter === ALL_OPTION ||
-        resource.level === levelFilter;
-
-      const matchesSemester =
-        semesterFilter === ALL_OPTION ||
-        resource.semester === semesterFilter;
-
-      const matchesCategory =
-        categoryFilter === ALL_OPTION ||
-        categoryId === categoryFilter;
-
-      return (
-        matchesSearch &&
-        matchesCollege &&
-        matchesDepartment &&
-        matchesLevel &&
-        matchesSemester &&
-        matchesCategory
-      );
-    });
-  }, [
-    data,
-    searchQuery,
-    collegeFilter,
-    departmentFilter,
-    levelFilter,
-    semesterFilter,
-    categoryFilter,
-  ]);
 
   const hasActiveFilters =
     searchQuery.trim() !== "" ||
@@ -550,6 +467,7 @@ function Approvals() {
     setLevelFilter(ALL_OPTION);
     setSemesterFilter(ALL_OPTION);
     setCategoryFilter(ALL_OPTION);
+    setPage(1);
   };
 
   const decide = useMutation({
@@ -840,8 +758,7 @@ function Approvals() {
 
     if (!reason) {
       toast.error(
-        pendingDecision.type ===
-          "approve"
+        pendingDecision.type === "approve"
           ? "Please provide an approval reason before approving this resource."
           : "Please provide a rejection reason before rejecting this resource.",
       );
@@ -850,12 +767,10 @@ function Approvals() {
 
     decide.mutate({
       id: pendingDecision.id,
-      file_path:
-        pendingDecision.file_path,
+      file_path: pendingDecision.file_path,
       title: pendingDecision.title,
       approve:
-        pendingDecision.type ===
-        "approve",
+        pendingDecision.type === "approve",
       reason,
     });
   };
@@ -878,8 +793,7 @@ function Approvals() {
     decideUser.mutate({
       id: pendingUserDecision.id,
       approve:
-        pendingUserDecision.type ===
-        "approve",
+        pendingUserDecision.type === "approve",
       reason,
     });
   };
@@ -905,17 +819,13 @@ function Approvals() {
                 type="button"
                 role="tab"
                 aria-selected={
-                  activeSection ===
-                  "users"
+                  activeSection === "users"
                 }
                 onClick={() =>
-                  setActiveSection(
-                    "users",
-                  )
+                  setActiveSection("users")
                 }
                 className={`relative flex shrink-0 items-center gap-1.5 border-b-2 px-1 pb-2.5 text-xs font-semibold transition-colors sm:gap-2 sm:pb-3 sm:text-sm ${
-                  activeSection ===
-                  "users"
+                  activeSection === "users"
                     ? "border-primary text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
@@ -924,12 +834,9 @@ function Approvals() {
                 User Accounts
 
                 {pendingUsers &&
-                  pendingUsers.length >
-                    0 && (
+                  pendingUsers.length > 0 && (
                     <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
-                      {
-                        pendingUsers.length
-                      }
+                      {pendingUsers.length}
                     </span>
                   )}
               </button>
@@ -939,38 +846,33 @@ function Approvals() {
               type="button"
               role="tab"
               aria-selected={
-                activeSection ===
-                "resources"
+                activeSection === "resources"
               }
               onClick={() =>
-                setActiveSection(
-                  "resources",
-                )
+                setActiveSection("resources")
               }
               className={`relative flex shrink-0 items-center gap-1.5 border-b-2 px-1 pb-2.5 text-xs font-semibold transition-colors sm:gap-2 sm:pb-3 sm:text-sm ${
-                activeSection ===
-                "resources"
+                activeSection === "resources"
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Resources
-              {data && data.length > 0 && (
-                <span  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
-                  {data.length}
+
+              {pendingCount > 0 && (
+                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
+                  {pendingCount}
                 </span>
               )}
-              </button>
+            </button>
           </div>
         </div>
 
         {/* User Accounts */}
-        {activeSection ===
-          "users" &&
+        {activeSection === "users" &&
           canApproveUsers && (
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
-
               {pendingUsersLoading ? (
                 <div className="p-7 text-center text-xs text-muted-foreground sm:p-8 sm:text-sm">
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -979,148 +881,139 @@ function Approvals() {
                   </div>
                 </div>
               ) : pendingUsers &&
-                pendingUsers.length >
-                  0 ? (
+                pendingUsers.length > 0 ? (
                 <ul className="divide-y divide-border">
-                  {pendingUsers.map(
-                    (pendingUser) => {
-                      const isProcessing =
-                        userDecisionLoading &&
-                        decideUser.variables
-                          ?.id ===
-                          pendingUser.id;
+                  {pendingUsers.map((pendingUser) => {
+                    const isProcessing =
+                      userDecisionLoading &&
+                      decideUser.variables?.id ===
+                        pendingUser.id;
 
-                      const displayName =
-                        pendingUser.full_name?.trim() ||
-                        "Unnamed user";
+                    const displayName =
+                      pendingUser.full_name?.trim() ||
+                      "Unnamed user";
 
-                      const email =
-                        pendingUser.email?.trim() ||
-                        "No email available";
+                    const email =
+                      pendingUser.email?.trim() ||
+                      "No email available";
 
-                      const detailItems =
-                        getPendingUserDetails(
-                          pendingUser,
-                        );
+                    return (
+                      <li
+                        key={pendingUser.id}
+                        className="border-b-2 border-border/70 p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
+                      >
+                        <div className="flex flex-col gap-3.5 sm:gap-4">
+                          <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gold sm:px-2 sm:text-[10px]">
+                                  <Clock3 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                                  Pending
+                                </span>
 
-                      return (
-                        <li
-                          key={
-                            pendingUser.id
-                          }
-                          className="border-b-2 border-border/70 p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
-                        >
-                          <div className="flex flex-col gap-3.5 sm:gap-4">
-                            <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                  <span className="inline-flex items-center gap-1 rounded-full border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gold sm:px-2 sm:text-[10px]">
-                                    <Clock3 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                    Pending
-                                  </span>
-
-                                  <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
-                                    {formatRoleLabel(
-                                      pendingUser.primary_role,
-                                    )}
-                                  </span>
-                                </div>
-
-                                <div className="mt-1.5 sm:mt-2">
-                                  <p className="break-words text-sm font-semibold leading-5 text-foreground sm:text-lg sm:leading-6">
-                                    {displayName}
-                                  </p>
-
-                                  <p className="mt-0.5 break-all text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-                                    {email}
-                                  </p>
-                                </div>
+                                <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
+                                  {formatRoleLabel(
+                                    pendingUser.primary_role,
+                                  )}
+                                </span>
                               </div>
 
+                              <div className="mt-1.5 sm:mt-2">
+                                <p className="break-words text-sm font-semibold leading-5 text-foreground sm:text-lg sm:leading-6">
+                                  {displayName}
+                                </p>
+
+                                <p className="mt-0.5 break-all text-xs text-muted-foreground sm:mt-1 sm:text-sm">
+                                  {email}
+                                </p>
+                              </div>
                             </div>
-
-
-{/* Account metadata */}
-{pendingUser.college?.trim() && (
-  <AuditItem
-    label="College"
-    value={pendingUser.college.trim()}
-  />
-)}
-
-{pendingUser.department?.trim() && (
-  <AuditItem
-    label="Department"
-    value={pendingUser.department.trim()}
-  />
-)}
-
-{pendingUser.primary_role === "student" &&
-  pendingUser.level?.trim() && (
-    <AuditItem
-      label="Level"
-      value={pendingUser.level.trim()}
-    />
-  )}
-
-<AuditItem
-  label="Registered"
-  value="Pending approval"
-  detail={formatDateTime(pendingUser.created_at)}
-/>
-
-
-{/* Account actions */}
-<div className="grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:gap-3 sm:pt-4">
-  <Button
-    type="button"
-    variant="outline"
-    disabled={userDecisionLoading}
-    onClick={() =>
-      requestRejectUser(
-        pendingUser.id,
-        displayName,
-        email,
-      )
-    }
-    className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
-  >
-    {isProcessing &&
-    pendingUserDecision?.type === "reject" ? (
-      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-    ) : (
-      <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-    )}
-    Reject
-  </Button>
-
-  <Button
-    type="button"
-    variant="outline"
-    disabled={userDecisionLoading}
-    onClick={() =>
-      requestApproveUser(
-        pendingUser.id,
-        displayName,
-        email,
-      )
-    }
-    className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
-  >
-    {isProcessing &&
-    pendingUserDecision?.type === "approve" ? (
-      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-    ) : (
-      <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-    )}
-    Approve
-  </Button>
-</div>
                           </div>
-                        </li>
-                      );
-                    },
-                  )}
+
+                          {/* Account metadata */}
+                          {pendingUser.college?.trim() && (
+                            <AuditItem
+                              label="College"
+                              value={pendingUser.college.trim()}
+                            />
+                          )}
+
+                          {pendingUser.department?.trim() && (
+                            <AuditItem
+                              label="Department"
+                              value={pendingUser.department.trim()}
+                            />
+                          )}
+
+                          {pendingUser.primary_role ===
+                            "student" &&
+                            pendingUser.level?.trim() && (
+                              <AuditItem
+                                label="Level"
+                                value={pendingUser.level.trim()}
+                              />
+                            )}
+
+                          <AuditItem
+                            label="Registered"
+                            value="Pending approval"
+                            detail={formatDateTime(
+                              pendingUser.created_at,
+                            )}
+                          />
+
+                          {/* Account actions */}
+                          <div className="grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:gap-3 sm:pt-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={userDecisionLoading}
+                              onClick={() =>
+                                requestRejectUser(
+                                  pendingUser.id,
+                                  displayName,
+                                  email,
+                                )
+                              }
+                              className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+                            >
+                              {isProcessing &&
+                              pendingUserDecision?.type ===
+                                "reject" ? (
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                              ) : (
+                                <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              )}
+                              Reject
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={userDecisionLoading}
+                              onClick={() =>
+                                requestApproveUser(
+                                  pendingUser.id,
+                                  displayName,
+                                  email,
+                                )
+                              }
+                              className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
+                            >
+                              {isProcessing &&
+                              pendingUserDecision?.type ===
+                                "approve" ? (
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                              ) : (
+                                <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              )}
+                              Approve
+                            </Button>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <EmptyState
@@ -1132,200 +1025,219 @@ function Approvals() {
           )}
 
         {/* Resources */}
-        {activeSection ===
-          "resources" && (
+        {activeSection === "resources" && (
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
-            {!isLoading && data && data.length > 0 && (
-              <div className="border-b border-border p-3 sm:p-4">
-                <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  <div className="relative md:col-span-2 xl:col-span-3">
-                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+            {/* Resource filters */}
+            {!isLoading &&
+              !isError &&
+              pendingCount > 0 && (
+                <div className="border-b border-border p-3 sm:p-4">
+                  <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="relative md:col-span-2 xl:col-span-3">
+                      <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
-                    <Input
-                      placeholder="Search title, course code, description…"
-                      value={searchQuery}
-                      onChange={(event) =>
-                        setSearchQuery(event.target.value)
-                      }
-                      aria-label="Search pending resources"
-                      className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
-                    />
-                  </div>
+                      <Input
+                        placeholder="Search title, course code, description…"
+                        value={searchQuery}
+                        onChange={(event) =>
+                          setSearchQuery(event.target.value)
+                        }
+                        aria-label="Search pending resources"
+                        className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+                      />
+                    </div>
 
-                  {/* Category */}
-              <div className="md:col-span-2 xl:col-span-3">
-                <Select
-                  value={categoryFilter}
-                  onValueChange={setCategoryFilter}
-                >
-                  <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectItem value={ALL_OPTION}>
-                      All Categories
-                    </SelectItem>
-
-                    {cats?.map((category) => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.id}
+                    {/* Category */}
+                    <div className="md:col-span-2 xl:col-span-3">
+                      <Select
+                        value={categoryFilter}
+                        onValueChange={setCategoryFilter}
                       >
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
 
-                  <Select
-                    value={collegeFilter}
-                    onValueChange={(value) => {
-                      setCollegeFilter(value);
-                      setDepartmentFilter(ALL_OPTION);
-                    }}
-                  >
-                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                      <SelectValue placeholder="College" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      <SelectItem value={ALL_OPTION}>
-                        All Colleges
-                      </SelectItem>
-
-                      {colleges.map((college) => (
-                        <SelectItem
-                          key={college.id}
-                          value={college.id}
-                        >
-                          <>
-                            <span className="sm:hidden">
-                              {college.id}
-                            </span>
-                            <span className="hidden sm:inline">
-                              {college.name} ({college.id})
-                            </span>
-                          </>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={departmentFilter}
-                    onValueChange={setDepartmentFilter}
-                  >
-                    <SelectTrigger
-                      className={`h-9 text-xs sm:h-10 sm:text-sm ${
-                        collegeFilter === ALL_OPTION
-                          ? "opacity-60"
-                          : ""
-                      }`}
-                    >
-                      <span>
-                        {departmentFilter === ALL_OPTION
-                          ? "All Departments"
-                          : departmentFilter}
-                      </span>
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {collegeFilter === ALL_OPTION ? (
-                        <div className="px-3 py-2 text-sm text-muted-foreground">
-                          Select College first
-                        </div>
-                      ) : (
-                        <>
+                        <SelectContent>
                           <SelectItem value={ALL_OPTION}>
-                            All Departments
+                            All Categories
                           </SelectItem>
 
-                          {departments.map((department) => (
+                          {cats?.map((category) => (
                             <SelectItem
-                              key={department}
-                              value={department}
+                              key={category.id}
+                              value={category.id}
                             >
-                              {department}
+                              {category.name}
                             </SelectItem>
                           ))}
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <Select
-                    value={levelFilter}
-                    onValueChange={setLevelFilter}
-                  >
-                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                      <SelectValue placeholder="Level" />
-                    </SelectTrigger>
+                    <Select
+                      value={collegeFilter}
+                      onValueChange={(value) => {
+                        setCollegeFilter(value);
+                        setDepartmentFilter(ALL_OPTION);
+                      }}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                        <SelectValue placeholder="College" />
+                      </SelectTrigger>
 
-                    <SelectContent>
-                      <SelectItem value={ALL_OPTION}>
-                        All Levels
-                      </SelectItem>
-
-                      {levels.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
+                      <SelectContent>
+                        <SelectItem value={ALL_OPTION}>
+                          All Colleges
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
 
-                  <Select
-                    value={semesterFilter}
-                    onValueChange={setSemesterFilter}
-                  >
-                    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                      <SelectValue placeholder="Semester" />
-                    </SelectTrigger>
+                        {colleges.map((college) => (
+                          <SelectItem
+                            key={college.id}
+                            value={college.id}
+                          >
+                            <>
+                              <span className="sm:hidden">
+                                {college.id}
+                              </span>
+                              <span className="hidden sm:inline">
+                                {college.name} ({college.id})
+                              </span>
+                            </>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                    <SelectContent>
-                      <SelectItem value={ALL_OPTION}>
-                        All Semesters
-                      </SelectItem>
+                    <Select
+                      value={departmentFilter}
+                      onValueChange={setDepartmentFilter}
+                    >
+                      <SelectTrigger
+                        className={`h-9 text-xs sm:h-10 sm:text-sm ${
+                          collegeFilter === ALL_OPTION
+                            ? "opacity-60"
+                            : ""
+                        }`}
+                      >
+                        <span>
+                          {departmentFilter === ALL_OPTION
+                            ? "All Departments"
+                            : departmentFilter}
+                        </span>
+                      </SelectTrigger>
 
-                      {semesters.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
+                      <SelectContent>
+                        {collegeFilter === ALL_OPTION ? (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            Select College first
+                          </div>
+                        ) : (
+                          <>
+                            <SelectItem value={ALL_OPTION}>
+                              All Departments
+                            </SelectItem>
+
+                            {departments.map((department) => (
+                              <SelectItem
+                                key={department}
+                                value={department}
+                              >
+                                {department}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={levelFilter}
+                      onValueChange={setLevelFilter}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                        <SelectValue placeholder="Level" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value={ALL_OPTION}>
+                          All Levels
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                        {levels.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={semesterFilter}
+                      onValueChange={setSemesterFilter}
+                    >
+                      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                        <SelectValue placeholder="Semester" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value={ALL_OPTION}>
+                          All Semesters
+                        </SelectItem>
+
+                        {semesters.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+              )}
 
-                {hasActiveFilters && (
-                  <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
-                    <p className="text-[10px] text-muted-foreground sm:text-xs">
+            {/* Matching count */}
+            {!isLoading && !isError && (
+              <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
+                <p
+                  className="text-[10px] text-muted-foreground sm:text-xs"
+                  aria-live="polite"
+                >
+                  {totalCount === 0 ? (
+                    "No matching pending resources"
+                  ) : (
+                    <>
                       Showing{" "}
                       <span className="font-medium text-foreground">
-                        {filteredResources.length}
+                        {(page - 1) * PAGE_SIZE + 1}–
+                        {Math.min(
+                          page * PAGE_SIZE,
+                          totalCount,
+                        )}
                       </span>{" "}
                       of{" "}
                       <span className="font-medium text-foreground">
-                        {data.length}
+                        {totalCount}
                       </span>{" "}
-                      pending{" "}
-                      {data.length === 1
+                      matching pending{" "}
+                      {totalCount === 1
                         ? "resource"
                         : "resources"}
-                    </p>
+                    </>
+                  )}
+                </p>
 
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="shrink-0 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-xs"
-                    >
-                      Clear filters
-                    </button>
-                  </div>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="shrink-0 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-xs"
+                  >
+                    Clear filters
+                  </button>
                 )}
               </div>
             )}
+
             {isLoading ? (
               <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
                 <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -1333,45 +1245,50 @@ function Approvals() {
                   Loading review queue…
                 </div>
               </div>
-              ) : filteredResources.length > 0 ? (
-              <ul className="divide-y-0">
-                {filteredResources.map(
-                  (resource) => {
+            ) : isError ? (
+              <div className="p-7 text-center sm:p-10">
+                <p className="text-xs text-muted-foreground sm:text-sm">
+                  Could not load pending resources. Please try again.
+                </p>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void refetch()}
+                  className="mt-3 h-9 text-xs sm:text-sm"
+                >
+                  Try again
+                </Button>
+              </div>
+            ) : filteredResources.length > 0 ? (
+              <>
+                <ul className="divide-y-0">
+                  {filteredResources.map((resource) => {
                     const isProcessing =
                       decisionLoading &&
-                      decide.variables
-                        ?.id ===
-                        resource.id;
+                      decide.variables?.id === resource.id;
 
                     const canPreview =
-                      resource.file_size >
-                        0 &&
-                      resource.status ===
-                        "pending";
+                      resource.file_size > 0 &&
+                      resource.status === "pending";
 
                     const categoryName =
-                      resource.category
-                        ?.deleted_at ==
-                        null &&
+                      resource.category?.deleted_at == null &&
                       resource.category?.name?.trim()
                         ? resource.category.name.trim()
                         : "Uncategorized";
 
                     return (
                       <li
-                        key={
-                          resource.id
-                        }
-                        className="group border-b-2 border-border/70 p-3.5 transition-colors sm:p-5 odd:bg-card even:bg-muted/40 hover:bg-muted/50"
+                        key={resource.id}
+                        className="group border-b-2 border-border/70 p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
                       >
                         <div className="flex flex-col gap-3.5 sm:gap-4">
                           <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                 <StatusPill
-                                  status={
-                                    resource.status
-                                  }
+                                  status={resource.status}
                                 />
 
                                 <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
@@ -1381,9 +1298,7 @@ function Approvals() {
 
                               <div className="mt-1.5 min-w-0 sm:mt-2">
                                 <p className="break-words text-sm font-semibold leading-5 text-foreground sm:text-lg sm:leading-6">
-                                  {
-                                    resource.title
-                                  }
+                                  {resource.title}
                                 </p>
 
                                 <p className="mt-1 break-all text-[10px] text-muted-foreground sm:text-xs">
@@ -1392,61 +1307,59 @@ function Approvals() {
 
                                 {resource.description && (
                                   <p className="mt-2 max-w-4xl line-clamp-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
-                                    {
-                                      resource.description
-                                    }
+                                    {resource.description}
                                   </p>
                                 )}
                               </div>
 
+                              <div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
+                                <AuditItem
+                                  label="File size"
+                                  value={formatFileSize(resource.file_size)}
+                                />
 
-<div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
-  <AuditItem
-    label="File size"
-    value={formatFileSize(resource.file_size)}
-  />
+                                <AuditItem
+                                  label="Course code"
+                                  value={resource.course_code || "Not provided"}
+                                />
 
-  <AuditItem
-    label="Course code"
-    value={resource.course_code || "Not provided"}
-  />
+                                <AuditItem
+                                  label="College"
+                                  value={resource.college || "Not provided"}
+                                />
 
-  <AuditItem
-    label="College"
-    value={resource.college || "Not provided"}
-  />
+                                <AuditItem
+                                  label="Department"
+                                  value={resource.department || "Not provided"}
+                                />
 
-  <AuditItem
-    label="Department"
-    value={resource.department || "Not provided"}
-  />
+                                <AuditItem
+                                  label="Level"
+                                  value={resource.level || "Not provided"}
+                                />
 
-  <AuditItem
-    label="Level"
-    value={resource.level || "Not provided"}
-  />
+                                <AuditItem
+                                  label="Semester"
+                                  value={resource.semester || "Not provided"}
+                                />
 
-  <AuditItem
-    label="Semester"
-    value={resource.semester || "Not provided"}
-  />
-
-  <AuditItem
-    label="Year"
-    value={resource.year?.toString() || "Not provided"}
-  />
-</div>
-</div>
-</div>
+                                <AuditItem
+                                  label="Year"
+                                  value={
+                                    resource.year?.toString() ||
+                                    "Not provided"
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
 
                           <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
                             <AuditItem
                               label="Uploader"
                               value={
-                                resource.uploader
-                                  ?.full_name ||
-                                resource.uploader
-                                  ?.email ||
+                                resource.uploader?.full_name ||
+                                resource.uploader?.email ||
                                 "Unknown"
                               }
                               detail={formatDateTime(
@@ -1463,76 +1376,127 @@ function Approvals() {
                             />
                           </div>
 
-{/* Resource actions */}
-<div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-3 sm:gap-3 sm:pt-4">
-  {canPreview && (
-    <Button
-      type="button"
-      variant="outline"
-      disabled={decisionLoading}
-      onClick={() =>
-        setPreviewResource({
-          id: resource.id,
-          title: resource.title,
-          file_path: resource.file_path,
-        })
-      }
-      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
-    >
-      <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-      Preview
-    </Button>
-  )}
+                          {/* Resource actions */}
+                          <div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-3 sm:gap-3 sm:pt-4">
+                            {canPreview && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={decisionLoading}
+                                onClick={() =>
+                                  setPreviewResource({
+                                    id: resource.id,
+                                    title: resource.title,
+                                    file_path: resource.file_path,
+                                  })
+                                }
+                                className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+                              >
+                                <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                                Preview
+                              </Button>
+                            )}
 
-  <Button
-    type="button"
-    variant="outline"
-    disabled={decisionLoading}
-    onClick={() =>
-      requestReject(
-        resource.id,
-        resource.file_path,
-        resource.title,
-      )
-    }
-    className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
-  >
-    {isProcessing && !decide.variables?.approve ? (
-      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-    ) : (
-      <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-    )}
-    Reject
-  </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={decisionLoading}
+                              onClick={() =>
+                                requestReject(
+                                  resource.id,
+                                  resource.file_path,
+                                  resource.title,
+                                )
+                              }
+                              className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+                            >
+                              {isProcessing &&
+                              !decide.variables?.approve ? (
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                              ) : (
+                                <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              )}
+                              Reject
+                            </Button>
 
-  <Button
-    type="button"
-    variant="outline"
-    disabled={decisionLoading}
-    onClick={() =>
-      requestApprove(
-        resource.id,
-        resource.file_path,
-        resource.title,
-      )
-    }
-    className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
-  >
-    {isProcessing && decide.variables?.approve ? (
-      <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-    ) : (
-      <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-    )}
-    Approve
-  </Button>
-</div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              disabled={decisionLoading}
+                              onClick={() =>
+                                requestApprove(
+                                  resource.id,
+                                  resource.file_path,
+                                  resource.title,
+                                )
+                              }
+                              className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
+                            >
+                              {isProcessing &&
+                              decide.variables?.approve ? (
+                                <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                              ) : (
+                                <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                              )}
+                              Approve
+                            </Button>
+                          </div>
                         </div>
                       </li>
                     );
-                  },
+                  })}
+                </ul>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between gap-3 border-t border-border p-3 sm:p-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={page <= 1}
+                      onClick={() =>
+                        setPage((current) =>
+                          Math.max(1, current - 1),
+                        )
+                      }
+                      className="h-9 px-2.5 text-xs sm:px-3 sm:text-sm"
+                    >
+                      <ChevronLeft className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      Previous
+                    </Button>
+
+                    <span className="text-[10px] text-muted-foreground sm:text-xs">
+                      Page{" "}
+                      <span className="font-medium text-foreground">
+                        {page}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-medium text-foreground">
+                        {totalPages}
+                      </span>
+                    </span>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={page >= totalPages}
+                      onClick={() =>
+                        setPage((current) =>
+                          Math.min(
+                            totalPages,
+                            current + 1,
+                          ),
+                        )
+                      }
+                      className="h-9 px-2.5 text-xs sm:px-3 sm:text-sm"
+                    >
+                      Next
+                      <ChevronRight className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Button>
+                  </div>
                 )}
-              </ul>
-              ) : hasActiveFilters ? (
+              </>
+            ) : hasActiveFilters ? (
               <EmptyState
                 title="No matching resources"
                 desc="No pending resources match the selected filters."
@@ -1549,14 +1513,9 @@ function Approvals() {
 
       {/* Resource decision dialog */}
       <AlertDialog
-        open={
-          pendingDecision !== null
-        }
+        open={pendingDecision !== null}
         onOpenChange={(open) => {
-          if (
-            !open &&
-            !decisionLoading
-          ) {
+          if (!open && !decisionLoading) {
             setPendingDecision(null);
             setDecisionReason("");
           }
@@ -1565,41 +1524,27 @@ function Approvals() {
         <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
-              {pendingDecision?.type ===
-              "approve"
+              {pendingDecision?.type === "approve"
                 ? "Approve resource?"
                 : "Reject resource?"}
             </AlertDialogTitle>
 
             <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
-              {pendingDecision?.type ===
-              "approve" ? (
+              {pendingDecision?.type === "approve" ? (
                 <>
-                  Are you sure you want to
-                  approve{" "}
-                  <strong>
-                    {
-                      pendingDecision.title
-                    }
-                  </strong>
-                  ? The resource will become
-                  available in the Library and
-                  the uploader will receive a
+                  Are you sure you want to approve{" "}
+                  <strong>{pendingDecision.title}</strong>?
+                  The resource will become available in the
+                  Library and the uploader will receive a
                   notification.
                 </>
               ) : (
                 <>
-                  Are you sure you want to
-                  reject{" "}
-                  <strong>
-                    {
-                      pendingDecision?.title
-                    }
-                  </strong>
-                  ? The uploaded file will be
-                  permanently removed, while the
-                  resource record will be retained
-                  for history.
+                  Are you sure you want to reject{" "}
+                  <strong>{pendingDecision?.title}</strong>?
+                  The uploaded file will be permanently
+                  removed, while the resource record will be
+                  retained for history.
                 </>
               )}
             </AlertDialogDescription>
@@ -1611,8 +1556,7 @@ function Approvals() {
                 htmlFor="resource-decision-reason"
                 className="text-xs font-medium sm:text-sm"
               >
-                {pendingDecision.type ===
-                "approve"
+                {pendingDecision.type === "approve"
                   ? "Approval reason"
                   : "Rejection reason"}
               </label>
@@ -1621,19 +1565,14 @@ function Approvals() {
                 id="resource-decision-reason"
                 value={decisionReason}
                 onChange={(event) =>
-                  setDecisionReason(
-                    event.target.value,
-                  )
+                  setDecisionReason(event.target.value)
                 }
                 placeholder={
-                  pendingDecision.type ===
-                  "approve"
+                  pendingDecision.type === "approve"
                     ? "e.g. Content verified and meets Library submission requirements"
                     : "e.g. Incorrect course material or poor-quality scan"
                 }
-                disabled={
-                  decisionLoading
-                }
+                disabled={decisionLoading}
                 required
                 aria-required="true"
                 className="h-9 text-xs sm:h-10 sm:text-sm"
@@ -1641,8 +1580,7 @@ function Approvals() {
 
               <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
                 A{" "}
-                {pendingDecision.type ===
-                "approve"
+                {pendingDecision.type === "approve"
                   ? "reason for approval"
                   : "reason for rejection"}{" "}
                 is required before continuing.
@@ -1668,8 +1606,7 @@ function Approvals() {
                 !decisionReason.trim()
               }
               className={`h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm ${
-                pendingDecision?.type ===
-                "reject"
+                pendingDecision?.type === "reject"
                   ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   : "bg-gradient-emerald text-primary-foreground"
               }`}
@@ -1679,12 +1616,10 @@ function Approvals() {
               )}
 
               {decisionLoading
-                ? pendingDecision?.type ===
-                  "approve"
+                ? pendingDecision?.type === "approve"
                   ? "Approving…"
                   : "Rejecting…"
-                : pendingDecision?.type ===
-                    "approve"
+                : pendingDecision?.type === "approve"
                   ? "Approve resource"
                   : "Reject resource"}
             </AlertDialogAction>
@@ -1694,15 +1629,9 @@ function Approvals() {
 
       {/* User account decision dialog */}
       <AlertDialog
-        open={
-          pendingUserDecision !==
-          null
-        }
+        open={pendingUserDecision !== null}
         onOpenChange={(open) => {
-          if (
-            !open &&
-            !userDecisionLoading
-          ) {
+          if (!open && !userDecisionLoading) {
             setPendingUserDecision(null);
             setUserDecisionReason("");
           }
@@ -1711,39 +1640,25 @@ function Approvals() {
         <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
-              {pendingUserDecision?.type ===
-              "approve"
+              {pendingUserDecision?.type === "approve"
                 ? "Approve user account?"
                 : "Reject user account?"}
             </AlertDialogTitle>
 
             <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
-              {pendingUserDecision?.type ===
-              "approve" ? (
+              {pendingUserDecision?.type === "approve" ? (
                 <>
-                  Are you sure you want to
-                  approve{" "}
-                  <strong>
-                    {
-                      pendingUserDecision.name
-                    }
-                  </strong>
-                  ? This will activate the account
-                  and allow the user to access
-                  Aneks Library.
+                  Are you sure you want to approve{" "}
+                  <strong>{pendingUserDecision.name}</strong>?
+                  This will activate the account and allow the
+                  user to access Aneks Library.
                 </>
               ) : (
                 <>
-                  Are you sure you want to
-                  reject{" "}
-                  <strong>
-                    {
-                      pendingUserDecision?.name
-                    }
-                  </strong>
-                  ? The account will remain
-                  rejected and will not be granted
-                  access.
+                  Are you sure you want to reject{" "}
+                  <strong>{pendingUserDecision?.name}</strong>?
+                  The account will remain rejected and will not
+                  be granted access.
                 </>
               )}
             </AlertDialogDescription>
@@ -1754,8 +1669,7 @@ function Approvals() {
               htmlFor="user-decision-reason"
               className="text-xs font-medium sm:text-sm"
             >
-              {pendingUserDecision?.type ===
-              "approve"
+              {pendingUserDecision?.type === "approve"
                 ? "Approval reason"
                 : "Rejection reason"}
             </label>
@@ -1764,36 +1678,28 @@ function Approvals() {
               id="user-decision-reason"
               value={userDecisionReason}
               onChange={(event) =>
-                setUserDecisionReason(
-                  event.target.value,
-                )
+                setUserDecisionReason(event.target.value)
               }
               placeholder={
-                pendingUserDecision?.type ===
-                "approve"
+                pendingUserDecision?.type === "approve"
                   ? "e.g. Registration details verified"
                   : "e.g. Registration details could not be verified"
               }
-              disabled={
-                userDecisionLoading
-              }
+              disabled={userDecisionLoading}
               required
               aria-required="true"
               className="h-9 text-xs sm:h-10 sm:text-sm"
             />
 
             <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
-              A reason is required and will be
-              recorded in the account audit
-              history.
+              A reason is required and will be recorded in
+              the account audit history.
             </p>
           </div>
 
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel
-              disabled={
-                userDecisionLoading
-              }
+              disabled={userDecisionLoading}
               className="h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               Cancel
@@ -1809,8 +1715,7 @@ function Approvals() {
                 !userDecisionReason.trim()
               }
               className={`h-9 w-full text-xs sm:h-10 sm:w-auto sm:text-sm ${
-                pendingUserDecision?.type ===
-                "reject"
+                pendingUserDecision?.type === "reject"
                   ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   : "bg-gradient-emerald text-primary-foreground"
               }`}
@@ -1820,12 +1725,10 @@ function Approvals() {
               )}
 
               {userDecisionLoading
-                ? pendingUserDecision?.type ===
-                  "approve"
+                ? pendingUserDecision?.type === "approve"
                   ? "Approving…"
                   : "Rejecting…"
-                : pendingUserDecision?.type ===
-                    "approve"
+                : pendingUserDecision?.type === "approve"
                   ? "Approve account"
                   : "Reject account"}
             </AlertDialogAction>
@@ -1843,15 +1746,6 @@ function Approvals() {
       )}
     </>
   );
-}
-
-function getResourceCategoryName(
-  resource: Resource,
-): string {
-  return resource.category?.deleted_at == null &&
-    resource.category?.name?.trim()
-    ? resource.category.name.trim()
-    : "Uncategorized";
 }
 
 function getPendingUserDetails(
@@ -1992,23 +1886,17 @@ function AuditItem({
   );
 }
 
-function formatRoleLabel(
-  value: string,
-) {
+function formatRoleLabel(value: string) {
   return value
     .replace(/[-_]/g, " ")
     .toUpperCase();
 }
 
-function formatDateTime(
-  value: string,
-) {
+function formatDateTime(value: string) {
   return new Date(value).toLocaleString();
 }
 
-function formatFileSize(
-  bytes: number,
-) {
+function formatFileSize(bytes: number) {
   if (!bytes || bytes <= 0) {
     return "0 B";
   }
@@ -2022,16 +1910,12 @@ function formatFileSize(
   ];
 
   const index = Math.floor(
-    Math.log(bytes) /
-      Math.log(1024),
+    Math.log(bytes) / Math.log(1024),
   );
 
   return `${(
-    bytes /
-    Math.pow(1024, index)
-  ).toFixed(
-    index === 0 ? 0 : 1,
-  )} ${units[index]}`;
+    bytes / Math.pow(1024, index)
+  ).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
 function PreviewModal({
@@ -2046,9 +1930,7 @@ function PreviewModal({
   onClose: () => void;
 }) {
   const [scrollRoot, setScrollRoot] =
-    useState<HTMLDivElement | null>(
-      null,
-    );
+    useState<HTMLDivElement | null>(null);
 
   const {
     data: previewUrl,
@@ -2062,8 +1944,7 @@ function PreviewModal({
     queryFn: async () => {
       const {
         data: { session },
-      } =
-        await supabase.auth.getSession();
+      } = await supabase.auth.getSession();
 
       return {
         url:
@@ -2079,10 +1960,9 @@ function PreviewModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 backdrop-blur-sm sm:p-4"
-      onMouseDown={(e) => {
+      onMouseDown={(event) => {
         if (
-          e.target ===
-          e.currentTarget
+          event.target === event.currentTarget
         ) {
           onClose();
         }
@@ -2118,8 +1998,7 @@ function PreviewModal({
           }
           className="min-h-0 flex-1 overflow-auto p-2.5 sm:p-4"
         >
-          {isLoading ||
-          !previewUrl ? (
+          {isLoading || !previewUrl ? (
             <div className="flex min-h-[60vh] items-center justify-center text-xs text-muted-foreground sm:text-sm">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
@@ -2129,12 +2008,8 @@ function PreviewModal({
           ) : (
             <DocumentPreview
               url={previewUrl.url}
-              token={
-                previewUrl.accessToken
-              }
-              filePath={
-                resource.file_path
-              }
+              token={previewUrl.accessToken}
+              filePath={resource.file_path}
               title={resource.title}
               scrollRoot={scrollRoot}
             />

@@ -40,6 +40,7 @@ import {
   semesters,
   years,
   getDepartments,
+  ALL_OPTION,
 } from "@/lib/academicData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,15 @@ type Resource = {
     email?: string | null;
   } | null;
 };
+
+type AdminResourcesPage = {
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  resources: Resource[];
+};
+
+const PAGE_SIZE = 20;
 
 type ResourceEditAudit = {
   id: string;
@@ -328,8 +338,6 @@ function ResourcesPage() {
     }
   }, [user, roles, navigate]);
 
-const ALL_OPTION = "all";
-
 const [search, setSearch] = useState("");
 const [status, setStatus] =
   useState<"all" | ResourceStatus>("all");
@@ -341,6 +349,7 @@ const [semester, setSemester] = useState("all");
 
 const [sortOrder, setSortOrder] =
   useState<"newest" | "oldest">("newest");
+const [page, setPage] = useState(1);
 
 const departments = useMemo(
   () => college !== ALL_OPTION ? getDepartments(college) : [],
@@ -386,178 +395,88 @@ const departments = useMemo(
   ] = useState<string | null>(null);
 
   const {
-    data: resources,
-    isLoading,
-  } = useQuery({
-    queryKey: ["admin-resources"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("resources")
-        .select(
-          `
-            id,
-            uploader_id,
-            category_id,
-            title,
-            description,
-            course_code,
-            department,
-            level,
-            author,
-            year,
-            tags,
-            file_path,
-            file_name,
-            file_size,
-            mime_type,
-            thumbnail_path,
-            status,
-            rejection_reason,
-            rejected_by,
-            rejected_at,
-            download_count,
-            bookmark_count,
-            approved_by,
-            approved_at,
-            approval_reason,
-            deleted_by,
-            deleted_at,
-            deletion_reason,
-            created_at,
-            updated_at,
-            college,
-            semester,
-            category:categories(name, deleted_at)
-          `,
-        )
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      const primaryResources =
-        (data ?? []) as unknown as Resource[];
-
-      const profileIds = [
-        ...new Set(
-          [
-            ...primaryResources.map(
-              (resource) =>
-                resource.uploader_id,
-            ),
-            ...primaryResources.map(
-              (resource) =>
-                resource.approved_by,
-            ),
-            ...primaryResources.map(
-              (resource) =>
-                resource.deleted_by,
-            ),
-            ...primaryResources.map(
-              (resource) =>
-                resource.rejected_by,
-            ),
-          ].filter(
-            (id): id is string =>
-              Boolean(id),
-          ),
-        ),
-      ];
-
-      if (profileIds.length === 0) {
-        return primaryResources;
-      }
-
-      const {
-        data: profiles,
-        error: profilesError,
-      } = await supabase
-        .from("private_profiles")
-        .select(
-          "id, full_name, email",
-        )
-        .in("id", profileIds);
-
-      if (profilesError) {
-        throw profilesError;
-      }
-
-      const profileMap = new Map(
-        (profiles ?? []).map(
-          (profile) => [
-            profile.id,
-            {
-              full_name:
-                profile.full_name,
-              email: profile.email,
-            },
-          ],
-        ),
-      );
-
-      return primaryResources.map(
-        (resource) => ({
-          ...resource,
-          uploader:
-            profileMap.get(
-              resource.uploader_id,
-            ) ?? null,
-          approver:
-            resource.approved_by
-              ? profileMap.get(
-                  resource.approved_by,
-                ) ?? null
-              : null,
-          deleter:
-            resource.deleted_by
-              ? profileMap.get(
-                  resource.deleted_by,
-                ) ?? null
-              : null,
-          rejecter:
-            resource.rejected_by
-              ? profileMap.get(
-                  resource.rejected_by,
-                ) ?? null
-              : null,
-        }),
-      );
-    },
-  });
-
-  const { data: categories } =
-    useQuery({
-      queryKey: [
-        "admin-resource-categories",
-      ],
-      queryFn: async () => {
-        const { data, error } =
-          await supabase
-            .from("categories")
-            .select("id, name")
-            .is("deleted_at", null)
-            .order("name", {
-              ascending: true,
-            });
-
-        if (error) {
-          throw error;
-        }
-
-        return data ?? [];
-      },
+  data: resourcePage,
+  isLoading: resourcesLoading,
+  isError: resourcesError,
+  refetch: refetchResources,
+} = useQuery({
+  queryKey: [
+    "admin-resources",
+    search.trim(),
+    status,
+    category,
+    college,
+    department,
+    level,
+    semester,
+    sortOrder,
+    page,
+  ],
+  queryFn: async (): Promise<AdminResourcesPage> => {
+    const { data, error } = await supabase.rpc("get_admin_resources", {
+      p_search: search.trim(),
+      p_status: status,
+      p_category_id: category,
+      p_college: college,
+      p_department: department,
+      p_level: level,
+      p_semester: semester,
+      p_sort: sortOrder,
+      p_page_size: PAGE_SIZE,
+      p_page: page,
     });
 
+    if (error) {
+      throw error;
+    }
+
+    const result = data as unknown as AdminResourcesPage;
+
+    return {
+      totalCount: Number(result.totalCount ?? 0),
+      page: Number(result.page ?? page),
+      pageSize: Number(result.pageSize ?? PAGE_SIZE),
+      resources: result.resources ?? [],
+    };
+  },
+});
+
+const { data: categories } = useQuery({
+  queryKey: ["admin-resource-categories"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name")
+      .is("deleted_at", null)
+      .order("name", { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    return data ?? [];
+  },
+});
+
+const resources = resourcePage?.resources ?? [];
+const totalCount = resourcePage?.totalCount ?? 0;
+const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+const firstResource =
+  totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+
+const lastResource = Math.min(page * PAGE_SIZE, totalCount);
+
+useEffect(() => {
+  if (page > totalPages) {
+    setPage(totalPages);
+  }
+}, [page, totalPages]);
+
   const resourceIds = useMemo(
-    () =>
-      (resources ?? []).map(
-        (resource) => resource.id,
-      ),
-    [resources],
-  );
+  () => resources.map((resource) => resource.id),
+  [resources],
+);
 
   const { data: editAudits } =
     useQuery({
@@ -1091,148 +1010,6 @@ const departments = useMemo(
     },
   });
 
-  const filteredResources =
-    useMemo(() => {
-      if (!resources) {
-        return [];
-      }
-
-      const query =
-        search.trim().toLowerCase();
-
-      const filtered =
-        resources.filter(
-          (resource) => {
-            const matchesStatus =
-              status === "all" ||
-              resource.status ===
-                status;
-
-            const categoryName =
-              resource.category
-                ?.deleted_at == null &&
-              resource.category?.name
-                ?.trim()
-                ? resource.category.name.trim()
-                : "Uncategorized";
-
-            const categoryIsUncategorized =
-              !resource.category_id ||
-              resource.category?.deleted_at !=
-                null ||
-              !resource.category?.name?.trim();
-
-            let matchesCategory =
-              true;
-
-            if (
-              category !== "all"
-            ) {
-              if (
-                category ===
-                UNCATEGORIZED_FILTER
-              ) {
-                matchesCategory =
-                  categoryIsUncategorized;
-              } else {
-                matchesCategory =
-                  resource.category_id ===
-                    category &&
-                  !categoryIsUncategorized;
-              }
-            }
-
-           
-            const matchesCollege =
-              college === ALL_OPTION ||
-              resource.college === college;
-
-            const matchesDepartment =
-              department === ALL_OPTION ||
-              resource.department === department;
-
-            const matchesLevel =
-              level === ALL_OPTION ||
-              resource.level === level;
-
-            const matchesSemester =
-              semester === ALL_OPTION ||
-              resource.semester === semester;
-
-            if (
-              !matchesStatus ||
-              !matchesCategory ||
-              !matchesCollege ||
-              !matchesDepartment ||
-              !matchesLevel ||
-              !matchesSemester
-            ) {
-              return false;
-            }
-
-            if (!query) {
-              return true;
-            }
-
-            const searchable = [
-              resource.title,
-              resource.file_name,
-              resource.description,
-              resource.course_code,
-              resource.college,
-              resource.department,
-              resource.level,
-              resource.semester,
-              resource.author,
-              resource.year?.toString(),
-              resource.tags?.join(
-                " ",
-              ),
-              categoryName,
-              resource.uploader
-                ?.full_name,
-              resource.uploader?.email,
-            ]
-              .filter(Boolean)
-              .join(" ")
-              .toLowerCase();
-
-            return searchable.includes(
-              query,
-            );
-          },
-        );
-
-      return [...filtered].sort(
-        (a, b) => {
-          const dateA =
-            new Date(
-              a.created_at,
-            ).getTime();
-
-          const dateB =
-            new Date(
-              b.created_at,
-            ).getTime();
-
-          return sortOrder ===
-            "newest"
-            ? dateB - dateA
-            : dateA - dateB;
-        },
-      );
-    }, [
-      resources,
-      search,
-      status,
-      category,
-      college,
-      department,
-      level,
-      semester,
-      sortOrder,
-    ]);
-
   const openEdit = (
     resource: Resource,
   ) => {
@@ -1434,15 +1211,23 @@ const departments = useMemo(
       : false;
 
     
-const isPublication =
+
+
+const selectedCategoryName =
   categories?.find(
     (category) => category.id === editForm.category_id,
-  )?.name === "Publications";
+  )?.name;
+
+const isPublication = selectedCategoryName === "Publications";
+
+const isGlobalCategory =
+  isPublication ||
+  selectedCategoryName === "Lecture Timetables";
 
 const isSGS = editForm.college === "SGS";
 
 const availableDepartments =
-  isSGS || !editForm.college
+  editForm.college === ALL_OPTION
     ? []
     : getDepartments(editForm.college);
 
@@ -1482,7 +1267,10 @@ const availableDepartments =
       <Input
         placeholder="Search resource title, file name, uploader…"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+  setSearch(e.target.value);
+  setPage(1);
+}}
         className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
       />
     </div>
@@ -1490,9 +1278,10 @@ const availableDepartments =
     {/* Status */}
     <Select
       value={status}
-      onValueChange={(value) =>
-        setStatus(value as "all" | ResourceStatus)
-      }
+      onValueChange={(value) => {
+  setStatus(value as "all" | ResourceStatus);
+  setPage(1);
+}}
     >
       <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
         <SelectValue placeholder="Status" />
@@ -1508,7 +1297,13 @@ const availableDepartments =
     </Select>
 
     {/* Category */}
-    <Select value={category} onValueChange={setCategory}>
+    <Select
+  value={category}
+  onValueChange={(value) => {
+    setCategory(value);
+    setPage(1);
+  }}
+>
       <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
         <SelectValue placeholder="Category" />
       </SelectTrigger>
@@ -1532,9 +1327,10 @@ const availableDepartments =
     <Select
       value={college}
       onValueChange={(value) => {
-        setCollege(value);
-        setDepartment(ALL_OPTION);
-      }}
+  setCollege(value);
+  setDepartment(ALL_OPTION);
+  setPage(1);
+}}
     >
       <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
         <SelectValue placeholder="College" />
@@ -1558,9 +1354,12 @@ const availableDepartments =
 
     {/* Department */}
     <Select
-      value={department}
-      onValueChange={setDepartment}
-    >
+  value={department}
+  onValueChange={(value) => {
+    setDepartment(value);
+    setPage(1);
+  }}
+>
       <SelectTrigger
         className={`h-9 text-xs sm:h-10 sm:text-sm ${
           college === ALL_OPTION ? "opacity-60" : ""
@@ -1595,7 +1394,13 @@ const availableDepartments =
     </Select>
 
     {/* Level */}
-    <Select value={level} onValueChange={setLevel}>
+    <Select
+  value={level}
+  onValueChange={(value) => {
+    setLevel(value);
+    setPage(1);
+  }}
+>
       <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
         <SelectValue placeholder="Level" />
       </SelectTrigger>
@@ -1612,7 +1417,13 @@ const availableDepartments =
     </Select>
 
     {/* Semester */}
-    <Select value={semester} onValueChange={setSemester}>
+    <Select
+  value={semester}
+  onValueChange={(value) => {
+    setSemester(value);
+    setPage(1);
+  }}
+>
       <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
         <SelectValue placeholder="Semester" />
       </SelectTrigger>
@@ -1631,9 +1442,10 @@ const availableDepartments =
     {/* Sort */}
     <Select
       value={sortOrder}
-      onValueChange={(value) =>
-        setSortOrder(value as "newest" | "oldest")
-      }
+      onValueChange={(value) => {
+  setSortOrder(value as "newest" | "oldest");
+  setPage(1);
+}}
     >
       <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
         <SelectValue />
@@ -1646,18 +1458,9 @@ const availableDepartments =
     </Select>
   </div>
 
-  {(search ||
-    status !== "all" ||
-    category !== "all" ||
-    college !== ALL_OPTION ||
-    department !== ALL_OPTION ||
-    level !== "all" ||
-    semester !== "all" ||
-    sortOrder !== "newest") && (
     <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
       <p className="text-[10px] text-muted-foreground sm:text-xs">
-        Showing {filteredResources.length} of{" "}
-        {resources?.length ?? 0} resources
+        Showing {firstResource}–{lastResource} of {totalCount} resources
       </p>
 
       <Button
@@ -1673,25 +1476,24 @@ const availableDepartments =
           setLevel("all");
           setSemester("all");
           setSortOrder("newest");
+          setPage(1);
         }}
         className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
       >
         Clear filters
       </Button>
     </div>
-  )}
 </div>
 
       {/* Resource list */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
-        {isLoading ? (
+        {resourcesLoading ? (
           <div className="p-6 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             Loading resources…
           </div>
-        ) : filteredResources.length >
-          0 ? (
+        ) : resources.length > 0 ? (
           <ul className="divide-y-0">
-            {filteredResources.map(
+            {resources.map(
               (resource) => {
                 const isDeleting =
                   deleteResource.isPending &&
@@ -2208,27 +2010,77 @@ const availableDepartments =
               },
             )}
           </ul>
-        ) : resources &&
-          resources.length > 0 ? (
-          <div className="p-6 text-center sm:p-10">
-  <Search className="mx-auto h-7 w-7 text-muted-foreground/50 sm:h-8 sm:w-8" />
+        ) : resourcesError ? (
+  <div className="p-6 text-center sm:p-10">
+    <p className="text-sm text-destructive">
+      Failed to load resources.
+    </p>
 
-  <p className="mt-2.5 text-xs font-medium sm:mt-3 sm:text-sm">
-    No matching resources
-  </p>
+    <Button
+      type="button"
+      variant="outline"
+      className="mt-3"
+      onClick={() => refetchResources()}
+    >
+      Retry
+    </Button>
+  </div>
+) : totalCount === 0 &&
+  (search.trim() !== "" ||
+    status !== "all" ||
+    category !== "all" ||
+    college !== ALL_OPTION ||
+    department !== ALL_OPTION ||
+    level !== "all" ||
+    semester !== "all") ? (
+  <div className="p-6 text-center sm:p-10">
+    <Search className="mx-auto h-7 w-7 text-muted-foreground/50 sm:h-8 sm:w-8" />
 
-  <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-    Try changing your search or filters.
-  </p>
-</div>
-        ) : (
-          <EmptyState
-            title="No resources yet"
-            desc="Resources uploaded to the library will appear here."
-          />
-        )}
+    <p className="mt-2.5 text-xs font-medium sm:mt-3 sm:text-sm">
+      No matching resources
+    </p>
+
+    <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+      Try changing your search or filters.
+    </p>
+  </div>
+) : (
+  <EmptyState
+    title="No resources yet"
+    desc="Resources uploaded to the library will appear here."
+  />
+)}
       </div>
+      
+      {totalCount > PAGE_SIZE && (
+  <div className="flex items-center justify-between gap-3 border-t py-4">
+    <p className="text-sm text-muted-foreground">
+      Page {page} of {totalPages}
+    </p>
 
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={page <= 1 || resourcesLoading}
+        onClick={() => setPage((current) => current - 1)}
+      >
+        Previous
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={page >= totalPages || resourcesLoading}
+        onClick={() => setPage((current) => current + 1)}
+      >
+        Next
+      </Button>
+    </div>
+  </div>
+)}
       {/* Edit resource dialog */}
       <AlertDialog
         open={
@@ -2306,30 +2158,42 @@ const availableDepartments =
     </Label>
     <Select
       value={editForm.category_id || "uncategorized"}
-      onValueChange={(value) => {
-        const categoryId =
-          value === "uncategorized" ? "" : value;
+      
+onValueChange={(value) => {
+  const categoryId =
+    value === "uncategorized" ? "" : value;
 
-        const selectedCategory = categories?.find(
-          (category) => category.id === categoryId,
-        );
+  const selectedCategory = categories?.find(
+    (category) => category.id === categoryId,
+  );
 
-        const publication =
-          selectedCategory?.name === "Publications";
+  const selectedIsGlobalCategory =
+    selectedCategory?.name === "Publications" ||
+    selectedCategory?.name === "Lecture Timetables";
 
-        setEditForm((current) => ({
-          ...current,
-          category_id: categoryId,
-          ...(publication
-            ? {
-                college: "",
-                department: "",
-                level: "",
-                course_code: "",
-              }
-            : {}),
-        }));
-      }}
+  const currentIsGlobalCategory =
+    categories?.some(
+      (category) =>
+        category.id === editForm.category_id &&
+        (category.name === "Publications" ||
+          category.name === "Lecture Timetables"),
+    ) ?? false;
+
+  setEditForm((current) => ({
+    ...current,
+    category_id: categoryId,
+    ...(selectedIsGlobalCategory ||
+    currentIsGlobalCategory
+      ? {
+          college: "",
+          department: "",
+          level: "",
+          course_code: "",
+        }
+      : {}),
+  }));
+}}
+
       disabled={editResource.isPending}
     >
       <SelectTrigger id="edit-resource-category">
@@ -2348,85 +2212,156 @@ const availableDepartments =
     </Select>
   </div>
 
-  {/* College and Department */}
-  {!isPublication && (
-    <div
-  className={`grid grid-cols-1 gap-4 ${
-    isSGS ? "sm:grid-cols-1" : "sm:grid-cols-2"
-  }`}
->
-      <div className="space-y-2">
-        <Label htmlFor="edit-resource-college">
-          College
-        </Label>
-        <Select
-          value={editForm.college || "none"}
-          onValueChange={(value) =>
-            setEditForm((current) => ({
-              ...current,
-              college: value === "none" ? "" : value,
-              department: "",
-            }))
-          }
-          disabled={editResource.isPending}
-        >
-          <SelectTrigger id="edit-resource-college">
-            <SelectValue placeholder="Select college" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">
-              Select college
-            </SelectItem>
-            {colleges.map((college) => (
-              <SelectItem key={college.id} value={college.id}>
-                {college.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+  
+{/* College and Department */}
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    {/* College */}
+    <div className="space-y-2">
+      <Label className="text-xs sm:text-sm">
+        College
+      </Label>
 
-      {!isSGS && (
-        <div className="space-y-2">
-          <Label htmlFor="edit-resource-department">
-            Department
-          </Label>
-          <Select
-            value={editForm.department || "none"}
-            onValueChange={(value) =>
-              setEditForm((current) => ({
-                ...current,
-                department: value === "none" ? "" : value,
-              }))
-            }
-            disabled={
-              editResource.isPending || !editForm.college
-            }
-          >
-            <SelectTrigger id="edit-resource-department">
-              <SelectValue placeholder="Select department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                {editForm.college
-                  ? "Select department"
-                  : "Select college first"}
-              </SelectItem>
-              {availableDepartments.map((department) => (
-                <SelectItem key={department} value={department}>
-                  {department}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-    </div>
-  )}
+      <Select
+        value={editForm.college || "none"}
+        onValueChange={(value) =>
+          setEditForm((current) => ({
+            ...current,
+            college:
+              value === "none" ? "" : value,
+            department: "",
+          }))
+        }
+        disabled={editResource.isPending}
+      >
+        <SelectTrigger id="edit-resource-college">
+          <SelectValue placeholder="Select college" />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value="none">
+            Select college
+          </SelectItem>
+
+          {isGlobalCategory && (
+            <SelectItem value={ALL_OPTION}>
+              All Colleges
+                          </SelectItem>
+                        )}
+              
+                        {colleges.map((college) => (
+                          <SelectItem
+                            key={college.id}
+                            value={college.id}
+                            className="text-xs sm:text-sm"
+                          >
+                            <>
+                              <span className="sm:hidden">
+                                {college.id}
+                              </span>
+              
+                              <span className="hidden sm:inline">
+                                {college.name} ({college.id})
+                              </span>
+                            </>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+{/* Department */}
+{(!isSGS ||
+  isGlobalCategory ||
+  availableDepartments.length > 0) && (
+  <div className="space-y-2">
+    <Label htmlFor="edit-resource-department">
+      Department
+    </Label>
+
+    <Select
+      value={editForm.department || "none"}
+      onValueChange={(value) =>
+        setEditForm((current) => ({
+          ...current,
+          department: value === "none" ? "" : value,
+        }))
+      }
+      disabled={
+        editResource.isPending ||
+        !editForm.college ||
+        editForm.college === "none"
+      }
+    >
+      <SelectTrigger id="edit-resource-department">
+        <SelectValue
+          placeholder={
+            editForm.college && editForm.college !== "none"
+              ? "Select department"
+              : "Select college first"
+          }
+        />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="none">
+          {!editForm.college || editForm.college === "none"
+            ? "Select college first"
+            : "Select department"}
+        </SelectItem>
+
+        {(isGlobalCategory || isSGS) && (
+          <SelectItem value={ALL_OPTION}>
+            All Departments
+          </SelectItem>
+        )}
+
+        {availableDepartments.map((department) => (
+          <SelectItem key={department} value={department}>
+            {department}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+)}
+</div>
 
 {/* Level, Semester and Upload Year */}
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-    {!isPublication && (
+    {isGlobalCategory ? (
+  <div className="space-y-2">
+    <Label htmlFor="edit-resource-level">
+      Level
+    </Label>
+    <Select
+      value={editForm.level || "none"}
+      onValueChange={(value) =>
+        setEditForm((current) => ({
+          ...current,
+          level: value === "none" ? "" : value,
+        }))
+      }
+      disabled={editResource.isPending}
+    >
+      <SelectTrigger id="edit-resource-level">
+        <SelectValue placeholder="Select level" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="none">
+          Select level
+        </SelectItem>
+        <SelectItem value={ALL_OPTION}>
+          All Levels
+        </SelectItem>
+        {levels.map((level) => (
+          <SelectItem key={level} value={level}>
+            {level}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+) : (
       <div className="space-y-2">
         <Label htmlFor="edit-resource-level">
           Level
@@ -2448,6 +2383,11 @@ const availableDepartments =
             <SelectItem value="none">
               Select level
             </SelectItem>
+            {isGlobalCategory && (
+            <SelectItem value={ALL_OPTION}>
+            All Levels
+            </SelectItem>
+            )}
             {levels.map((level) => (
               <SelectItem key={level} value={level}>
                 {level}
@@ -2457,9 +2397,9 @@ const availableDepartments =
         </Select>
       </div>
     )}
-    
+
   {/* Course code */}
-  {!isPublication && (
+  {!isGlobalCategory && (
     <div className="space-y-2">
       <Label htmlFor="edit-resource-course-code">
         Course code
@@ -2478,8 +2418,6 @@ const availableDepartments =
       />
     </div>
   )}
-
-  
 
     <div className="space-y-2">
       <Label htmlFor="edit-resource-semester">
