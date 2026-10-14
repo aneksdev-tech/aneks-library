@@ -1,32 +1,7 @@
-import {
-  createFileRoute,
-  useNavigate,
-} from "@tanstack/react-router";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  CheckCircle2,
-  Clock3,
-  Download,
-  Edit3,
-  Eye,
-  Filter,
-  FileText,
-  History,
-  Loader2,
-  Search,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {  useEffect,  useMemo,  useRef,  useState  } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2, Clock3, Download, Edit3, Eye, Filter, FileText, History, Loader2, Search, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,33 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useAccess } from "@/hooks/useAccess";
 import { downloadResource } from "@/lib/download";
-import {
-  colleges,
-  levels,
-  semesters,
-  years,
-  getDepartments,
-  ALL_OPTION,
-} from "@/lib/academicData";
+import { colleges, levels, semesters, years, getDepartments, ALL_OPTION } from "@/lib/academicData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
 import { EmptyState } from "./dashboard";
 
@@ -143,7 +96,7 @@ type AdminResourcesPage = {
   resources: Resource[];
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 
 type ResourceEditAudit = {
   id: string;
@@ -351,6 +304,9 @@ const [sortOrder, setSortOrder] =
   useState<"newest" | "oldest">("newest");
 const [page, setPage] = useState(1);
 
+const resourcesTopRef = useRef<HTMLDivElement>(null);
+const previousPageRef = useRef(page);
+
 const departments = useMemo(
   () => college !== ALL_OPTION ? getDepartments(college) : [],
   [college],
@@ -472,6 +428,18 @@ useEffect(() => {
     setPage(totalPages);
   }
 }, [page, totalPages]);
+
+// Scroll to the resource list when the page changes.
+useEffect(() => {
+  if (previousPageRef.current === page) return;
+
+  previousPageRef.current = page;
+
+  resourcesTopRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, [page]);
 
   const resourceIds = useMemo(
   () => resources.map((resource) => resource.id),
@@ -1486,7 +1454,8 @@ const availableDepartments =
 </div>
 
       {/* Resource list */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+      <div ref={resourcesTopRef} className="scroll-mt-4">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
         {resourcesLoading ? (
           <div className="p-6 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             Loading resources…
@@ -2051,7 +2020,8 @@ const availableDepartments =
   />
 )}
       </div>
-      
+      </div>
+
       {totalCount > PAGE_SIZE && (
   <div className="flex items-center justify-between gap-3 border-t py-4">
     <p className="text-sm text-muted-foreground">

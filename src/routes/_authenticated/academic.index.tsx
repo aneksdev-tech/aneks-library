@@ -1,31 +1,8 @@
 
-import {
-  createFileRoute,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
-import {
-  useEffect,
-  useState,
-} from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  Check,
-  CheckCircle2,
-  Clock3,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  FileText,
-  Loader2,
-  Search,
-  X,
-  XCircle,
-} from "lucide-react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, CheckCircle2, Clock3, ChevronLeft, ChevronRight, Eye, FileText, Loader2, Search, X, XCircle, } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,32 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "./dashboard";
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  colleges,
-  levels,
-  semesters,
-  getDepartments,
-  ALL_OPTION,
-} from "@/lib/academicData";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { colleges, levels, semesters, getDepartments, ALL_OPTION } from "@/lib/academicData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 
 export const Route = createFileRoute(
   "/_authenticated/academic/",
@@ -196,6 +152,9 @@ function AcademicApprovals() {
   const [categoryFilter, setCategoryFilter] = useState(ALL_OPTION);
   const [page, setPage] = useState(1);
 
+  const resourcesTopRef = useRef<HTMLDivElement>(null);
+  const previousPageRef = useRef(page);
+
   const departments =
     collegeFilter === ALL_OPTION
       ? []
@@ -214,6 +173,32 @@ function AcademicApprovals() {
     semesterFilter,
     categoryFilter,
   ]);
+
+  /*
+ * Reset pagination whenever a filter or search term changes.
+ */
+useEffect(() => {
+  setPage(1);
+}, [
+  searchQuery,
+  collegeFilter,
+  departmentFilter,
+  levelFilter,
+  semesterFilter,
+  categoryFilter,
+]);
+
+// Scroll to the resource queue when the page changes.
+useEffect(() => {
+  if (previousPageRef.current === page) return;
+
+  previousPageRef.current = page;
+
+  resourcesTopRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, [page]);
 
   /*
    * Keep the page reactive if the lecturer's role or status
@@ -734,7 +719,7 @@ function AcademicApprovals() {
             </Select>
           </div>
         </div>
-          {(hasActiveFilters || totalCount >= 0) && (
+    {(hasActiveFilters || totalCount >= 0) && (
   <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
     <p className="text-[10px] text-muted-foreground sm:text-xs">
       {totalCount === 0 ? (
@@ -762,6 +747,7 @@ function AcademicApprovals() {
 )}
 
         {/* Resource queue */}
+        <div ref={resourcesTopRef} className="scroll-mt-4">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
           {isLoading ? (
             <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
@@ -973,6 +959,7 @@ function AcademicApprovals() {
               desc="No resources are waiting for academic review right now."
             />
           )}
+          </div>
         </div>
 
         {/* Pagination */}

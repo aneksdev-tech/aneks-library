@@ -4,7 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccess } from "@/hooks/useAccess";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
 });
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 
 function LibraryPage() {
   const [q, setQ] = useState("");
@@ -61,6 +61,8 @@ function LibraryPage() {
   const [level, setLevel] = useState(ALL_OPTION);
   const [semester, setSemester] = useState(ALL_OPTION);
   const [page, setPage] = useState(1);
+  const resourcesTopRef = useRef<HTMLDivElement>(null);
+  const previousPageRef = useRef(page);
 
   const departments =
     college === ALL_OPTION ? [] : getDepartments(college);
@@ -71,6 +73,17 @@ function LibraryPage() {
   useEffect(() => {
     setPage(1);
   }, [q, category, college, department, level, semester, sort]);
+
+  useEffect(() => {
+  if (previousPageRef.current === page) return;
+
+  previousPageRef.current = page;
+
+  resourcesTopRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, [page]);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -361,7 +374,8 @@ function LibraryPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      <div ref={resourcesTopRef} className="scroll-mt-4">
+        {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
@@ -387,7 +401,7 @@ function LibraryPage() {
             />
           ))}
         </div>
-      ) : (
+            ) : (
         <div className="rounded-2xl border border-border bg-card">
           <EmptyState
             title="No resources found"
@@ -395,6 +409,7 @@ function LibraryPage() {
           />
         </div>
       )}
+    </div>
 
       {/* Pagination */}
       {!isLoading && !isError && totalPages > 1 && (

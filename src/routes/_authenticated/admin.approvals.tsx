@@ -1,64 +1,19 @@
 
-import {
-  createFileRoute,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { createFileRoute, redirect, useNavigate, } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { canManageApprovals } from "@/lib/permissions";
-import {
-  useAuth,
-  type AppRole,
-} from "@/lib/auth";
+import { useAuth, type AppRole } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  ALL_OPTION,
-  colleges,
-  getDepartments,
-  levels,
-  semesters,
-} from "@/lib/academicData";
-import {
-  Check,
-  CheckCircle2,
-  Clock3,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  FileText,
-  Loader2,
-  Search,
-  UserRound,
-  X,
-  XCircle,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ALL_OPTION, colleges, getDepartments, levels, semesters } from "@/lib/academicData";
+import { Check, CheckCircle2, Clock3, ChevronLeft, ChevronRight, Eye, FileText, Loader2, Search, UserRound, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute(
   "/_authenticated/admin/approvals",
@@ -128,7 +83,7 @@ export const Route = createFileRoute(
   component: Approvals,
 });
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 
 type ResourceStatus =
   | "pending"
@@ -309,6 +264,9 @@ function Approvals() {
 
   const [page, setPage] = useState(1);
 
+  const resourcesTopRef = useRef<HTMLDivElement>(null);
+  const previousPageRef = useRef(page);
+
   // Fetch only the requested page of filtered pending resources.
   const {
     data,
@@ -438,6 +396,18 @@ function Approvals() {
     levelFilter,
     semesterFilter,
   ]);
+
+  // Scroll to the resource queue when the page changes.
+  useEffect(() => {
+  if (previousPageRef.current === page) return;
+
+  previousPageRef.current = page;
+
+  resourcesTopRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, [page]);
 
   // If a decision or changed result set reduces the number of pages,
   // move back to the last page that still exists.
@@ -1026,7 +996,8 @@ function Approvals() {
 
         {/* Resources */}
         {activeSection === "resources" && (
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+          <div ref={resourcesTopRef} className="scroll-mt-4">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
             {/* Resource filters */}
             {!isLoading &&
               !isError &&
@@ -1508,6 +1479,7 @@ function Approvals() {
               />
             )}
           </div>
+        </div>
         )}
       </section>
 

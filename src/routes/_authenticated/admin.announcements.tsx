@@ -117,6 +117,8 @@ function AnnouncementsPage() {
   const [editingAnnouncement, setEditingAnnouncement] =
     useState<Announcement | null>(null);
 
+  const announcementFormRef = useRef<HTMLDivElement>(null);
+
   const [editSummary, setEditSummary] = useState("");
   const [pendingEditSave, setPendingEditSave] =
     useState<boolean>(false);
@@ -624,20 +626,25 @@ function AnnouncementsPage() {
   });
 
   const startEditing = (
-    announcement: Announcement,
-  ) => {
-    if (announcement.deleted_at) {
-      return;
-    }
+  announcement: Announcement,
+) => {
+  if (announcement.deleted_at) {
+    return;
+  }
 
-    setEditingAnnouncement(announcement);
-    setTitle(announcement.title);
-    setBody(announcement.body);
-    setContent(announcement.content ?? "");
-    setLink(announcement.link ?? "");
-    setEditSummary("");
-    setPendingEditSave(false);
-  };
+  setEditingAnnouncement(announcement);
+  setTitle(announcement.title);
+  setBody(announcement.body);
+  setContent(announcement.content ?? "");
+  setLink(announcement.link ?? "");
+  setEditSummary("");
+  setPendingEditSave(false);
+
+  announcementFormRef.current?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+};
 
   const cancelEditing = () => {
     if (saveAnnouncement.isPending) {
@@ -835,7 +842,10 @@ function AnnouncementsPage() {
   return (
     <section className="space-y-5 sm:space-y-6">
       {/* Announcement form */}
-      <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:rounded-lg sm:p-5">
+      <div
+        ref={announcementFormRef}
+        className="scroll-mt-4 rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:rounded-lg sm:p-5"
+      >
         <div className="mb-4 flex items-start gap-2 sm:mb-5 sm:items-center">
           <Megaphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary sm:mt-0 sm:h-4 sm:w-4" />
 
