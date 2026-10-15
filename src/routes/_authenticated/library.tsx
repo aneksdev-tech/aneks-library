@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
 import { ResourceTypeBadge } from "@/components/ResourceTypeBadge";
+import { getResourceScopeLabel } from "@/lib/resource-scope-labels";
 
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
@@ -500,8 +501,28 @@ export function ResourceCard({
 
   const [previewing, setPreviewing] = useState(false);
 
-  const collegeShort =
-    r.college?.match(/\((.*?)\)/)?.[1] ?? r.college;
+  const collegeLabel = getResourceScopeLabel(
+  r.college,
+  "college",
+);
+
+const collegeShort =
+collegeLabel.match(/\((.*?)\)/)?.[1] ?? collegeLabel;
+
+const departmentLabel = getResourceScopeLabel(
+  r.department,
+  "department",
+);
+
+const levelLabel = getResourceScopeLabel(
+  r.level,
+  "level",
+);
+
+const semesterLabel = getResourceScopeLabel(
+  r.semester,
+  "semester",
+);
 
   const { data: bookmarked } = useQuery({
     queryKey: ["bookmarked", r.id, user?.id],
@@ -589,27 +610,35 @@ export function ResourceCard({
 
       <div className="mt-2.5 space-y-1.5 text-xs sm:mt-3 sm:space-y-2 sm:text-sm">
         {r.course_code && (
-          <div className="font-medium text-primary">
+          <div className="text-muted-foreground">
             📘 {r.course_code}
           </div>
         )}
 
         {r.college && (
-          <div className="text-muted-foreground">
-            🏛️ {collegeShort}
+            <div className="text-muted-foreground">
+              🏛️ {collegeShort}
+            </div>
+          )}
+
+          {r.department && (
+            <div className="text-muted-foreground">
+              🏢 {departmentLabel}
+            </div>
+          )}
+
+          {r.level && (
+            <div className="text-muted-foreground">
+              🎓 {levelLabel}
+            </div>
+          )}
+
+          {r.semester && (
+            <div className="text-muted-foreground">
+              📅 {semesterLabel}
+            </div>
+          )}
           </div>
-        )}
-
-        {r.department && (
-          <div className="text-muted-foreground">
-            🏢 {r.department}
-          </div>
-        )}
-
-        {r.level && <div>🎓 {r.level}</div>}
-
-        {r.semester && <div>📅 {r.semester}</div>}
-      </div>
 
       <div className="mt-auto flex items-center justify-between pt-4 text-[10px] text-muted-foreground sm:pt-5 sm:text-xs">
         <span>

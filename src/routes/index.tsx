@@ -435,7 +435,7 @@ function LandingPage() {
       <Header />
 
       {/* HERO — split screen */}
-      <section className="relative overflow-hidden bg-secondary/40">
+      <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
 
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-5 sm:px-6 md:gap-7 md:px-4 md:py-5 lg:gap-8 lg:px-6 lg:py-8 xl:py-12 md:grid-cols-2">
@@ -525,7 +525,7 @@ function LandingPage() {
       </section>
 
       {/* ABOUT */}
-      <section id="about" className="border-t border-border/60 ">
+      <section id="about" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-1 max-w-7xl">
             <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
@@ -560,7 +560,7 @@ function LandingPage() {
       {/* FEATURES */}
       <section
         id="features"
-        className="border-t border-border/60 bg-secondary/40"
+        className="border-t border-border/60"
       >
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-14 max-w-1xl md:mb-9 lg:mb-14">
@@ -597,7 +597,7 @@ function LandingPage() {
       </section>
 
       {/* CATEGORIES */}
-      <section id="categories" className="border-t border-border/60">
+      <section id="categories" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-14 flex items-end justify-between gap-6 md:mb-9 md:gap-4 lg:mb-14 lg:gap-6">
             <div className="max-w-1xl">
@@ -651,7 +651,7 @@ function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="border-t border-border/60 bg-secondary/40">
+      <section id="how" className="border-t border-border/60">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-14 max-w-1xl md:mb-9 lg:mb-14">
             <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
@@ -696,7 +696,7 @@ function LandingPage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="border-t border-border/60">
+      <section className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-14 max-w-1xl md:mb-9 lg:mb-14">
             <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
@@ -740,7 +740,7 @@ function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="border-t border-border/60 bg-secondary/40">
+      <section id="faq" className="border-t border-border/60">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-10 text-left md:mb-8 lg:mb-10">
             <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
@@ -777,7 +777,7 @@ function LandingPage() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="border-t border-border/60">
+      <section id="contact" className="border-t border-border/60 bg-secondary/40">
         <div className="mx-auto max-w-7xl px-4 py-18 text-left sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
             Contact
@@ -798,7 +798,7 @@ function LandingPage() {
               size="lg"
               className="bg-gradient-emerald text-primary-foreground shadow-elegant md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
             >
-              <a href="mailto:hello@anekslibrary.com">
+              <a href="mailto:aneksdev@gmail.com">
                 <Mail className="mr-2 h-4 w-4 md:mr-1.5 md:h-3.5 md:w-3.5 lg:mr-2 lg:h-4 lg:w-4" />
                 Email us
               </a>
@@ -811,7 +811,7 @@ function LandingPage() {
               className="md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
             >
               <a
-                href="https://wa.me/2340000000000"
+                href="https://wa.me/2349067627242"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -824,7 +824,7 @@ function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-border/60 bg-secondary/40">
+      <footer className="border-t border-border/60">
         <div className="mx-auto grid max-w-7xl gap-10 px-1 py-14 sm:px-6 md:grid-cols-4 md:gap-6 md:px-4 md:py-12 lg:gap-10 lg:px-6 lg:py-14">
           <div>
             <div className="flex items-center gap-0.5">

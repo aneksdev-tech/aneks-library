@@ -1,60 +1,14 @@
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import {
-  ArrowLeft,
-  CalendarDays,
-  Download,
-  FileText,
-  GraduationCap,
-  History,
-  Loader2,
-  Mail,
-  Phone,
-  Shield,
-  UserCog,
-  UserRound,
-  Upload,
-} from "lucide-react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CalendarDays, Download, FileText, GraduationCap, History, Loader2, Mail, Phone, Shield, UserCog, UserRound, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  useAuth,
-  type AccountStatus,
-  type AppRole,
-} from "@/lib/auth";
+import { useAuth, type AccountStatus, type AppRole } from "@/lib/auth";
 import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute(

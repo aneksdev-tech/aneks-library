@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { downloadResource } from "@/lib/download";
+import { getResourceScopeLabel } from "@/lib/resource-scope-labels";
 
 export const Route = createFileRoute(
   "/_authenticated/preview/$resourceId",
@@ -142,6 +143,26 @@ function PreviewPage() {
     resource.college ?? "",
   );
 
+const collegeLabel = getResourceScopeLabel(
+  resource.college,
+  "college",
+);
+
+const departmentLabel = getResourceScopeLabel(
+  resource.department,
+  "department",
+);
+
+const levelLabel = getResourceScopeLabel(
+  resource.level,
+  "level",
+);
+
+const semesterLabel = getResourceScopeLabel(
+  resource.semester,
+  "semester",
+);
+
   const categoryName =
     resource.category?.deleted_at == null &&
     resource.category?.name?.trim()
@@ -241,7 +262,7 @@ function PreviewPage() {
                 <span>
                   {college
                     ? `${college.name} (${college.id})`
-                    : resource.college}
+                    : collegeLabel}
                 </span>
               </div>
             )}
@@ -249,21 +270,21 @@ function PreviewPage() {
             {resource.department && (
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <Building2 className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
-                <span>{resource.department}</span>
+                <span>{departmentLabel}</span>
               </div>
             )}
 
             {resource.level && (
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <GraduationCap className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
-                <span>{resource.level}</span>
+                <span>{levelLabel}</span>
               </div>
             )}
 
             {resource.semester && (
               <div className="flex items-center gap-2.5 sm:gap-3">
                 <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
-                <span>{resource.semester}</span>
+                <span>{semesterLabel}</span>
               </div>
             )}
 
