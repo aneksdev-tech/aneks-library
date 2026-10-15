@@ -115,11 +115,11 @@ export function AnnouncementPopup() {
       aria-modal="true"
       aria-labelledby="announcement-popup-title"
     >
-      <div className="relative max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-xl border border-border bg-card shadow-elegant sm:rounded-2xl">
+      <div className="relative max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-sm border border-border bg-card shadow-elegant sm:rounded-sm">
         <button
           type="button"
           onClick={handleClose}
-          className="absolute right-3 top-3 z-10 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 sm:right-4 sm:top-4"
+          className="absolute right-3 top-3 z-10 rounded-sm p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 sm:right-4 sm:top-4"
           aria-label="Close announcement"
         >
           <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

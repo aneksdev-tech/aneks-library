@@ -844,11 +844,9 @@ function AnnouncementsPage() {
       {/* Announcement form */}
       <div
         ref={announcementFormRef}
-        className="scroll-mt-4 rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:rounded-lg sm:p-5"
+        className="scroll-mt-4 rounded-sm border border-border bg-card p-3.5 shadow-soft sm:rounded-sm sm:p-5"
       >
         <div className="mb-4 flex items-start gap-2 sm:mb-5 sm:items-center">
-          <Megaphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary sm:mt-0 sm:h-4 sm:w-4" />
-
           <div className="min-w-0">
             <p className="text-xs font-semibold sm:text-sm">
               {editingAnnouncement
@@ -902,7 +900,7 @@ function AnnouncementsPage() {
               placeholder="Enter a short summary for the Dashboard announcement banner..."
               rows={4}
               disabled={saveAnnouncement.isPending}
-              className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
+              className="w-full resize-y rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -923,7 +921,7 @@ function AnnouncementsPage() {
               placeholder="Enter the complete announcement details..."
               rows={10}
               disabled={saveAnnouncement.isPending}
-              className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
+              className="w-full resize-y rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             />
 
             <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
@@ -996,7 +994,7 @@ function AnnouncementsPage() {
       </div>
 
       {/* Announcement history */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+      <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
         <div className="border-b border-border p-3.5 sm:p-5">
           <h2 className="font-display text-base font-semibold sm:text-lg">
             Announcements
@@ -1057,7 +1055,7 @@ function AnnouncementsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span
-                          className={`rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${
+                          className={`rounded-sm border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${
                             isDeleted
                               ? "border-destructive/20 bg-destructive/10 text-destructive"
                               : announcement.is_active
@@ -1431,7 +1429,7 @@ function AnnouncementsPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               {hasActualChanges()
@@ -1467,7 +1465,7 @@ function AnnouncementsPage() {
                 placeholder="e.g. Updated the deadline and added the submission link..."
                 rows={4}
                 disabled={saveAnnouncement.isPending}
-                className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
+                className="w-full resize-y rounded-sm border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
               />
 
               <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
@@ -1528,7 +1526,7 @@ function AnnouncementsPage() {
             }
           }}
         >
-          <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+          <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-base sm:text-lg">
                 {pendingToggle.nextIsActive
@@ -1572,7 +1570,7 @@ function AnnouncementsPage() {
                 }
                 rows={4}
                 disabled={toggleAnnouncement.isPending}
-                className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
+                className="w-full resize-y rounded-sm border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
               />
 
               <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
@@ -1622,7 +1620,7 @@ function AnnouncementsPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Delete announcement?

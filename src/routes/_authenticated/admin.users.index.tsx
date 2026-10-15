@@ -1,3 +1,4 @@
+
 import {
   createFileRoute,
   Link,
@@ -13,10 +14,13 @@ import {
   Fragment,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   GraduationCap,
   History,
@@ -25,6 +29,7 @@ import {
   Shield,
   UserCog,
   UserRound,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,6 +98,8 @@ export const Route = createFileRoute(
   component: UsersPage,
 });
 
+const PAGE_SIZE = 6;
+
 const STATUSES: AccountStatus[] = [
   "active",
   "rejected",
@@ -123,18 +130,14 @@ type ProfileQueryRow = {
   avatar_url: string | null;
   bio: string | null;
   phone_number: string | null;
-
   college: string | null;
   department: string | null;
   level: string | null;
-
   primary_role: DatabaseAppRole;
   status: AccountStatus;
   reputation: number;
-
   created_at: string;
   updated_at: string;
-
   subscription_plan: SubscriptionPlan;
   subscription_status: string;
   subscription_started_at: string | null;
@@ -148,18 +151,14 @@ type UserProfile = {
   avatar_url: string | null;
   bio: string | null;
   phone_number: string | null;
-
   college: string | null;
   department: string | null;
   level: string | null;
-
   primary_role: AppRole;
   status: AccountStatus;
   reputation: number;
-
   created_at: string;
   updated_at: string;
-
   subscription_plan: SubscriptionPlan;
   subscription_status: string;
   subscription_started_at: string | null;
@@ -205,18 +204,14 @@ function mapUserProfile(
     avatar_url: row.avatar_url,
     bio: row.bio,
     phone_number: row.phone_number,
-
     college: row.college,
     department: row.department,
     level: row.level,
-
     primary_role: row.primary_role as AppRole,
     status: row.status,
     reputation: row.reputation,
-
     created_at: row.created_at,
     updated_at: row.updated_at,
-
     subscription_plan: row.subscription_plan,
     subscription_status: row.subscription_status,
     subscription_started_at:
@@ -402,6 +397,19 @@ function UsersPage() {
   const [roleFilter, setRoleFilter] =
     useState("all");
 
+  const [sort, setSort] =
+    useState<"newest" | "alphabetical">(
+      "newest",
+    );
+
+  const [page, setPage] = useState(1);
+
+  const searchTopRef =
+    useRef<HTMLDivElement>(null);
+
+  const previousPageRef = useRef(page);
+  const pendingScrollRef = useRef(false);
+
   const [
     pendingAction,
     setPendingAction,
@@ -419,13 +427,6 @@ function UsersPage() {
    * Keep the currently open Users page
    * synchronized with the authenticated
    * user's permissions.
-   *
-   * The sidebar already reacts when the
-   * authenticated user's role changes.
-   * This guard makes the page itself react
-   * as well instead of remaining accessible
-   * simply because /admin/users was already
-   * open in the browser.
    */
   useEffect(() => {
     const stillHasUserManagementAccess =
@@ -506,9 +507,7 @@ function UsersPage() {
     data: auditLogs,
     isLoading: auditLogsLoading,
   } = useQuery<UserAuditLog[]>({
-    queryKey: [
-      "admin-user-audits",
-    ],
+    queryKey: ["admin-user-audits"],
 
     queryFn: async () => {
       const { data, error } =
@@ -576,10 +575,7 @@ function UsersPage() {
   });
 
   const actorMap = useMemo(() => {
-    const map = new Map<
-      string,
-      string
-    >();
+    const map = new Map<string, string>();
 
     for (
       const actor of
@@ -680,9 +676,7 @@ function UsersPage() {
       });
 
       qc.invalidateQueries({
-        queryKey: [
-          "admin-user-audits",
-        ],
+        queryKey: ["admin-user-audits"],
       });
 
       setPendingAction(null);
@@ -753,9 +747,7 @@ function UsersPage() {
       });
 
       qc.invalidateQueries({
-        queryKey: [
-          "admin-user-audits",
-        ],
+        queryKey: ["admin-user-audits"],
       });
 
       setPendingAction(null);
@@ -776,7 +768,7 @@ function UsersPage() {
       .trim()
       .toLowerCase();
 
-    return users.filter((user) => {
+    const filtered = users.filter((user) => {
       const matchesSearch =
         !query ||
         user.full_name
@@ -792,8 +784,7 @@ function UsersPage() {
 
       const matchesRole =
         roleFilter === "all" ||
-        user.primary_role ===
-          roleFilter;
+        user.primary_role === roleFilter;
 
       return (
         matchesSearch &&
@@ -801,12 +792,81 @@ function UsersPage() {
         matchesRole
       );
     });
+
+    if (sort === "alphabetical") {
+      filtered.sort((a, b) =>
+        a.full_name.localeCompare(
+          b.full_name,
+          undefined,
+          {
+            sensitivity: "base",
+          },
+        ),
+      );
+    }
+
+    return filtered;
   }, [
     data,
     search,
     statusFilter,
     roleFilter,
+    sort,
   ]);
+
+  /*
+   * Reset pagination when search, filters,
+   * or sort order changes.
+   */
+  useEffect(() => {
+    setPage(1);
+  }, [
+    search,
+    statusFilter,
+    roleFilter,
+    sort,
+  ]);
+
+  /*
+   * Remember page changes so scrolling
+   * occurs after React commits the update.
+   */
+  useEffect(() => {
+    if (previousPageRef.current === page) {
+      return;
+    }
+
+    previousPageRef.current = page;
+    pendingScrollRef.current = true;
+  }, [page]);
+
+  /*
+   * Scroll to the search field after a page
+   * change. Waiting for the next animation
+   * frame helps ensure the target is mounted.
+   */
+  useEffect(() => {
+    if (!pendingScrollRef.current) {
+      return;
+    }
+
+    const target = searchTopRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    pendingScrollRef.current = false;
+
+    const frame = requestAnimationFrame(() => {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [page]);
 
   const currentUserIsAdmin =
     roles?.includes("admin");
@@ -869,9 +929,7 @@ function UsersPage() {
       return;
     }
 
-    if (
-      role === target.primary_role
-    ) {
+    if (role === target.primary_role) {
       return;
     }
 
@@ -909,10 +967,7 @@ function UsersPage() {
       return;
     }
 
-    if (
-      pendingAction.type ===
-      "status"
-    ) {
+    if (pendingAction.type === "status") {
       setStatus.mutate({
         id: pendingAction.user.id,
         status: pendingAction.value,
@@ -944,32 +999,71 @@ function UsersPage() {
     );
   };
 
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    statusFilter !== "all" ||
+    roleFilter !== "all";
+
+  const totalCount = filteredUsers.length;
+
+  const totalPages = Math.ceil(
+    totalCount / PAGE_SIZE,
+  );
+
+  const firstResult =
+    totalCount === 0
+      ? 0
+      : (page - 1) * PAGE_SIZE + 1;
+
+  const lastResult = Math.min(
+    page * PAGE_SIZE,
+    totalCount,
+  );
+
+  const paginatedUsers = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+
+    return filteredUsers.slice(
+      start,
+      start + PAGE_SIZE,
+    );
+  }, [filteredUsers, page]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setRoleFilter("all");
+    setSort("newest");
+    setPage(1);
+  };
+
   return (
     <>
       <div className="w-full space-y-4 sm:space-y-5">
         {/* Filters */}
-        <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-4">
+        <div
+          ref={searchTopRef}
+          className="scroll-mt-21 rounded-sm border border-border bg-card p-3.5 shadow-soft sm:p-4"
+        >
           <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row">
+            {/* Search */}
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:left-3 sm:h-4 sm:w-4" />
 
               <Input
                 value={search}
                 onChange={(event) =>
-                  setSearch(
-                    event.target.value,
-                  )
+                  setSearch(event.target.value)
                 }
                 placeholder="Search by name or email..."
                 className="h-9 pl-8 text-xs sm:h-10 sm:pl-9 sm:text-sm"
               />
             </div>
 
+            {/* Status */}
             <Select
               value={statusFilter}
-              onValueChange={
-                setStatusFilter
-              }
+              onValueChange={setStatusFilter}
             >
               <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
                 <SelectValue placeholder="All statuses" />
@@ -980,26 +1074,21 @@ function UsersPage() {
                   All statuses
                 </SelectItem>
 
-                {STATUSES.map(
-                  (status) => (
-                    <SelectItem
-                      key={status}
-                      value={status}
-                    >
-                      {formatLabel(
-                        status,
-                      )}
-                    </SelectItem>
-                  ),
-                )}
+                {STATUSES.map((status) => (
+                  <SelectItem
+                    key={status}
+                    value={status}
+                  >
+                    {formatLabel(status)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
+            {/* Role */}
             <Select
               value={roleFilter}
-              onValueChange={
-                setRoleFilter
-              }
+              onValueChange={setRoleFilter}
             >
               <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
                 <SelectValue placeholder="All roles" />
@@ -1020,37 +1109,71 @@ function UsersPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Sort */}
+            <Select
+              value={sort}
+              onValueChange={(value) =>
+                setSort(
+                  value as typeof sort,
+                )
+              }
+            >
+              <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
+                <SelectValue placeholder="Sort users" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="newest">
+                  Newest first
+                </SelectItem>
+
+                <SelectItem value="alphabetical">
+                  Alphabetical (A–Z)
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground sm:mt-3 sm:text-xs">
-            <span>
-              {isLoading
-                ? "Loading users..."
-                : `${filteredUsers.length} of ${
-                    data?.length ?? 0
-                  } users`}
-            </span>
+          {/* Result count and clear filters */}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+            <p className="pl-1 text-xs text-amber-700 dark:text-gold sm:text-sm">
+              {isLoading ? (
+                "Loading users..."
+              ) : isError ? (
+                "Unable to load users"
+              ) : totalCount === 0 ? (
+                <>
+                  Showing{" "}
+                  <span className="font-semibold text-amber-700 dark:text-gold">
+                    0
+                  </span>{" "}
+                  users
+                </>
+              ) : (
+                <>
+                  Showing{" "}
+                  <span className="font-semibold text-amber-700 dark:text-gold">
+                    {firstResult}–{lastResult}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-amber-700 dark:text-gold">
+                    {totalCount}
+                  </span>{" "}
+                  {totalCount === 1 ? "user" : "users"}
+                </>
+              )}
+            </p>
 
-            {(search ||
-              statusFilter !==
-                "all" ||
-              roleFilter !==
-                "all") && (
+            {hasActiveFilters && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 shrink-0 px-2 text-[10px] sm:text-xs"
-                onClick={() => {
-                  setSearch("");
-                  setStatusFilter(
-                    "all",
-                  );
-                  setRoleFilter(
-                    "all",
-                  );
-                }}
+                onClick={clearFilters}
+                className="h-7 shrink-0 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
               >
+                <X className="mr-1 h-3.5 w-3.5" />
                 Clear filters
               </Button>
             )}
@@ -1058,11 +1181,11 @@ function UsersPage() {
         </div>
 
         {/* User table */}
-        <div className="rounded-2xl border border-border bg-card shadow-soft">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-xs sm:text-sm">
-              <thead className="border-b border-border text-left text-[9px] uppercase tracking-wider text-muted-foreground sm:text-xs">
-                <tr>
+          <div className="rounded-1xl border border-border bg-card shadow-soft">
+            <div className="aneks-horizontal-scroll">
+              <table className="w-full min-w-[850px] text-xs sm:text-sm">
+                <thead className="border-b border-border text-left text-[9px] uppercase tracking-wider text-muted-foreground sm:text-xs">
+                  <tr>
                   <th className="p-3 font-medium sm:p-4">
                     User
                   </th>
@@ -1100,23 +1223,20 @@ function UsersPage() {
                   </tr>
                 )}
 
-                {isError &&
-                  !isLoading && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="p-8 text-center text-xs text-destructive sm:p-10 sm:text-sm"
-                      >
-                        Failed to load
-                        users.
-                      </td>
-                    </tr>
-                  )}
+                {isError && !isLoading && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="p-8 text-center text-xs text-destructive sm:p-10 sm:text-sm"
+                    >
+                      Failed to load users.
+                    </td>
+                  </tr>
+                )}
 
                 {!isLoading &&
                   !isError &&
-                  filteredUsers.length ===
-                    0 && (
+                  filteredUsers.length === 0 && (
                     <tr>
                       <td
                         colSpan={5}
@@ -1131,352 +1251,348 @@ function UsersPage() {
 
                 {!isLoading &&
                   !isError &&
-                  filteredUsers.map(
-                    (user) => {
-                      const isSelf =
-                        currentUser?.id ===
-                        user.id;
+                  paginatedUsers.map((user) => {
+                    const isSelf =
+                      currentUser?.id === user.id;
 
-                      const canModify =
-                        canModifyUser(
-                          user,
-                        );
+                    const canModify =
+                      canModifyUser(user);
 
-                      const RoleIcon =
-                        getRoleIcon(
-                          user.primary_role,
-                        );
+                    const RoleIcon =
+                      getRoleIcon(user.primary_role);
 
-                      const userHistory =
-                        auditByUser.get(
-                          user.id,
-                        ) ?? [];
+                    const userHistory =
+                      auditByUser.get(user.id) ?? [];
 
-                      const historyOpen =
-                        expandedHistoryUserId ===
-                        user.id;
+                    const historyOpen =
+                      expandedHistoryUserId === user.id;
 
-                      return (
-                        <Fragment
-                          key={user.id}
-                        >
-                          <tr className="transition-colors hover:bg-muted/30">
-                            <td className="p-3 sm:p-4">
-                              <div className="flex items-center gap-2.5 sm:gap-3">
-                                {user.avatar_url ? (
-                                  <img
-                                    src={
-                                      user.avatar_url
-                                    }
-                                    alt={
-                                      user.full_name
-                                    }
-                                    className="h-8 w-8 shrink-0 rounded-full border border-border object-cover sm:h-9 sm:w-9"
-                                  />
-                                ) : (
-                                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold sm:h-9 sm:w-9 sm:text-xs">
-                                    {getInitials(
-                                      user.full_name ||
-                                        "User",
-                                    )}
-                                  </div>
-                                )}
+                    return (
+                      <Fragment key={user.id}>
+                        <tr className="transition-colors hover:bg-muted/30">
+                          <td className="p-3 sm:p-4">
+                            <div className="flex items-center gap-2.5 sm:gap-3">
+                              {user.avatar_url ? (
+                                <img
+                                  src={user.avatar_url}
+                                  alt={user.full_name}
+                                  className="h-8 w-8 shrink-0 rounded-full border border-border object-cover sm:h-9 sm:w-9"
+                                />
+                              ) : (
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold sm:h-9 sm:w-9 sm:text-xs">
+                                  {getInitials(
+                                    user.full_name || "User",
+                                  )}
+                                </div>
+                              )}
 
-                                <div className="min-w-0">
-                                  <div className="font-medium">
-                                    {user.full_name ||
-                                      "Unnamed user"}
+                              <div className="min-w-0">
+                                <div className="font-medium">
+                                  {user.full_name ||
+                                    "Unnamed user"}
 
-                                    {isSelf && (
-                                      <span className="ml-1.5 text-[10px] font-normal text-muted-foreground sm:ml-2 sm:text-xs">
-                                        (You)
-                                      </span>
-                                    )}
-                                  </div>
+                                  {isSelf && (
+                                    <span className="ml-1.5 text-[10px] font-normal text-muted-foreground sm:ml-2 sm:text-xs">
+                                      (You)
+                                    </span>
+                                  )}
+                                </div>
 
-                                  <div className="max-w-[220px] truncate text-[10px] text-muted-foreground sm:max-w-none sm:text-xs">
-                                    {user.email ||
-                                      "—"}
-                                  </div>
+                                <div className="max-w-[220px] truncate text-[10px] text-muted-foreground sm:max-w-none sm:text-xs">
+                                  {user.email || "—"}
                                 </div>
                               </div>
-                            </td>
+                            </div>
+                          </td>
 
-                            <td className="p-3 sm:p-4">
-                              <Select
-                                value={
-                                  user.primary_role
-                                }
-                                onValueChange={(
-                                  value,
-                                ) =>
-                                  requestRoleChange(
-                                    user,
-                                    value as AppRole,
-                                  )
-                                }
-                                disabled={
-                                  !canModify ||
-                                  setRole.isPending
-                                }
-                              >
-                                <SelectTrigger className="h-8 w-[145px] text-[10px] sm:h-9 sm:w-[160px] sm:text-xs">
-                                  <div className="flex items-center gap-1.5 sm:gap-2">
-                                    <RoleIcon className="h-3 w-3 text-muted-foreground sm:h-3.5 sm:w-3.5" />
-                                    <SelectValue />
-                                  </div>
-                                </SelectTrigger>
-
-                                <SelectContent>
-                                  {ROLES.map(
-                                    (role) => {
-                                      const blockedForCoAdmin =
-                                        !currentUserIsAdmin &&
-                                        role ===
-                                          "admin";
-
-                                      return (
-                                        <SelectItem
-                                          key={role}
-                                          value={role}
-                                          disabled={
-                                            blockedForCoAdmin
-                                          }
-                                        >
-                                          {formatLabel(
-                                            role,
-                                          )}
-                                        </SelectItem>
-                                      );
-                                    },
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </td>
-
-                            <td className="p-3 sm:p-4">
-                              <Select
-                                value={
-                                  user.status
-                                }
-                                onValueChange={(
-                                  value,
-                                ) =>
-                                  requestStatusChange(
-                                    user,
-                                    value as AccountStatus,
-                                  )
-                                }
-                                disabled={
-                                  !canModify ||
-                                  setStatus.isPending
-                                }
-                              >
-                                <SelectTrigger className="h-8 w-[135px] text-[10px] sm:h-9 sm:w-[150px] sm:text-xs">
+                          <td className="p-3 sm:p-4">
+                            <Select
+                              value={user.primary_role}
+                              onValueChange={(value) =>
+                                requestRoleChange(
+                                  user,
+                                  value as AppRole,
+                                )
+                              }
+                              disabled={
+                                !canModify ||
+                                setRole.isPending
+                              }
+                            >
+                              <SelectTrigger className="h-8 w-[145px] text-[10px] sm:h-9 sm:w-[160px] sm:text-xs">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                  <RoleIcon className="h-3 w-3 text-muted-foreground sm:h-3.5 sm:w-3.5" />
                                   <SelectValue />
-                                </SelectTrigger>
+                                </div>
+                              </SelectTrigger>
 
-                                <SelectContent>
-                                  {STATUSES.map(
-                                    (
-                                      status,
-                                    ) => (
-                                      <SelectItem
-                                        key={
-                                          status
-                                        }
-                                        value={
-                                          status
-                                        }
-                                      >
-                                        {formatLabel(
-                                          status,
-                                        )}
-                                      </SelectItem>
-                                    ),
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </td>
+                              <SelectContent>
+                                {ROLES.map((role) => {
+                                  const blockedForCoAdmin =
+                                    !currentUserIsAdmin &&
+                                    role === "admin";
 
-                            <td className="whitespace-nowrap p-3 text-muted-foreground sm:p-4">
-                              {formatDate(
-                                user.created_at,
-                              )}
-                            </td>
-
-                            <td className="p-3 sm:p-4">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 px-2 text-[10px] text-muted-foreground sm:h-9 sm:px-2.5 sm:text-xs"
-                                  onClick={() =>
-                                    toggleHistory(
-                                      user.id,
-                                    )
-                                  }
-                                >
-                                  <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
-
-                                  {historyOpen ? (
-                                    <>
-                                      Hide history
-                                      <ChevronUp className="ml-0.5 h-3 w-3 sm:ml-1 sm:h-3.5 sm:w-3.5" />
-                                    </>
-                                  ) : (
-                                    <>
-                                      History (
-                                      {
-                                        userHistory.length
+                                  return (
+                                    <SelectItem
+                                      key={role}
+                                      value={role}
+                                      disabled={
+                                        blockedForCoAdmin
                                       }
-                                      )
-                                      <ChevronDown className="ml-0.5 h-3 w-3 sm:ml-1 sm:h-3.5 sm:w-3.5" />
-                                    </>
-                                  )}
-                                </Button>
+                                    >
+                                      {formatLabel(role)}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </td>
 
-                                {isSelf ? (
-                                  <span className="px-2 text-[10px] text-muted-foreground sm:text-xs">
-                                    Your account
-                                  </span>
-                                ) : (
-                                  <Link
-                                    to="/admin/users/$userId"
-                                    params={{
-                                      userId:
-                                        user.id,
-                                    }}
-                                    className="inline-flex h-8 items-center justify-center rounded-md px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-9 sm:px-3 sm:text-xs"
+                          <td className="p-3 sm:p-4">
+                            <Select
+                              value={user.status}
+                              onValueChange={(value) =>
+                                requestStatusChange(
+                                  user,
+                                  value as AccountStatus,
+                                )
+                              }
+                              disabled={
+                                !canModify ||
+                                setStatus.isPending
+                              }
+                            >
+                              <SelectTrigger className="h-8 w-[135px] text-[10px] sm:h-9 sm:w-[150px] sm:text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+
+                              <SelectContent>
+                                {STATUSES.map((status) => (
+                                  <SelectItem
+                                    key={status}
+                                    value={status}
                                   >
-                                    <UserCog className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                    Details
-                                  </Link>
+                                    {formatLabel(status)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+
+                          <td className="whitespace-nowrap p-3 text-muted-foreground sm:p-4">
+                            {formatDate(user.created_at)}
+                          </td>
+
+                          <td className="p-3 sm:p-4">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-[10px] text-muted-foreground sm:h-9 sm:px-2.5 sm:text-xs"
+                                onClick={() =>
+                                  toggleHistory(user.id)
+                                }
+                              >
+                                <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+
+                                {historyOpen ? (
+                                  <>
+                                    Hide history
+                                    <ChevronUp className="ml-0.5 h-3 w-3 sm:ml-1 sm:h-3.5 sm:w-3.5" />
+                                  </>
+                                ) : (
+                                  <>
+                                    History ({userHistory.length})
+                                    <ChevronDown className="ml-0.5 h-3 w-3 sm:ml-1 sm:h-3.5 sm:w-3.5" />
+                                  </>
+                                )}
+                              </Button>
+
+                              {isSelf ? (
+                                <span className="px-2 text-[10px] text-muted-foreground sm:text-xs">
+                                  Your account
+                                </span>
+                              ) : (
+                                <Link
+                                  to="/admin/users/$userId"
+                                  params={{
+                                    userId: user.id,
+                                  }}
+                                  className="inline-flex h-8 items-center justify-center rounded-sm px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-9 sm:px-3 sm:text-xs"
+                                >
+                                  <UserCog className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                  Details
+                                </Link>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+
+                        {historyOpen && (
+                          <tr className="bg-muted/10">
+                            <td
+                              colSpan={5}
+                              className="p-0"
+                            >
+                              <div className="border-t border-border px-3.5 py-3.5 sm:px-6 sm:py-4">
+                                <div className="mb-2.5 flex items-center justify-between sm:mb-3">
+                                  <div>
+                                    <h4 className="text-xs font-semibold sm:text-sm">
+                                      User history
+                                    </h4>
+
+                                    <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
+                                      Role and account-status changes recorded for this user.
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {auditLogsLoading ? (
+                                  <div className="flex items-center gap-1.5 py-5 text-xs text-muted-foreground sm:gap-2 sm:py-6 sm:text-sm">
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+                                    Loading history...
+                                  </div>
+                                ) : userHistory.length === 0 ? (
+                                  <div className="py-5 text-xs text-muted-foreground sm:py-6 sm:text-sm">
+                                    No account changes have been recorded for this user.
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2.5 sm:space-y-3">
+                                    {userHistory.map((log) => (
+                                      <div
+                                        key={log.id}
+                                        className="border-l-2 border-border pl-3 sm:pl-4"
+                                      >
+                                        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                                          <div>
+                                            <div className="text-xs font-medium sm:text-sm">
+                                              {getAuditActionLabel(
+                                                log.action,
+                                              )}
+                                            </div>
+
+                                            <div className="text-[10px] text-muted-foreground sm:text-xs">
+                                              {getAuditChange(log)}
+                                            </div>
+                                          </div>
+
+                                          <div className="text-[10px] text-muted-foreground sm:text-right sm:text-xs">
+                                            {formatDateTime(
+                                              log.created_at,
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <div className="mt-1.5 text-[10px] text-muted-foreground sm:mt-2 sm:text-xs">
+                                          By{" "}
+                                          <span className="font-medium text-foreground">
+                                            {getActorLabel(
+                                              log.performed_by,
+                                              actorMap,
+                                            )}
+                                          </span>
+                                        </div>
+
+                                        <div className="mt-0.5 text-[10px] text-muted-foreground sm:mt-1 sm:text-xs">
+                                          Reason:{" "}
+                                          <span className="text-foreground">
+                                            {log.reason || "—"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
                             </td>
                           </tr>
-
-                          {historyOpen && (
-                            <tr className="bg-muted/10">
-                              <td
-                                colSpan={5}
-                                className="p-0"
-                              >
-                                <div className="border-t border-border px-3.5 py-3.5 sm:px-6 sm:py-4">
-                                  <div className="mb-2.5 flex items-center justify-between sm:mb-3">
-                                    <div>
-                                      <h4 className="text-xs font-semibold sm:text-sm">
-                                        User history
-                                      </h4>
-
-                                      <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
-                                        Role and account-status changes recorded for this user.
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {auditLogsLoading ? (
-                                    <div className="flex items-center gap-1.5 py-5 text-xs text-muted-foreground sm:gap-2 sm:py-6 sm:text-sm">
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-                                      Loading history...
-                                    </div>
-                                  ) : userHistory.length ===
-                                    0 ? (
-                                    <div className="py-5 text-xs text-muted-foreground sm:py-6 sm:text-sm">
-                                      No account changes have been recorded for this user.
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-2.5 sm:space-y-3">
-                                      {userHistory.map(
-                                        (log) => (
-                                          <div
-                                            key={
-                                              log.id
-                                            }
-                                            className="border-l-2 border-border pl-3 sm:pl-4"
-                                          >
-                                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                                              <div>
-                                                <div className="text-xs font-medium sm:text-sm">
-                                                  {getAuditActionLabel(
-                                                    log.action,
-                                                  )}
-                                                </div>
-
-                                                <div className="text-[10px] text-muted-foreground sm:text-xs">
-                                                  {getAuditChange(
-                                                    log,
-                                                  )}
-                                                </div>
-                                              </div>
-
-                                              <div className="text-[10px] text-muted-foreground sm:text-right sm:text-xs">
-                                                {formatDateTime(
-                                                  log.created_at,
-                                                )}
-                                              </div>
-                                            </div>
-
-                                            <div className="mt-1.5 text-[10px] text-muted-foreground sm:mt-2 sm:text-xs">
-                                              By{" "}
-                                              <span className="font-medium text-foreground">
-                                                {getActorLabel(
-                                                  log.performed_by,
-                                                  actorMap,
-                                                )}
-                                              </span>
-                                            </div>
-
-                                            <div className="mt-0.5 text-[10px] text-muted-foreground sm:mt-1 sm:text-xs">
-                                              Reason:{" "}
-                                              <span className="text-foreground">
-                                                {log.reason ||
-                                                  "—"}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        ),
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    },
-                  )}
+                        )}
+                      </Fragment>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Pagination */}
+        {!isLoading &&
+          !isError &&
+          totalCount > 0 &&
+          totalPages > 1 && (
+            <div className="border-t border-border pt-4">
+              <div className="grid grid-cols-3 items-center gap-2">
+                {/* Previous: far left */}
+                <div className="flex justify-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1 || isLoading}
+                    onClick={() =>
+                      setPage((current) =>
+                        Math.max(1, current - 1),
+                      )
+                    }
+                    className="h-9 text-xs sm:text-sm"
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    Previous
+                  </Button>
+                </div>
+
+                {/* Page indicator: exact center */}
+                <span className="whitespace-nowrap text-center text-xs text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+
+                {/* Next: far right */}
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                      page >= totalPages || isLoading
+                    }
+                    onClick={() =>
+                      setPage((current) =>
+                        Math.min(
+                          totalPages,
+                          current + 1,
+                        ),
+                      )
+                    }
+                    className="h-9 text-xs sm:text-sm"
+                  >
+                    Next
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
 
       {/* Confirmation dialog for table-level changes */}
       <AlertDialog
         open={pendingAction !== null}
         onOpenChange={(open) => {
-          if (
-            !open &&
-            !actionLoading
-          ) {
+          if (!open && !actionLoading) {
             setPendingAction(null);
             setActionReason("");
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Confirm account change
             </AlertDialogTitle>
 
             <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
-              {pendingAction?.type ===
-                "status" && (
+              {pendingAction?.type === "status" && (
                 <>
                   Change{" "}
                   <strong>
@@ -1490,16 +1606,13 @@ function UsersPage() {
                   </strong>{" "}
                   to{" "}
                   <strong>
-                    {formatLabel(
-                      pendingAction.value,
-                    )}
+                    {formatLabel(pendingAction.value)}
                   </strong>
                   ?
                 </>
               )}
 
-              {pendingAction?.type ===
-                "role" && (
+              {pendingAction?.type === "role" && (
                 <>
                   Change{" "}
                   <strong>
@@ -1513,9 +1626,7 @@ function UsersPage() {
                   </strong>{" "}
                   to{" "}
                   <strong>
-                    {formatLabel(
-                      pendingAction.value,
-                    )}
+                    {formatLabel(pendingAction.value)}
                   </strong>
                   ?
                 </>
@@ -1535,9 +1646,7 @@ function UsersPage() {
               id="user-change-reason"
               value={actionReason}
               onChange={(event) =>
-                setActionReason(
-                  event.target.value,
-                )
+                setActionReason(event.target.value)
               }
               placeholder="Enter a reason for this change..."
               disabled={actionLoading}
@@ -1546,8 +1655,7 @@ function UsersPage() {
             />
 
             <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-5">
-              This reason will be saved in
-              the user audit history.
+              This reason will be saved in the user audit history.
             </p>
           </div>
 

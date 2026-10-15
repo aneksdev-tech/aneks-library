@@ -26,10 +26,10 @@ function PremiumPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
-      <div className="rounded-2xl border bg-card p-4 shadow-soft sm:rounded-3xl sm:p-6">
+      <div className="rounded-sm border bg-card p-4 shadow-soft sm:rounded-sm sm:p-6">
         <div className="flex items-center gap-2.5 sm:gap-3">
           <div>
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 sm:h-10 sm:w-10">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-sm bg-primary/10 sm:h-10 sm:w-10">
               <Crown className="h-6 w-6 text-yellow-500 sm:h-8 sm:w-8" />
             </div>
 
@@ -45,7 +45,7 @@ function PremiumPage() {
       </div>
 
       <div className="grid gap-3 sm:gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border p-4 sm:p-6">
+        <div className="rounded-sm border p-4 sm:p-6">
           <h2 className="text-lg font-semibold sm:text-xl">
             Free Plan
           </h2>
@@ -79,8 +79,8 @@ function PremiumPage() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4 sm:p-6">
-          <div className="mb-2.5 inline-flex rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold text-primary-foreground sm:mb-3 sm:px-3 sm:text-xs">
+        <div className="rounded-sm border-2 border-primary bg-primary/5 p-4 sm:p-6">
+          <div className="mb-2.5 inline-flex rounded-sm bg-primary px-2.5 py-1 text-[10px] font-semibold text-primary-foreground sm:mb-3 sm:px-3 sm:text-xs">
             Recommended
           </div>
 
@@ -133,7 +133,7 @@ function PremiumPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border p-4 sm:p-6">
+      <div className="rounded-sm border p-4 sm:p-6">
         <h2 className="text-xl font-semibold sm:text-2xl">
           Secure Payments
         </h2>
@@ -144,7 +144,7 @@ function PremiumPage() {
         </p>
       </div>
 
-      <div className="rounded-2xl border p-4 sm:p-6">
+      <div className="rounded-sm border p-4 sm:p-6">
         <h2 className="text-xl font-semibold sm:text-2xl">
           Frequently Asked Questions
         </h2>

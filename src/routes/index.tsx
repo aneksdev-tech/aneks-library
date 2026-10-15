@@ -244,7 +244,7 @@ function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label="Toggle theme"
-      className="rounded-md border border-border bg-card p-2 text-muted-foreground shadow-soft transition-colors hover:text-foreground"
+      className="rounded-sm border border-border bg-card p-2 text-muted-foreground shadow-soft transition-colors hover:text-foreground"
     >
       {theme === "dark" ? (
         <Sun className="h-4 w-4" />
@@ -266,7 +266,7 @@ function Header() {
           <img
             src={logo}
             alt="Aneks Library"
-            className="h-10 w-10 rounded-lg object-contain md:h-8 md:w-8 lg:h-10 lg:w-10"
+            className="h-10 w-10 rounded-sm object-contain md:h-8 md:w-8 lg:h-10 lg:w-10"
           />
 
           <span className="-ml-2 font-display text-xs font-semibold tracking-tight sm:text-lg md:text-sm lg:text-lg">
@@ -350,7 +350,7 @@ function Header() {
 
           <button
             onClick={() => setOpen(!open)}
-            className="rounded-md border border-border bg-card p-2 shadow-soft md:hidden"
+            className="rounded-sm border border-border bg-card p-2 shadow-soft md:hidden"
             aria-label="Toggle menu"
           >
             {open ? (
@@ -369,7 +369,7 @@ function Header() {
               <a
                 href="#about"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 transition hover:bg-muted"
+                className="rounded-sm px-3 py-3 transition hover:bg-muted"
               >
                 About
               </a>
@@ -377,7 +377,7 @@ function Header() {
               <a
                 href="#features"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 hover:bg-muted"
+                className="rounded-sm px-3 py-2 hover:bg-muted"
               >
                 Features
               </a>
@@ -385,7 +385,7 @@ function Header() {
               <a
                 href="#categories"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 hover:bg-muted"
+                className="rounded-sm px-3 py-2 hover:bg-muted"
               >
                 Categories
               </a>
@@ -393,7 +393,7 @@ function Header() {
               {/* <Link
                 to="/pricing"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 hover:bg-muted"
+                className="rounded-sm px-3 py-2 hover:bg-muted"
               >
                 Pricing
               </Link> */}
@@ -401,7 +401,7 @@ function Header() {
               <a
                 href="#how"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 hover:bg-muted"
+                className="rounded-sm px-3 py-2 hover:bg-muted"
               >
                 How it works
               </a>
@@ -409,7 +409,7 @@ function Header() {
               <a
                 href="#faq"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 hover:bg-muted"
+                className="rounded-sm px-3 py-2 hover:bg-muted"
               >
                 FAQ
               </a>
@@ -417,7 +417,7 @@ function Header() {
               <a
                 href="#contact"
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 hover:bg-muted"
+                className="rounded-sm px-3 py-2 hover:bg-muted"
               >
                 Contact
               </a>
@@ -435,12 +435,12 @@ function LandingPage() {
       <Header />
 
       {/* HERO — split screen */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-secondary/40">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_20%_0%,color-mix(in_oklab,var(--color-primary)_18%,transparent),transparent)]" />
 
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-5 sm:px-6 md:gap-7 md:px-4 md:py-5 lg:gap-8 lg:px-6 lg:py-8 xl:py-12 md:grid-cols-2">
           <div className="flex flex-col justify-center">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft md:px-3 md:py-1 md:text-[11px] lg:px-3 lg:py-1 lg:text-xs">
+            <div className="inline-flex w-fit items-center gap-2 rounded-sm border border-border/60 bg-card/60 px-3 py-1 text-xs text-muted-foreground shadow-soft md:px-3 md:py-1 md:text-[11px] lg:px-3 lg:py-1 lg:text-xs">
               <Sparkles className="h-3.5 w-3.5 text-gold md:h-3.5 md:w-3.5 lg:h-3.5 lg:w-3.5" />
               Designed for MOUAU Students
             </div>
@@ -480,7 +480,7 @@ function LandingPage() {
               {stats.map((s) => (
                 <div
                   key={s.label}
-                  className="rounded-xl border border-border/60 bg-card/60 p-3 shadow-soft sm:p-4 md:rounded-lg md:p-3 lg:rounded-xl lg:p-4"
+                  className="rounded-sm border border-border/60 bg-card/60 p-3 shadow-soft sm:p-4 md:rounded-sm md:p-3 lg:rounded-sm lg:p-4"
                 >
                   <dt className="break-words text-xs uppercase tracking-wider text-muted-foreground md:text-[10px] lg:text-xs">
                     {s.label}
@@ -496,10 +496,10 @@ function LandingPage() {
 
           <div className="relative flex h-full">
             {/* Glow */}
-            <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-emerald opacity-20 blur-3xl" />
+            <div className="absolute -inset-6 -z-10 rounded-sm bg-gradient-emerald opacity-20 blur-3xl" />
 
             {/* Image */}
-            <div className="w-full overflow-hidden rounded-xl border border-border shadow-elegant md:rounded-lg lg:rounded-xl">
+            <div className="w-full overflow-hidden rounded-sm border border-border shadow-elegant md:rounded-sm lg:rounded-sm">
               <img
                 src={heroImg}
                 alt="Illustration of an academic library reading room"
@@ -510,7 +510,7 @@ function LandingPage() {
             </div>
 
             {/* Floating Card */}
-            <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-xl border border-border bg-card p-4 shadow-elegant sm:block md:bottom-5 md:left-5 md:max-w-[190px] md:rounded-lg md:p-3.5 lg:bottom-6 lg:left-6 lg:max-w-[220px] lg:rounded-xl lg:p-4">
+            <div className="absolute bottom-6 left-6 hidden max-w-[220px] rounded-sm border border-border bg-card p-4 shadow-elegant sm:block md:bottom-5 md:left-5 md:max-w-[190px] md:rounded-sm md:p-3.5 lg:bottom-6 lg:left-6 lg:max-w-[220px] lg:rounded-sm lg:p-4">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground md:text-[10px] lg:text-xs">
                 <Users className="h-3.5 w-3.5 text-primary md:h-3.5 md:w-3.5 lg:h-3.5 lg:w-3.5" />
                 Helped Students
@@ -525,7 +525,7 @@ function LandingPage() {
       </section>
 
       {/* ABOUT */}
-      <section id="about" className="border-t border-border/60">
+      <section id="about" className="border-t border-border/60 ">
         <div className="mx-auto max-w-7xl px-4 py-18 sm:px-6 md:px-4 md:py-12 lg:px-6 lg:py-18">
           <div className="mb-1 max-w-7xl">
             <p className="text-sm uppercase tracking-[0.2em] text-gold md:text-[11px] lg:text-sm">
@@ -577,9 +577,9 @@ function LandingPage() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
+                className="group rounded-sm border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant md:rounded-sm md:p-5 lg:rounded-sm lg:p-6"
               >
-                <span className="inline-grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary md:h-9 md:w-9 md:rounded-md lg:h-10 lg:w-10 lg:rounded-lg">
+                <span className="inline-grid h-10 w-10 place-items-center rounded-sm bg-primary/10 text-primary md:h-9 md:w-9 md:rounded-sm lg:h-10 lg:w-10 lg:rounded-sm">
                   <f.icon className="h-5 w-5 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5" />
                 </span>
 
@@ -627,9 +627,9 @@ function LandingPage() {
               <Link
                 key={c.slug}
                 to="/library"
-                className="group rounded-2xl border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
+                className="group rounded-sm border border-border/60 bg-card p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant md:rounded-sm md:p-5 lg:rounded-sm lg:p-6"
               >
-                <span className="inline-grid h-11 w-11 place-items-center rounded-xl bg-gradient-emerald text-primary-foreground md:h-10 md:w-10 md:rounded-lg lg:h-11 lg:w-11 lg:rounded-xl">
+                <span className="inline-grid h-11 w-11 place-items-center rounded-sm bg-gradient-emerald text-primary-foreground md:h-10 md:w-10 md:rounded-sm lg:h-11 lg:w-11 lg:rounded-sm">
                   <c.icon className="h-5 w-5 md:h-4.5 md:w-4.5 lg:h-5 lg:w-5" />
                 </span>
 
@@ -667,7 +667,7 @@ function LandingPage() {
             {steps.map((s, i) => (
               <li
                 key={s.n}
-                className="relative rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
+                className="relative rounded-sm border border-border/60 bg-card p-6 shadow-soft md:rounded-sm md:p-5 lg:rounded-sm lg:p-6"
               >
                 <div className="flex items-center gap-3 md:gap-2.5 lg:gap-3">
                   <span className="font-display text-3xl font-semibold text-gold md:text-[1.65rem] lg:text-3xl">
@@ -712,7 +712,7 @@ function LandingPage() {
             {testimonials.map((t) => (
               <figure
                 key={t.name}
-                className="rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:rounded-xl md:p-5 lg:rounded-2xl lg:p-6"
+                className="rounded-sm border border-border/60 bg-card p-6 shadow-soft md:rounded-sm md:p-5 lg:rounded-sm lg:p-6"
               >
                 <blockquote className="text-sm leading-relaxed text-foreground md:text-sm lg:text-sm">
                   "{t.quote}"
@@ -755,7 +755,7 @@ function LandingPage() {
           <Accordion
             type="single"
             collapsible
-            className="rounded-2xl border border-border/60 bg-card px-4 shadow-soft md:rounded-xl md:px-4 lg:rounded-2xl lg:px-4"
+            className="rounded-sm border border-border/60 bg-card px-4 shadow-soft md:rounded-sm md:px-4 lg:rounded-sm lg:px-4"
           >
             {faqs.map((f, i) => (
               <AccordionItem
@@ -831,7 +831,7 @@ function LandingPage() {
               <img
                 src={logo}
                 alt="Aneks Library"
-                className="h-9 w-9 rounded-md object-contain md:h-8 md:w-8 lg:h-9 lg:w-9"
+                className="h-9 w-9 rounded-sm object-contain md:h-8 md:w-8 lg:h-9 lg:w-9"
               />
 
               <span className="-ml-1 font-display text-lg font-semibold md:text-base lg:text-lg">
@@ -930,7 +930,7 @@ function LandingPage() {
                 type="email"
                 required
                 placeholder="you@university.edu"
-                className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring md:px-2.5 md:py-1.5 md:text-sm lg:px-3 lg:py-2 lg:text-sm"
+                className="min-w-0 flex-1 rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring md:px-2.5 md:py-1.5 md:text-sm lg:px-3 lg:py-2 lg:text-sm"
               />
 
               <Button

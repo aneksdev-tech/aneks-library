@@ -185,7 +185,7 @@ const tabs = [
             Administration
           </p>
 
-          <span className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-muted-foreground sm:px-2 sm:py-1 sm:text-[10px]">
+          <span className="rounded-sm border border-border bg-muted/40 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-muted-foreground sm:px-2 sm:py-1 sm:text-[10px]">
             {roles[0] ?? "Member"}
           </span>
         </div>
@@ -203,7 +203,7 @@ const tabs = [
       {/* Admin Navigation */}
       <nav
         aria-label="Administration navigation"
-        className="rounded-lg border border-border bg-card p-1 shadow-soft sm:p-1.5"
+        className="rounded-sm border border-border bg-card p-1 shadow-soft sm:p-1.5"
       >
         <div
           className={`grid gap-1 ${
@@ -225,7 +225,7 @@ const tabs = [
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`group flex min-h-9 min-w-0 items-center justify-start gap-1 rounded-md px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:flex-1 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
+                className={`group flex min-h-9 min-w-0 items-center justify-start gap-1 rounded-sm px-1.5 py-1.5 text-[9px] font-medium transition-all duration-200 sm:min-h-11 sm:flex-1 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
                   active
                     ? "bg-gradient-emerald text-primary-foreground shadow-soft"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
@@ -244,7 +244,7 @@ const tabs = [
                 {tab.to === "/admin/approvals" &&
                 approvalCount > 0 ? (
                   <span
-                    className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[8px] font-semibold text-gold-foreground sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
+                    className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-sm bg-gold px-1 text-[8px] font-semibold text-gold-foreground sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
                     aria-label={`${approvalCount} pending approval items`}
                   >
                     {approvalCount > 99

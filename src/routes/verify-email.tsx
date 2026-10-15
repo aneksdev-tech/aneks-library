@@ -51,8 +51,8 @@ function VerifyEmail() {
 
   return (
     <div className="grid min-h-dvh place-items-center bg-background p-4 sm:p-6">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-4 text-center shadow-elegant sm:rounded-2xl sm:p-8">
-        <span className="mx-auto grid h-9 w-9 place-items-center rounded-lg bg-gradient-emerald text-primary-foreground sm:h-12 sm:w-12 sm:rounded-xl">
+      <div className="w-full max-w-md rounded-sm border border-border bg-card p-4 text-center shadow-elegant sm:rounded-smxl sm:p-8">
+        <span className="mx-auto grid h-9 w-9 place-items-center rounded-lg bg-gradient-emerald text-primary-foreground sm:h-12 sm:w-12 sm:rounded-sm">
           <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
         </span>
 

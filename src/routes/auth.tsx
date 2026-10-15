@@ -2742,7 +2742,7 @@ function ForgotForm() {
       </p>
 
       {sent ? (
-        <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
+        <div className="mt-8 rounded-sm border border-primary/30 bg-primary/5 p-6 text-center">
           <Mail className="mx-auto h-8 w-8 text-primary" />
 
           <p className="mt-3 font-medium">

@@ -108,7 +108,7 @@ function Bookmarks() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card">
+        <div className="rounded-sm border border-border bg-card">
           <EmptyState
             title="No bookmarks yet"
             desc="Save resources from the library to find them here."

@@ -211,7 +211,7 @@ function PreviewPage() {
           </button>
 
           <div className="mb-3 flex flex-wrap gap-2 sm:mb-4">
-            <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary sm:px-3 sm:py-1 sm:text-sm">
+            <span className="rounded-sm bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary sm:px-3 sm:py-1 sm:text-sm">
               {categoryName}
             </span>
           </div>
@@ -334,8 +334,8 @@ function PreviewPage() {
                   </div>
                 )
               ) : (
-                <div className="flex items-center gap-2.5 rounded-xl border border-transparent p-2.5 sm:gap-3 sm:p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">
+                <div className="flex items-center gap-2.5 rounded-sm border border-transparent p-2.5 sm:gap-3 sm:p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">
                     ?
                   </div>
 
@@ -383,7 +383,7 @@ function PreviewPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-2.5 sm:p-4">
+        <div className="rounded-sm border bg-card p-2.5 sm:p-4">
           {previewUrl ? (
             <DocumentPreview
               url={previewUrl.url}

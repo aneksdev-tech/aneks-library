@@ -353,7 +353,7 @@ function MyUploads() {
                     .value as StatusFilter,
                 )
               }
-              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+              className="h-9 w-full rounded-sm border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
               aria-label="Filter uploads by status"
             >
               <option value="all">
@@ -399,7 +399,7 @@ function MyUploads() {
                     .value as SortOption,
                 )
               }
-              className="h-9 w-full rounded-md border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+              className="h-9 w-full rounded-sm border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
               aria-label="Sort uploads"
             >
               <option value="newest">
@@ -489,7 +489,7 @@ function MyUploads() {
         params={{
           draftId: resource.id,
         }}
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
+        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
       >
         <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         Edit draft
@@ -507,7 +507,7 @@ function MyUploads() {
           deletingDraftId ===
           resource.id
         }
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
+        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
       >
         <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 

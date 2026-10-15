@@ -1,38 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useAccess } from "@/hooks/useAccess";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  colleges,
-  levels,
-  semesters,
-  getDepartments,
-  ALL_OPTION,
-} from "@/lib/academicData";
+import { colleges, levels, semesters, getDepartments, ALL_OPTION } from "@/lib/academicData";
 import { useAuth } from "@/lib/auth";
-import {
-  Bookmark,
-  Download,
-  Search,
-  Filter,
-  Eye,
-  Loader2,
-  X,
-} from "lucide-react";
+import { Bookmark, ChevronLeft, ChevronRight, Download, Search, Filter, Eye, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
 import { ResourceTypeBadge } from "@/components/ResourceTypeBadge";
@@ -47,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
 });
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 6;
 
 function LibraryPage() {
   const [q, setQ] = useState("");
@@ -61,8 +37,10 @@ function LibraryPage() {
   const [level, setLevel] = useState(ALL_OPTION);
   const [semester, setSemester] = useState(ALL_OPTION);
   const [page, setPage] = useState(1);
-  const resourcesTopRef = useRef<HTMLDivElement>(null);
+
+  const findResourcesRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(page);
+  const pendingScrollRef = useRef(false);
 
   const departments =
     college === ALL_OPTION ? [] : getDepartments(college);
@@ -73,17 +51,6 @@ function LibraryPage() {
   useEffect(() => {
     setPage(1);
   }, [q, category, college, department, level, semester, sort]);
-
-  useEffect(() => {
-  if (previousPageRef.current === page) return;
-
-  previousPageRef.current = page;
-
-  resourcesTopRef.current?.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  });
-}, [page]);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -156,6 +123,37 @@ function LibraryPage() {
     totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const lastResult = Math.min(page * PAGE_SIZE, totalCount);
 
+  // Remember when the page changes and scrolling is needed.
+  useEffect(() => {
+    if (previousPageRef.current === page) return;
+
+    previousPageRef.current = page;
+    pendingScrollRef.current = true;
+  }, [page]);
+
+ // Scroll to Find resources after the requested page loads.
+useEffect(() => {
+  if (
+    !pendingScrollRef.current ||
+    isLoading ||
+    isError ||
+    !libraryResult
+  ) {
+    return;
+  }
+
+  const target = findResourcesRef.current;
+
+  if (!target) return;
+
+  pendingScrollRef.current = false;
+
+  target.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}, [page, isLoading, isError, libraryResult]);
+
   const hasActiveFilters =
     q.trim() !== "" ||
     category !== ALL_OPTION ||
@@ -191,7 +189,10 @@ function LibraryPage() {
       </div>
 
       {/* Filters */}
-      <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+      <div
+        ref={findResourcesRef}
+        className="scroll-mt-21 rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4"
+      >
         <div className="mb-3 flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
           <p className="text-xs font-semibold sm:text-sm">
@@ -333,13 +334,13 @@ function LibraryPage() {
 
         {/* Result count and clear filters */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-          <p className="text-xs text-muted-foreground sm:text-sm">
+          <p className="text-xs text-amber-700 dark:text-gold sm:text-sm">
             {isLoading ? (
               "Loading resource count…"
             ) : totalCount === 0 ? (
               <>
                 Showing{" "}
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-amber-700 dark:text-gold">
                   0
                 </span>{" "}
                 resources
@@ -347,11 +348,11 @@ function LibraryPage() {
             ) : (
               <>
                 Showing{" "}
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-amber-700 dark:text-gold">
                   {firstResult}–{lastResult}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-amber-700 dark:text-gold">
                   {totalCount}
                 </span>{" "}
                 {totalCount === 1 ? "resource" : "resources"}
@@ -365,7 +366,7 @@ function LibraryPage() {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-8 gap-1.5 px-2 text-xs sm:text-sm"
+              className="h-7 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
             >
               <X className="h-3.5 w-3.5" />
               Clear filters
@@ -374,77 +375,93 @@ function LibraryPage() {
         </div>
       </div>
 
-      <div ref={resourcesTopRef} className="scroll-mt-4">
+      {/* Resource list */}
+      <div>
         {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-40 animate-pulse rounded-2xl border border-border bg-card sm:h-48"
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-40 animate-pulse rounded-sm border border-border bg-card sm:h-48"
+              />
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="rounded-sm border border-border bg-card p-5">
+            <EmptyState
+              title="Unable to load resources"
+              desc="Please try again. If the problem continues, refresh the page."
             />
-          ))}
-        </div>
-      ) : isError ? (
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <EmptyState
-            title="Unable to load resources"
-            desc="Please try again. If the problem continues, refresh the page."
-          />
-        </div>
-      ) : data.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {data.map((resource) => (
-            <ResourceCard
-              key={resource.id}
-              r={resource as unknown as ResourceRow}
-              canDownload={canDownload}
+          </div>
+        ) : data.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            {data.map((resource) => (
+              <ResourceCard
+                key={resource.id}
+                r={resource as unknown as ResourceRow}
+                canDownload={canDownload}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-sm border border-border bg-card">
+            <EmptyState
+              title="No resources found"
+              desc="Try a different search or clear the filters."
             />
-          ))}
-        </div>
-            ) : (
-        <div className="rounded-2xl border border-border bg-card">
-          <EmptyState
-            title="No resources found"
-            desc="Try a different search or clear the filters."
-          />
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </div>
 
       {/* Pagination */}
-      {!isLoading && !isError && totalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-xs text-muted-foreground sm:text-sm">
-            Page {page} of {totalPages}
-          </p>
+      {!isLoading && !isError && totalCount > 0 && (
+        <div className="border-t border-border pt-4">
+          {totalPages > 1 && (
+            <div className="grid grid-cols-3 items-center gap-2">
+              {/* Previous: far left */}
+              <div className="flex justify-start">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1 || isLoading}
+                  onClick={() =>
+                    setPage((current) =>
+                      Math.max(1, current - 1),
+                    )
+                  }
+                  className="h-9 text-xs sm:text-sm"
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Previous
+                </Button>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() =>
-                setPage((current) => Math.max(1, current - 1))
-              }
-            >
-              Previous
-            </Button>
+              {/* Page indicator: exact center */}
+              <span className="whitespace-nowrap text-center text-xs text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() =>
-                setPage((current) =>
-                  Math.min(totalPages, current + 1),
-                )
-              }
-            >
-              Next
-            </Button>
-          </div>
+              {/* Next: far right */}
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages || isLoading}
+                  onClick={() =>
+                    setPage((current) =>
+                      Math.min(totalPages, current + 1),
+                    )
+                  }
+                  className="h-9 text-xs sm:text-sm"
+                >
+                  Next
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -548,7 +565,7 @@ export function ResourceCard({
     r.category_name?.trim() || "Uncategorized";
 
   return (
-    <article className="group flex flex-col rounded-2xl border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
+    <article className="group flex flex-col rounded-sm border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
       <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-3">
         <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-primary sm:text-xs">
           {categoryName}
@@ -560,7 +577,7 @@ export function ResourceCard({
         </div>
       </div>
 
-      <h3 className="line-clamp-2 font-display text-base font-semibold leading-snug sm:text-lg">
+      <h3 className="line-clamp-2 font-display text-[13px] font-semibold leading-snug sm:text-lg">
         {r.title}
       </h3>
 

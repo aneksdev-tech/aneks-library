@@ -270,7 +270,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh w-full bg-background text-foreground">
       {/* Desktop sidebar */}
-      <aside className="hidden w-50 shrink-0 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-50 flex-col border-r border-border bg-sidebar text-sidebar-foreground md:flex lg:w-64">
         <Link
           to="/"
           className="flex items-center gap-0.5 px-4 py-6"
@@ -335,7 +335,7 @@ export function AppShell({
                   setMobileOpen(false)
                 }
                 aria-label="Close menu"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -361,14 +361,14 @@ export function AppShell({
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col md:ml-50 lg:ml-64">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
           {/* Mobile menu button */}
           <button
             onClick={() =>
               setMobileOpen(true)
             }
-            className="rounded-md border border-border p-2 md:hidden"
+            className="rounded-sm border border-border p-2 md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-4 w-4" />
@@ -382,7 +382,7 @@ export function AppShell({
             <button
               onClick={toggle}
               aria-label="Toggle theme"
-              className="rounded-md border border-border p-2 text-muted-foreground hover:text-foreground"
+              className="rounded-sm border border-border p-2 text-muted-foreground hover:text-foreground"
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4" />
@@ -395,7 +395,7 @@ export function AppShell({
               <DropdownMenuTrigger
                 asChild
               >
-                <button className="flex items-center gap-2 rounded-md border border-border px-2 py-1.5 text-sm hover:bg-accent">
+                <button className="flex items-center gap-2 rounded-sm border border-border px-2 py-1.5 text-sm hover:bg-accent">
                   <Avatar className="h-6 w-6">
                     <AvatarFallback className="bg-gradient-emerald text-[10px] text-primary-foreground">
                       {(
@@ -576,7 +576,7 @@ function NotificationBell({
   return (
     <Link
       to="/notifications"
-      className="relative rounded-md border border-border p-2 text-muted-foreground hover:text-foreground"
+      className="relative rounded-sm border border-border p-2 text-muted-foreground hover:text-foreground"
       aria-label="Notifications"
     >
       <Bell className="h-4 w-4" />

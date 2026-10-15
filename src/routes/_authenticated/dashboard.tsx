@@ -406,7 +406,7 @@ function DashboardPage() {
         {cards.map((c) => (
           <div
             key={c.label}
-            className="rounded-2xl border border-border bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-elegant sm:p-4 lg:p-5"
+            className="rounded-sm border border-border bg-card p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-elegant sm:p-4 lg:p-5"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="min-w-0 truncate text-[10px] uppercase tracking-wider text-muted-foreground sm:text-xs">
@@ -427,9 +427,9 @@ function DashboardPage() {
             {c.label ===
               "Reputation" && (
               <>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-3 sm:h-2">
+                <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-muted sm:mt-3 sm:h-2">
                   <div
-                    className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
+                    className="h-full rounded-sm bg-gradient-emerald transition-all duration-500"
                     style={{
                       width: `${progress}%`,
                     }}
@@ -548,7 +548,7 @@ function DashboardPage() {
                             draftId:
                               r.id,
                           }}
-                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
                         >
                           <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           Edit draft
@@ -568,7 +568,7 @@ function DashboardPage() {
                             deletingDraftId ===
                             r.id
                           }
-                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
+                          className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
                         >
                           <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 

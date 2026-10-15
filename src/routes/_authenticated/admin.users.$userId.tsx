@@ -1113,7 +1113,7 @@ function UserDetailsPage() {
 
           <Link
             to="/admin/users"
-            className="inline-flex h-9 w-full items-center justify-center rounded-md border border-border px-3 text-xs font-medium transition-colors hover:bg-muted sm:w-auto sm:text-sm"
+            className="inline-flex h-9 w-full items-center justify-center rounded-sm border border-border px-3 text-xs font-medium transition-colors hover:bg-muted sm:w-auto sm:text-sm"
           >
             <Upload className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
             View Uploads
@@ -1159,7 +1159,7 @@ function UserDetailsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+                    <div className="flex items-center gap-1.5 text-xs text-gold sm:gap-2 sm:text-sm">
                       <RoleIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       {formatLabel(
                         user.primary_role,
@@ -1361,7 +1361,7 @@ function UserDetailsPage() {
                           className="flex flex-col gap-2.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-4"
                         >
                           <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted sm:h-9 sm:w-9">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-muted sm:h-9 sm:w-9">
                               <FileText className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
                             </div>
 
@@ -1869,7 +1869,7 @@ function UserDetailsPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:p-6">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm p-4 sm:max-w-lg sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Confirm account change

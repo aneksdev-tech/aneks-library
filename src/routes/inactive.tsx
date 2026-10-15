@@ -12,7 +12,7 @@ function InactivePage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center px-4">
-      <div className="w-full max-w-lg rounded-xl border border-border bg-card p-4 shadow-elegant sm:rounded-2xl sm:p-8">
+      <div className="w-full max-w-lg rounded-sm border border-border bg-card p-4 shadow-elegant sm:rounded-smxl sm:p-8">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted sm:h-16 sm:w-16">
           <UserX
             className="h-6 w-6 text-muted-foreground sm:h-8 sm:w-8"

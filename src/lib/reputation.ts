@@ -11,7 +11,7 @@ export const contributorLevels: ContributorLevel[] = [
   {
     level: 1,
     name: "Beginner",
-    emoji: "🌱",
+    emoji: "",
     min: 0,
     max: 49,
     color: "text-slate-500",
@@ -19,7 +19,7 @@ export const contributorLevels: ContributorLevel[] = [
   {
     level: 2,
     name: "Contributor",
-    emoji: "📚",
+    emoji: "",
     min: 50,
     max: 149,
     color: "text-emerald-600",
@@ -27,7 +27,7 @@ export const contributorLevels: ContributorLevel[] = [
   {
     level: 3,
     name: "Scholar",
-    emoji: "🎓",
+    emoji: "",
     min: 150,
     max: 299,
     color: "text-blue-600",
@@ -35,7 +35,7 @@ export const contributorLevels: ContributorLevel[] = [
   {
     level: 4,
     name: "Expert",
-    emoji: "🏅",
+    emoji: "",
     min: 300,
     max: 599,
     color: "text-amber-600",
@@ -43,7 +43,7 @@ export const contributorLevels: ContributorLevel[] = [
   {
     level: 5,
     name: "Master Contributor",
-    emoji: "👑",
+    emoji: "",
     min: 600,
     max: Number.MAX_SAFE_INTEGER,
     color: "text-purple-600",

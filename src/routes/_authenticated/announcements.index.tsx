@@ -373,7 +373,7 @@ function Announcements() {
         {hasUnread && (
           <button
             type="button"
-            className="mb-0.5 inline-flex shrink-0 items-center gap-1 rounded-md border border-border px-2 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-gold/40 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
+            className="mb-0.5 inline-flex shrink-0 items-center gap-1 rounded-sm border border-border px-2 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-gold/40 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
             disabled={
               markAllAsRead.isPending
             }

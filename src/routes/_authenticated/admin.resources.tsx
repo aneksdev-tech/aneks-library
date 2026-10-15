@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {  useEffect,  useMemo,  useRef,  useState  } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock3, Download, Edit3, Eye, Filter, FileText, History, Loader2, Search, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Download, X, Edit3, Eye, Filter, FileText, History, Loader2, Search, Trash2, XCircle, ChevronLeft, ChevronRight, } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -96,7 +96,7 @@ type AdminResourcesPage = {
   resources: Resource[];
 };
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 type ResourceEditAudit = {
   id: string;
@@ -306,6 +306,7 @@ const [page, setPage] = useState(1);
 
 const resourcesTopRef = useRef<HTMLDivElement>(null);
 const previousPageRef = useRef(page);
+const pendingScrollRef = useRef(false);
 
 const departments = useMemo(
   () => college !== ALL_OPTION ? getDepartments(college) : [],
@@ -423,23 +424,57 @@ const firstResource =
 
 const lastResource = Math.min(page * PAGE_SIZE, totalCount);
 
+
 useEffect(() => {
+  // Wait until the data for the current page has loaded.
+  if (!resourcePage || resourcePage.page !== page) return;
+
   if (page > totalPages) {
     setPage(totalPages);
   }
-}, [page, totalPages]);
+}, [page, totalPages, resourcePage]);
 
-// Scroll to the resource list when the page changes.
+
+/*
+ * Remember that a page change requires scrolling to the resource list.
+ */
 useEffect(() => {
   if (previousPageRef.current === page) return;
 
   previousPageRef.current = page;
+  pendingScrollRef.current = true;
+}, [page]);
 
-  resourcesTopRef.current?.scrollIntoView({
+/*
+ * Scroll after the requested page's data has finished loading.
+ */
+useEffect(() => {
+  if (
+    !pendingScrollRef.current ||
+    resourcesLoading ||
+    resourcesError ||
+    !resourcePage ||
+    resourcePage.page !== page
+  ) {
+    return;
+  }
+
+  const target = resourcesTopRef.current;
+
+  if (!target) return;
+
+  pendingScrollRef.current = false;
+
+  target.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
-}, [page]);
+}, [
+  page,
+  resourcesLoading,
+  resourcesError,
+  resourcePage,
+]);
 
   const resourceIds = useMemo(
   () => resources.map((resource) => resource.id),
@@ -1178,8 +1213,6 @@ useEffect(() => {
         )
       : false;
 
-    
-
 
 const selectedCategoryName =
   categories?.find(
@@ -1218,13 +1251,16 @@ const availableDepartments =
     <section className="space-y-5 sm:space-y-6">
 
 {/* Filters */}
-<div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+<div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
   <div className="mb-3 flex items-center gap-2">
     <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
-    <p className="text-xs font-semibold sm:text-sm">
-      Find resources
-    </p>
+    <p
+  ref={resourcesTopRef}
+  className="scroll-mt-23 text-[10px] text-muted-foreground sm:text-xs"
+>
+  Find resources
+</p>
   </div>
 
   <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -1426,36 +1462,45 @@ const availableDepartments =
     </Select>
   </div>
 
-    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-      <p className="text-[10px] text-muted-foreground sm:text-xs">
-        Showing {firstResource}–{lastResource} of {totalCount} resources
-      </p>
+  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+      <p className="pl-1 text-[10px] text-amber-700 dark:text-gold sm:text-xs">
+  Showing {firstResource}–{lastResource} of {totalCount} resources
+</p>
 
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        onClick={() => {
-          setSearch("");
-          setStatus("all");
-          setCategory("all");
-          setCollege(ALL_OPTION);
-          setDepartment(ALL_OPTION);
-          setLevel("all");
-          setSemester("all");
-          setSortOrder("newest");
-          setPage(1);
-        }}
-        className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
-      >
-        Clear filters
-      </Button>
+      {(search.trim() !== "" ||
+        status !== "all" ||
+        category !== "all" ||
+        college !== ALL_OPTION ||
+        department !== ALL_OPTION ||
+        level !== "all" ||
+        semester !== "all") && (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            setSearch("");
+            setStatus("all");
+            setCategory("all");
+            setCollege(ALL_OPTION);
+            setDepartment(ALL_OPTION);
+            setLevel("all");
+            setSemester("all");
+            setSortOrder("newest");
+            setPage(1);
+          }}
+  className="h-7 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+>
+  <X className="h-3.5 w-3.5" />
+  Clear filters
+</Button>
+      )}
     </div>
 </div>
 
       {/* Resource list */}
-      <div ref={resourcesTopRef} className="scroll-mt-4">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+      <div>
+        <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
         {resourcesLoading ? (
           <div className="p-6 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             Loading resources…
@@ -1553,7 +1598,7 @@ const availableDepartments =
                               }
                             />
 
-                            <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
+                            <span className="max-w-[180px] truncate rounded-sm border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
                               {
                                 categoryName
                               }
@@ -1643,7 +1688,7 @@ const availableDepartments =
 
                       {/* Usage metrics */}
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5 sm:block sm:px-3 sm:py-2">
+                        <div className="flex items-center justify-between rounded-sm border border-border bg-muted/20 px-2.5 py-1.5 sm:block sm:px-3 sm:py-2">
                           <p className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground sm:text-[10px] sm:tracking-[0.12em]">
                             Downloads
                           </p>
@@ -1653,7 +1698,7 @@ const availableDepartments =
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5 sm:block sm:px-3 sm:py-2">
+                        <div className="flex items-center justify-between rounded-sm border border-border bg-muted/20 px-2.5 py-1.5 sm:block sm:px-3 sm:py-2">
                           <p className="text-[9px] font-medium uppercase tracking-[0.1em] text-muted-foreground sm:text-[10px] sm:tracking-[0.12em]">
                             Bookmarks
                           </p>
@@ -2022,35 +2067,62 @@ const availableDepartments =
       </div>
       </div>
 
-      {totalCount > PAGE_SIZE && (
-  <div className="flex items-center justify-between gap-3 border-t py-4">
-    <p className="text-sm text-muted-foreground">
-      Page {page} of {totalPages}
-    </p>
+      {/* Pagination */}
+      {!resourcesLoading &&
+        !resourcesError &&
+        totalCount > 0 && (
+          <div className="border-t border-border pt-4">
+            {totalPages > 1 && (
+              <div className="grid grid-cols-3 items-center gap-2">
+                {/* Previous: far left */}
+                <div className="flex justify-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1 || resourcesLoading}
+                    onClick={() =>
+                      setPage((current) =>
+                        Math.max(1, current - 1),
+                      )
+                    }
+                    className="h-9 text-xs sm:text-sm"
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" />
+                    Previous
+                  </Button>
+                </div>
 
-    <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={page <= 1 || resourcesLoading}
-        onClick={() => setPage((current) => current - 1)}
-      >
-        Previous
-      </Button>
+                {/* Page indicator: exact center */}
+                <span className="whitespace-nowrap text-center text-xs text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
 
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={page >= totalPages || resourcesLoading}
-        onClick={() => setPage((current) => current + 1)}
-      >
-        Next
-      </Button>
-    </div>
-  </div>
-)}
+                {/* Next: far right */}
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                      page >= totalPages || resourcesLoading
+                    }
+                    onClick={() =>
+                      setPage((current) =>
+                        Math.min(totalPages, current + 1),
+                      )
+                    }
+                    className="h-9 text-xs sm:text-sm"
+                  >
+                    Next
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
       {/* Edit resource dialog */}
       <AlertDialog
         open={
@@ -2066,7 +2138,7 @@ const availableDepartments =
           }
         }}
       >
-        <AlertDialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl p-4 sm:max-w-3xl sm:rounded-lg sm:p-6">
+        <AlertDialogContent className="max-h-[90vh] max-w-[calc(100%-2rem)] overflow-y-auto rounded-sm p-4 sm:max-w-3xl sm:rounded-sm sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Edit resource
@@ -2492,7 +2564,7 @@ onValueChange={(value) => {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:rounded-lg sm:p-6">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm p-4 sm:max-w-lg sm:rounded-sm sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               {editConfirmation ===
@@ -2558,7 +2630,7 @@ onValueChange={(value) => {
                 rows={3}
                 maxLength={500}
                 autoFocus
-                className="flex min-h-20 w-full rounded-md border border-input bg-background px-2.5 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
+                className="flex min-h-20 w-full rounded-sm border border-input bg-background px-2.5 py-2 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
               />
 
               <p className="text-[10px] text-muted-foreground sm:text-xs">
@@ -2641,7 +2713,7 @@ onValueChange={(value) => {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:rounded-lg sm:p-6">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm p-4 sm:max-w-lg sm:rounded-sm sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Confirm resource deletion
@@ -2803,7 +2875,7 @@ function StatusPill({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${item.className}`}
+      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${item.className}`}
     >
       <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
       {item.label}
@@ -2943,7 +3015,7 @@ function PreviewModal({
         }
       }}
     >
-      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-xl">
+      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-sm border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-sm">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:gap-4 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <p className="truncate text-xs font-medium sm:text-sm">

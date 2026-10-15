@@ -35,7 +35,7 @@ export function AnnouncementBanner() {
       <div className="min-w-0 flex-1 overflow-hidden">
         <a
           href={destination}
-          className="block min-w-0 rounded-lg transition-colors hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="block min-w-0 rounded-sm transition-colors hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/30"
           aria-label={`View announcement: ${announcement.title}`}
         >
           <div

@@ -543,7 +543,7 @@ function ProfilePage() {
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_340px]">
         {/* Main profile card */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+        <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft">
           {/* Profile identity */}
           <div className="border-b border-border bg-muted/20 p-3.5 sm:p-8">
             <div className="flex flex-col items-start gap-4 sm:gap-6">
@@ -556,10 +556,10 @@ function ProfilePage() {
                         profile?.full_name ||
                         "Profile avatar"
                       }
-                      className="h-32 w-24 rounded-2xl border-2 border-primary/30 object-cover shadow-xl sm:h-40 sm:w-32"
+                      className="h-32 w-24 rounded-sm border-2 border-primary/30 object-cover shadow-xl sm:h-40 sm:w-32"
                     />
                   ) : (
-                    <div className="flex h-32 w-24 items-center justify-center rounded-2xl border-2 border-primary/30 bg-muted text-4xl font-bold shadow-lg sm:h-40 sm:w-32 sm:text-5xl">
+                    <div className="flex h-32 w-24 items-center justify-center rounded-sm border-2 border-primary/30 bg-muted text-4xl font-bold shadow-lg sm:h-40 sm:w-32 sm:text-5xl">
                       {(
                         profile?.full_name ||
                         "U"
@@ -575,7 +575,7 @@ function ProfilePage() {
                     onClick={() =>
                       fileInputRef.current?.click()
                     }
-                    className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:bottom-2 sm:right-2 sm:h-10 sm:w-10"
+                    className="absolute bottom-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-sm border border-border bg-card text-foreground shadow-lg transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 sm:bottom-2 sm:right-2 sm:h-10 sm:w-10"
                     aria-label="Change profile photo"
                     title="Change profile photo"
                   >
@@ -585,11 +585,11 @@ function ProfilePage() {
 
                 <div className="min-w-0 flex-1 text-left">
                   <div className="flex flex-wrap items-center justify-start gap-1.5 sm:gap-2">
-                    <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary sm:px-3 sm:py-1 sm:text-xs">
+                    <span className="rounded-sm border border-gold/10 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium text-gold sm:px-3 sm:py-1 sm:text-xs">
                       {roleLabel}
                     </span>
 
-                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 sm:px-3 sm:py-1 sm:text-xs">
+                    <span className="rounded-sm border border-gold/10 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium text-gold dark:text-gold sm:px-3 sm:py-1 sm:text-xs">
                       {contributor.emoji}{" "}
                       {contributor.name}
                     </span>
@@ -625,7 +625,7 @@ function ProfilePage() {
 
           {/* Completion — intentionally before editable information */}
           <div className="border-b border-border p-2">
-            <div className="rounded-2xl border border-none bg-muted/20 p-3.5 sm:p-6">
+            <div className="rounded-sm border border-none bg-muted/20 p-3.5 sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
@@ -642,9 +642,9 @@ function ProfilePage() {
                 </span>
               </div>
 
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-4 sm:h-2">
+              <div className="mt-3 h-1.5 overflow-hidden rounded-sm bg-muted sm:mt-4 sm:h-2">
                 <div
-                  className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
+                  className="h-full rounded-sm bg-gradient-emerald transition-all duration-500"
                   style={{
                     width: `${completion}%`,
                   }}
@@ -1148,7 +1148,7 @@ function ProfilePage() {
         {/* Right sidebar */}
         <div className="space-y-4 sm:space-y-6">
           {/* Reputation */}
-          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-6">
+          <div className="rounded-sm border border-border bg-card p-3.5 shadow-soft sm:p-6">
             <div className="flex items-start justify-between gap-3 sm:gap-4">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-xs">
@@ -1170,12 +1170,9 @@ function ProfilePage() {
             </div>
 
             <div className="mt-4 flex items-center gap-2.5 sm:mt-5 sm:gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-lg sm:h-11 sm:w-11 sm:text-xl">
-                {contributor.emoji}
-              </div>
-
+              
               <div>
-                <p className="text-sm font-medium sm:text-base">
+                <p className="text-sm font-medium sm:text-base text-gold">
                   {contributor.name}
                 </p>
 
@@ -1185,9 +1182,9 @@ function ProfilePage() {
               </div>
             </div>
 
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted sm:mt-5 sm:h-2">
+            <div className="mt-4 h-1.5 overflow-hidden rounded-sm bg-muted sm:mt-5 sm:h-2">
               <div
-                className="h-full rounded-full bg-gradient-emerald transition-all duration-500"
+                className="h-full rounded-sm bg-gradient-emerald transition-all duration-500"
                 style={{
                   width: `${progress}%`,
                 }}
@@ -1202,7 +1199,7 @@ function ProfilePage() {
           </div>
 
           {/* Account */}
-          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-6">
+          <div className="rounded-sm border border-border bg-card p-3.5 shadow-soft sm:p-6">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <ShieldCheck className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 

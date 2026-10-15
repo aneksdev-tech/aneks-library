@@ -836,10 +836,8 @@ function CategoriesPage() {
     <>
       <section className="space-y-5 sm:space-y-8">
         {/* Create category */}
-        <div className="border-b border-border pb-5 sm:pb-6">
+        <div className="rounded-sm border border-border bg-card p-4 shadow-soft sm:p-6">
           <div className="mb-3 flex items-center gap-1.5 sm:mb-4 sm:gap-2">
-            <Plus className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
-
             <div>
               <p className="text-xs font-semibold sm:text-sm">
                 Create category
@@ -941,7 +939,7 @@ function CategoriesPage() {
         </div>
 
         {/* Active categories */}
-        <div>
+        <div className="rounded-sm border border-border bg-card p-4 shadow-soft sm:p-6">
           <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <FolderTree className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
@@ -959,14 +957,14 @@ function CategoriesPage() {
           </div>
 
           {isLoading ? (
-            <div className="border-y border-border py-8 text-center text-xs text-muted-foreground sm:py-10 sm:text-sm">
+            <div className="py-8 text-center text-xs text-muted-foreground sm:py-10 sm:text-sm">
               <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                 <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
                 Loading categories…
               </div>
             </div>
           ) : activeCategories.length > 0 ? (
-            <div className="border-y border-border">
+            <div>
               <ul className="divide-y divide-border">
                 {activeCategories.map((category, index) => {
                   const isDeleting =
@@ -1203,7 +1201,7 @@ function CategoriesPage() {
               </ul>
             </div>
           ) : (
-            <div className="border-y border-border py-10 text-center sm:py-12">
+            <div className="py-10 text-center sm:py-12">
               <FolderTree className="mx-auto h-7 w-7 text-muted-foreground/50 sm:h-8 sm:w-8" />
 
               <p className="mt-2.5 text-xs font-medium sm:mt-3 sm:text-sm">
@@ -1218,8 +1216,8 @@ function CategoriesPage() {
         </div>
 
         {/* Deleted categories */}
-        {deletedCategories.length > 0 && (
-          <div>
+          {deletedCategories.length > 0 && (
+          <div className="rounded-sm border border-border bg-card p-4 shadow-soft sm:p-6">
             <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Trash2 className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
@@ -1234,7 +1232,7 @@ function CategoriesPage() {
               </span>
             </div>
 
-            <div className="border-y border-border">
+            <div>
               <ul className="divide-y divide-border">
                 {deletedCategories.map((category) => {
                   const history = getCategoryHistory(
@@ -1418,7 +1416,7 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Edit category
@@ -1525,7 +1523,7 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Confirm category changes
@@ -1606,7 +1604,7 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Delete category?
@@ -1689,7 +1687,7 @@ function CategoriesPage() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               Restore category?

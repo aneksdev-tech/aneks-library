@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { colleges, levels, semesters, getDepartments, ALL_OPTION } from "@/lib/academicData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export const Route = createFileRoute(
   "/_authenticated/academic/",
@@ -152,29 +152,17 @@ function AcademicApprovals() {
   const [categoryFilter, setCategoryFilter] = useState(ALL_OPTION);
   const [page, setPage] = useState(1);
 
-  const resourcesTopRef = useRef<HTMLDivElement>(null);
+  const pendingResourcesHeaderRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(page);
+  const pendingScrollRef = useRef(false);
 
-  const departments =
-    collegeFilter === ALL_OPTION
-      ? []
-      : getDepartments(collegeFilter);
 
-  /*
-   * Reset pagination whenever a filter or search term changes.
-   */
-  useEffect(() => {
-    setPage(1);
-  }, [
-    searchQuery,
-    collegeFilter,
-    departmentFilter,
-    levelFilter,
-    semesterFilter,
-    categoryFilter,
-  ]);
+const departments =
+  collegeFilter === ALL_OPTION
+    ? []
+    : getDepartments(collegeFilter);
 
-  /*
+/*
  * Reset pagination whenever a filter or search term changes.
  */
 useEffect(() => {
@@ -188,112 +176,138 @@ useEffect(() => {
   categoryFilter,
 ]);
 
-// Scroll to the resource queue when the page changes.
+/*
+ * Keep the page reactive if the lecturer's role or status
+ * changes while the page is open.
+ */
+useEffect(() => {
+  if (loading || !profile || !user) {
+    return;
+  }
+
+  if (
+    profile.status !== "active" ||
+    !roles?.includes("lecturer")
+  ) {
+    toast.error(
+      "Your account no longer has permission to access the Academic Workspace.",
+    );
+
+    navigate({
+      to: "/dashboard",
+      replace: true,
+    });
+  }
+}, [loading, profile, user, roles, navigate]);
+
+/*
+ * The RPC performs filtering, counting and pagination in Supabase.
+ * Only the current page of resources is returned to the browser.
+ */
+const {
+  data: queueData,
+  isLoading,
+  isError,
+  error: queueError,
+} = useQuery({
+  queryKey: [
+    "academic-pending-resources",
+    searchQuery.trim(),
+    collegeFilter,
+    departmentFilter,
+    levelFilter,
+    semesterFilter,
+    categoryFilter,
+    page,
+    PAGE_SIZE,
+  ],
+
+  queryFn: async (): Promise<PendingQueueResponse> => {
+    const { data, error } = await supabase.rpc(
+      "get_academic_pending_resources",
+      {
+        p_search: searchQuery.trim(),
+        p_category_id: categoryFilter,
+        p_college: collegeFilter,
+        p_department: departmentFilter,
+        p_level: levelFilter,
+        p_semester: semesterFilter,
+        p_page_size: PAGE_SIZE,
+        p_page: page,
+      },
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    return data as unknown as PendingQueueResponse;
+  },
+});
+
+const resources = queueData?.resources ?? [];
+const totalCount = queueData?.totalCount ?? 0;
+const pendingCount = queueData?.pendingCount ?? 0;
+const totalPages = Math.max(
+  1,
+  Math.ceil(totalCount / PAGE_SIZE),
+);
+
+const firstResult =
+  totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+
+const lastResult = Math.min(
+  page * PAGE_SIZE,
+  totalCount,
+);
+
+/*
+ * Remember that a page change requires scrolling to the queue heading.
+ */
 useEffect(() => {
   if (previousPageRef.current === page) return;
 
   previousPageRef.current = page;
+  pendingScrollRef.current = true;
+}, [page]);
 
-  resourcesTopRef.current?.scrollIntoView({
+/*
+ * Scroll after the requested page's data has finished loading.
+ */
+useEffect(() => {
+  if (
+    !pendingScrollRef.current ||
+    isLoading ||
+    isError ||
+    !queueData
+  ) {
+    return;
+  }
+
+  const header = pendingResourcesHeaderRef.current;
+
+  if (!header) return;
+
+  pendingScrollRef.current = false;
+
+  header.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
-}, [page]);
+}, [page, isLoading, isError, queueData]);
 
-  /*
-   * Keep the page reactive if the lecturer's role or status
-   * changes while the page is open.
-   */
-  useEffect(() => {
-    if (loading || !profile || !user) {
-      return;
-    }
+/*
+ * If an action removes the last resource from the current page,
+ * return to the last valid page after the count updates.
+ * Wait for the current query to finish before validating the page.
+ */
+useEffect(() => {
+  if (isLoading || isError || !queueData) return;
 
-    if (
-      profile.status !== "active" ||
-      !roles?.includes("lecturer")
-    ) {
-      toast.error(
-        "Your account no longer has permission to access the Academic Workspace.",
-      );
-
-      navigate({
-        to: "/dashboard",
-        replace: true,
-      });
-    }
-  }, [loading, profile, user, roles, navigate]);
-
-  /*
-   * The RPC performs filtering, counting and pagination in Supabase.
-   * Only the current page of resources is returned to the browser.
-   */
-  const {
-    data: queueData,
-    isLoading,
-    isError,
-    error: queueError,
-  } = useQuery({
-    queryKey: [
-      "academic-pending-resources",
-      searchQuery.trim(),
-      collegeFilter,
-      departmentFilter,
-      levelFilter,
-      semesterFilter,
-      categoryFilter,
-      page,
-      PAGE_SIZE,
-    ],
-
-    queryFn: async (): Promise<PendingQueueResponse> => {
-      const { data, error } = await supabase.rpc(
-        "get_academic_pending_resources",
-        {
-          p_search: searchQuery.trim(),
-          p_category_id: categoryFilter,
-          p_college: collegeFilter,
-          p_department: departmentFilter,
-          p_level: levelFilter,
-          p_semester: semesterFilter,
-          p_page_size: PAGE_SIZE,
-          p_page: page,
-        },
-      );
-
-      if (error) {
-        throw error;
-      }
-
-      return data as unknown as PendingQueueResponse;
-    },
-  });
-
-  const resources = queueData?.resources ?? [];
-  const totalCount = queueData?.totalCount ?? 0;
-  const pendingCount = queueData?.pendingCount ?? 0;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(totalCount / PAGE_SIZE),
-  );
-
-  const firstResult =
-    totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-
-  const lastResult = Math.min(
-    page * PAGE_SIZE,
-    totalCount,
-  );
-
-  /*
-   * If an action removes the last resource from the current page,
-   * return to the last valid page after the count updates.
-   */
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
+  if (page > totalPages) {
+    setPage(totalPages);
+  }
+}, [page, totalPages, isLoading, isError, queueData]);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -528,8 +542,11 @@ useEffect(() => {
         </section>
 
         {/* Pending resources: total queue, not filtered count */}
-        <div className="flex items-center gap-2.5 border-b border-border pb-3 sm:gap-3 sm:pb-4">
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-muted sm:h-9 sm:w-9">
+        <div
+          ref={pendingResourcesHeaderRef}
+          className="scroll-mt-20 flex items-center gap-2.5 border-b border-border pb-3 sm:gap-3 sm:pb-4"
+          >
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-sm bg-muted sm:h-9 sm:w-9">
             <Clock3 className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
           </div>
 
@@ -540,7 +557,7 @@ useEffect(() => {
               </p>
 
               <span
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] font-semibold leading-none text-gold-foreground sm:h-5 sm:w-5"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gold text-[10px] font-semibold leading-none text-gold-foreground sm:h-5 sm:w-5"
                 aria-label={`${pendingCount} pending resources`}
               >
                 {pendingCount > 99 ? "99+" : pendingCount}
@@ -554,7 +571,7 @@ useEffect(() => {
         </div>
 
         {/* Filters */}
-        <div className="rounded-2xl border border-border bg-card p-3 shadow-soft sm:p-4">
+        <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
           <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
             {/* Search */}
             <div className="relative md:col-span-2 xl:col-span-3">
@@ -719,9 +736,10 @@ useEffect(() => {
             </Select>
           </div>
         </div>
-    {(hasActiveFilters || totalCount >= 0) && (
+
+{(hasActiveFilters || totalCount >= 0) && (
   <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
-    <p className="text-[10px] text-muted-foreground sm:text-xs">
+    <p className="text-[10px] text-amber-700 dark:text-gold sm:text-xs">
       {totalCount === 0 ? (
         "No matching pending resources"
       ) : (
@@ -738,17 +756,18 @@ useEffect(() => {
       <button
         type="button"
         onClick={clearFilters}
-        className="shrink-0 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-xs"
-      >
-        Clear filters
-      </button>
+        className="h-7 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+        >
+          <X className="h-3.5 w-3.5" />
+          Clear filters
+        </button>
     )}
   </div>
 )}
 
         {/* Resource queue */}
-        <div ref={resourcesTopRef} className="scroll-mt-4">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+        <div>
+        <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
           {isLoading ? (
             <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
               <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -806,7 +825,7 @@ useEffect(() => {
                         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                           <StatusPill status={resource.status} />
 
-                          <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
+                          <span className="max-w-[180px] truncate rounded-sm border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
                             {categoryName}
                           </span>
                         </div>
@@ -962,52 +981,58 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Pagination */}
-        {!isLoading &&
-          !isError &&
-          totalCount > 0 && (
-            <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-              
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page <= 1 || isLoading}
-                    onClick={() =>
-                      setPage((current) => Math.max(1, current - 1))
-                    }
-                    className="h-9 text-xs sm:text-sm"
-                  >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    Previous
-                  </Button>
+{/* Pagination */}
+{!isLoading &&
+  !isError &&
+  totalCount > 0 && (
+    <div className="border-t border-border pt-4">
+      {totalPages > 1 && (
+        <div className="grid grid-cols-3 items-center gap-2">
+          {/* Previous: far left */}
+          <div className="flex justify-start">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isLoading}
+              onClick={() =>
+                setPage((current) => Math.max(1, current - 1))
+              }
+              className="h-9 text-xs sm:text-sm"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Previous
+            </Button>
+          </div>
 
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
-                    Page {page} of {totalPages}
-                  </span>
+          {/* Page indicator: exact center */}
+          <span className="whitespace-nowrap text-center text-xs text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= totalPages || isLoading}
-                    onClick={() =>
-                      setPage((current) =>
-                        Math.min(totalPages, current + 1),
-                      )
-                    }
-                    className="h-9 text-xs sm:text-sm"
-                  >
-                    Next
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-      </section>
+          {/* Next: far right */}
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || isLoading}
+              onClick={() =>
+                setPage((current) =>
+                  Math.min(totalPages, current + 1),
+                )
+              }
+              className="h-9 text-xs sm:text-sm"
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+</section>
 
       {/* Resource decision dialog */}
       <AlertDialog
@@ -1019,7 +1044,7 @@ useEffect(() => {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl sm:max-w-lg">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               {pendingDecision?.type === "approve"
@@ -1179,7 +1204,7 @@ function StatusPill({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${item.className}`}
+      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${item.className}`}
     >
       <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
       {item.label}
@@ -1272,7 +1297,7 @@ function PreviewModal({
         }
       }}
     >
-      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-xl">
+      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-sm border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-sm">
         <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-3.5 py-3 sm:gap-4 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium sm:text-base">

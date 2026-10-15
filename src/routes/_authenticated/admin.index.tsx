@@ -164,7 +164,7 @@ function AdminOverview() {
   if (authLoading || !role) {
     return (
       <section className="space-y-5 sm:space-y-6">
-        <div className="rounded-lg border border-border bg-card p-3.5 sm:p-6">
+        <div className="rounded-sm border border-border bg-card p-3.5 sm:p-6">
           <div className="h-4 w-32 animate-pulse rounded bg-muted sm:h-5 sm:w-40" />
           <div className="mt-2.5 h-3 w-52 animate-pulse rounded bg-muted sm:mt-3 sm:h-4 sm:w-64" />
         </div>
@@ -179,7 +179,7 @@ function AdminOverview() {
       <section className="space-y-5 sm:space-y-6">
         {/* Staff overview */}
         <div
-          className={`flex items-center justify-between gap-3 rounded-lg border p-3.5 sm:gap-4 sm:p-5 ${
+          className={`flex items-center justify-between gap-3 rounded-sm border p-3.5 sm:gap-4 sm:p-5 ${
             pendingCount > 0
               ? "border-gold/40 bg-gold/5"
               : "border-border bg-card"
@@ -255,7 +255,7 @@ function AdminOverview() {
     <section className="space-y-5 sm:space-y-6">
     {/* Pending approvals */}
       <div
-        className={`flex items-center justify-between gap-3 rounded-lg border p-3.5 sm:gap-4 sm:p-5 ${
+        className={`flex items-center justify-between gap-3 rounded-sm border p-3.5 sm:gap-4 sm:p-5 ${
           pendingCount > 0
             ? "border-gold/40 bg-gold/5"
             : "border-border bg-card"
@@ -295,7 +295,7 @@ function AdminOverview() {
       </div>
       
       {/* Primary statistics */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
 

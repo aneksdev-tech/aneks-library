@@ -83,7 +83,7 @@ export const Route = createFileRoute(
   component: Approvals,
 });
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 type ResourceStatus =
   | "pending"
@@ -264,8 +264,9 @@ function Approvals() {
 
   const [page, setPage] = useState(1);
 
-  const resourcesTopRef = useRef<HTMLDivElement>(null);
+  const matchingCountRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(page);
+  const pendingScrollRef = useRef(false);
 
   // Fetch only the requested page of filtered pending resources.
   const {
@@ -397,25 +398,50 @@ function Approvals() {
     semesterFilter,
   ]);
 
-  // Scroll to the resource queue when the page changes.
-  useEffect(() => {
+ /*
+ * Remember that a page change requires scrolling to the matching-count row.
+ */
+useEffect(() => {
   if (previousPageRef.current === page) return;
 
   previousPageRef.current = page;
+  pendingScrollRef.current = true;
+}, [page]);
 
-  resourcesTopRef.current?.scrollIntoView({
+/*
+ * Scroll after the requested page's data has finished loading.
+ */
+useEffect(() => {
+  if (
+    !pendingScrollRef.current ||
+    isLoading ||
+    isError ||
+    !data
+  ) {
+    return;
+  }
+
+  const target = matchingCountRef.current;
+
+  if (!target) return;
+
+  pendingScrollRef.current = false;
+
+  target.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
-}, [page]);
+}, [page, isLoading, isError, data]);
 
   // If a decision or changed result set reduces the number of pages,
   // move back to the last page that still exists.
   useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
+  if (isLoading || isError || !data) return;
+
+  if (page > totalPages) {
+    setPage(totalPages);
+  }
+  }, [page, totalPages, isLoading, isError, data]);
 
   const departments =
     collegeFilter === ALL_OPTION
@@ -780,7 +806,8 @@ function Approvals() {
         {/* Approval section navigation */}
         <div className="border-b border-border">
           <div
-            className="flex items-center gap-4 overflow-x-auto sm:gap-6"
+            ref={matchingCountRef}
+            className="scroll-mt-20 flex items-center gap-4 overflow-x-auto sm:gap-6"
             role="tablist"
             aria-label="Approval sections"
           >
@@ -805,7 +832,7 @@ function Approvals() {
 
                 {pendingUsers &&
                   pendingUsers.length > 0 && (
-                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
+                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
                       {pendingUsers.length}
                     </span>
                   )}
@@ -831,7 +858,7 @@ function Approvals() {
               Resources
 
               {pendingCount > 0 && (
-                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
+                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
                   {pendingCount}
                 </span>
               )}
@@ -842,7 +869,7 @@ function Approvals() {
         {/* User Accounts */}
         {activeSection === "users" &&
           canApproveUsers && (
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+            <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
               {pendingUsersLoading ? (
                 <div className="p-7 text-center text-xs text-muted-foreground sm:p-8 sm:text-sm">
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -876,12 +903,12 @@ function Approvals() {
                           <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                <span className="inline-flex items-center gap-1 rounded-full border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gold sm:px-2 sm:text-[10px]">
+                                <span className="inline-flex items-center gap-1 rounded-sm border border-gold/20 bg-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gold sm:px-2 sm:text-[10px]">
                                   <Clock3 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                   Pending
                                 </span>
 
-                                <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
+                                <span className="max-w-[180px] truncate rounded-sm border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
                                   {formatRoleLabel(
                                     pendingUser.primary_role,
                                   )}
@@ -996,8 +1023,8 @@ function Approvals() {
 
         {/* Resources */}
         {activeSection === "resources" && (
-          <div ref={resourcesTopRef} className="scroll-mt-4">
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft sm:rounded-xl">
+          <div>
+            <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
             {/* Resource filters */}
             {!isLoading &&
               !isError &&
@@ -1166,48 +1193,46 @@ function Approvals() {
                 </div>
               )}
 
-            {/* Matching count */}
-            {!isLoading && !isError && (
-              <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
-                <p
-                  className="text-[10px] text-muted-foreground sm:text-xs"
-                  aria-live="polite"
-                >
-                  {totalCount === 0 ? (
-                    "No matching pending resources"
-                  ) : (
-                    <>
-                      Showing{" "}
-                      <span className="font-medium text-foreground">
-                        {(page - 1) * PAGE_SIZE + 1}–
-                        {Math.min(
-                          page * PAGE_SIZE,
-                          totalCount,
-                        )}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-medium text-foreground">
-                        {totalCount}
-                      </span>{" "}
-                      matching pending{" "}
-                      {totalCount === 1
-                        ? "resource"
-                        : "resources"}
-                    </>
-                  )}
-                </p>
+{/* Matching count */}
+{!isLoading && !isError && (
+  <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
+    <p
+      className="min-w-0 pl-1.5 text-[10px] text-amber-700 dark:text-gold sm:text-xs"
+      aria-live="polite"
+    >
+      {totalCount === 0 ? (
+        "No matching pending resources"
+      ) : (
+        <>
+          Showing{" "}
+          <span className="font-medium text-amber-700 dark:text-gold">
+            {(page - 1) * PAGE_SIZE + 1}–
+            {Math.min(page * PAGE_SIZE, totalCount)}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-amber-700 dark:text-gold">
+            {totalCount}
+          </span>{" "}
+          matching pending{" "}
+          {totalCount === 1 ? "resource" : "resources"}
+        </>
+      )}
+    </p>
 
-                {hasActiveFilters && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="shrink-0 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-xs"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            )}
+    {hasActiveFilters && (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={clearFilters}
+        className="h-7 shrink-0 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+      >
+        <X className="h-3.5 w-3.5" />
+        Clear filters
+      </Button>
+    )}
+  </div>
+)}
 
             {isLoading ? (
               <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
@@ -1262,7 +1287,7 @@ function Approvals() {
                                   status={resource.status}
                                 />
 
-                                <span className="max-w-[180px] truncate rounded-full border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
+                                <span className="max-w-[180px] truncate rounded-sm border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
                                   {categoryName}
                                 </span>
                               </div>
@@ -1493,7 +1518,7 @@ function Approvals() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:p-6">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm p-4 sm:max-w-lg sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               {pendingDecision?.type === "approve"
@@ -1609,7 +1634,7 @@ function Approvals() {
           }
         }}
       >
-        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl p-4 sm:max-w-lg sm:p-6">
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm p-4 sm:max-w-lg sm:p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base sm:text-lg">
               {pendingUserDecision?.type === "approve"
@@ -1822,7 +1847,7 @@ function StatusPill({
 
   return (
     <span
-      className={`inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:gap-1 sm:px-2 sm:text-[10px] ${item.className}`}
+      className={`inline-flex items-center gap-0.5 rounded-sm border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:gap-1 sm:px-2 sm:text-[10px] ${item.className}`}
     >
       <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
       {item.label}
@@ -1940,7 +1965,7 @@ function PreviewModal({
         }
       }}
     >
-      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-xl">
+      <div className="flex max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-sm border border-border bg-card shadow-2xl sm:max-h-[95vh] sm:rounded-sm">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3.5 py-3 sm:gap-4 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <p className="truncate text-xs font-medium sm:text-sm">
