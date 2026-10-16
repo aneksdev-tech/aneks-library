@@ -35,19 +35,19 @@ function Announcements() {
   } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
-      const {
-        data,
-        error,
-      } = await supabase.auth.getUser();
+  const {
+    data,
+    error,
+  } = await supabase.auth.getSession();
 
-      if (error) {
-        throw error;
-      }
+  if (error) {
+    throw error;
+  }
 
-      return {
-        user: data.user,
-      };
-    },
+  return {
+    user: data.session?.user ?? null,
+  };
+},
   });
 
   const {
@@ -65,12 +65,15 @@ function Announcements() {
         data: announcements,
         error: announcementsError,
       } = await supabase
-        .from("announcements")
+        .from("announcements")    
         .select(
-          "id, title, body, content, link, is_active, published_at",
+          "id, title, body, content, link, is_active, published_at, updated_at",
         )
         .is("deleted_at", null)
         .not("published_at", "is", null)
+        .order("is_active", {
+          ascending: false,
+        })
         .order("published_at", {
           ascending: false,
         });
@@ -346,11 +349,11 @@ function Announcements() {
     },
   });
 
-  const hasUnread =
-    data?.some(
-      (announcement) =>
-        !announcement.is_read,
-    ) ?? false;
+  const unreadCount =
+  data?.filter(
+    (announcement) =>
+      !announcement.is_read,
+  ).length ?? 0;
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -361,19 +364,27 @@ function Announcements() {
             Announcements
           </p>
 
-          <h1 className="mt-1 font-display text-lg font-semibold sm:text-3xl">
-            Stay up to date
-          </h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3">
+  <h1 className="font-display text-lg font-semibold sm:text-3xl">
+    Stay up to date
+  </h1>
+
+  {unreadCount > 0 && (
+    <span className="text-[10px] font-semibold text-gold sm:px-2.5 sm:py-1 sm:text-xs">
+      {unreadCount} unread
+    </span>
+  )}
+</div>
 
           <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
             Important updates and news from Aneks Library.
           </p>
         </div>
 
-        {hasUnread && (
+        {unreadCount > 0 && (
           <button
             type="button"
-            className="mb-0.5 inline-flex shrink-0 items-center gap-1 rounded-sm border border-border px-2 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-gold/40 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
+            className="mb-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-primary bg-primary px-2.5 py-1.5 text-[10px] font-medium text-primary-foreground transition-colors hover:border-border hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
             disabled={
               markAllAsRead.isPending
             }
@@ -434,7 +445,7 @@ function Announcements() {
               >
                 {announcement.is_active && (
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gold sm:mb-2.5 sm:text-xs">
-                    CURRENT
+                    ACTIVE
                   </div>
                 )}
 
@@ -474,36 +485,46 @@ function Announcements() {
                   )}
                 </Link>
 
-                {announcement.published_at && (
-                  <div className="mt-1.5 flex items-center justify-between gap-2 sm:mt-2">
-                    <p className="min-w-0 text-[10px] text-muted-foreground sm:text-xs">
-                      {new Date(
-                        announcement.published_at,
-                      ).toLocaleString()}
-                    </p>
+                
+{announcement.published_at && (
+  <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 sm:mt-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+      <p className="text-[10px] text-muted-foreground sm:text-xs">
+        Published{" "}
+        {new Date(
+          announcement.published_at,
+        ).toLocaleString()}
+      </p>
 
-                    <Link
-                      to="/announcements/$announcementId"
-                      params={{
-                        announcementId:
-                          announcement.id,
-                      }}
-                      className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
-                      onClick={() => {
-                        if (
-                          !announcement.is_read
-                        ) {
-                          markAsRead.mutate(
-                            announcement.id,
-                          );
-                        }
-                      }}
-                    >
-                      View &gt;
-                    </Link>
-                  </div>
-                )}
-              </article>
+      {announcement.updated_at &&
+        new Date(announcement.updated_at).getTime() >
+          new Date(announcement.published_at).getTime() && (
+          <p className="text-[10px] text-muted-foreground sm:text-xs">
+            Updated{" "}
+            {new Date(
+              announcement.updated_at,
+            ).toLocaleString()}
+          </p>
+        )}
+    </div>
+
+    <Link
+      to="/announcements/$announcementId"
+      params={{
+        announcementId: announcement.id,
+      }}
+      className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
+      onClick={() => {
+        if (!announcement.is_read) {
+          markAsRead.mutate(announcement.id);
+        }
+      }}
+    >
+      View &gt;
+    </Link>
+  </div>
+)}
+            </article>
             );
           })}
         </div>

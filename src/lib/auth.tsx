@@ -271,17 +271,15 @@ setProfile(nextProfile);
           );
 
           /*
-           * Do not synchronously query the profile
-           * inside Supabase's auth-state callback.
-           *
-           * This keeps the auth event handler free to
-           * finish before profile loading occurs.
+           * bootstrap() handles the initial session and
+           * profile load. Reload for subsequent auth
+           * events, including Google OAuth sign-in.
            */
-          setTimeout(() => {
-            void loadProfile(
-              s.user.id,
-            );
-          }, 0);
+          if (event !== "INITIAL_SESSION") {
+            setTimeout(() => {
+              void loadProfile(s.user.id);
+            }, 0);
+          }
         } else {
           profileChannel?.unsubscribe();
           profileChannel = null;

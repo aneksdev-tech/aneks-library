@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
@@ -7,13 +8,16 @@ import { Button } from "@/components/ui/button";
 export function AnnouncementPopup() {
   const [open, setOpen] = useState(false);
 
-  const { data: announcement } = useQuery({
+  const {
+    data: announcement,
+    isFetching,
+  } = useQuery({
     queryKey: ["active-announcement"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("announcements")
         .select(
-          "id, title, body, content, link, created_at",
+          "id, title, body, content, link, created_at, published_at",
         )
         .eq("is_active", true)
         .is("deleted_at", null)
@@ -29,12 +33,15 @@ export function AnnouncementPopup() {
 
       return data;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   /*
    * Clear announcement-seen markers when the user
-   * signs out so the active announcement can appear
-   * again after the next sign-in.
+   * signs out so announcements can appear again
+   * after the next sign-in.
    */
   useEffect(() => {
     const {
@@ -44,9 +51,7 @@ export function AnnouncementPopup() {
         if (event === "SIGNED_OUT") {
           Object.keys(sessionStorage)
             .filter((key) =>
-              key.startsWith(
-                "announcement-seen:",
-              ),
+              key.startsWith("announcement-seen:"),
             )
             .forEach((key) => {
               sessionStorage.removeItem(key);
@@ -62,15 +67,32 @@ export function AnnouncementPopup() {
     };
   }, []);
 
+  /*
+   * Use the publication timestamp as part of the
+   * seen key. Republishing the same announcement
+   * updates published_at, allowing it to appear again.
+   */
+  const publicationVersion = announcement
+    ? announcement.published_at ?? announcement.created_at
+    : null;
+
+  const seenKey =
+    announcement && publicationVersion
+      ? `announcement-seen:${announcement.id}:${publicationVersion}`
+      : null;
+
   useEffect(() => {
-    if (!announcement || announcement.link) {
+    if (
+      isFetching ||
+      !announcement ||
+      announcement.link ||
+      !seenKey
+    ) {
       return;
     }
 
-    const seenKey =
-      `announcement-seen:${announcement.id}`;
-
     if (sessionStorage.getItem(seenKey)) {
+      setOpen(false);
       return;
     }
 
@@ -81,25 +103,22 @@ export function AnnouncementPopup() {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [announcement]);
+  }, [announcement, isFetching, seenKey]);
 
   const handleClose = () => {
-    if (!announcement) {
+    if (!seenKey) {
       return;
     }
 
-    sessionStorage.setItem(
-      `announcement-seen:${announcement.id}`,
-      "true",
-    );
-
+    sessionStorage.setItem(seenKey, "true");
     setOpen(false);
   };
 
   if (
     !open ||
     !announcement ||
-    announcement.link
+    announcement.link ||
+    isFetching
   ) {
     return null;
   }

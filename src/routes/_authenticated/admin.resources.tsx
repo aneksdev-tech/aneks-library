@@ -276,7 +276,7 @@ function ResourcesPage() {
     roles?.includes("admin") ||
     roles?.includes("co-admin");
 
-  useEffect(() => {
+    useEffect(() => {
     if (!user) return;
     if (!roles) return;
 
@@ -1463,7 +1463,7 @@ const availableDepartments =
   </div>
 
   <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-      <p className="pl-1 text-[10px] text-amber-700 dark:text-gold sm:text-xs">
+      <p className="pl-1 text-[10px] text-gold sm:text-xs">
   Showing {firstResource}–{lastResource} of {totalCount} resources
 </p>
 
@@ -1489,7 +1489,7 @@ const availableDepartments =
             setSortOrder("newest");
             setPage(1);
           }}
-  className="h-7 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+  className="h-7 px-2 text-xs text-gold sm:h-8"
 >
   <X className="h-3.5 w-3.5" />
   Clear filters
@@ -1852,9 +1852,9 @@ const availableDepartments =
                                 : resource.id,
                             )
                           }
-                          className="h-8 px-2 text-[10px] text-muted-foreground sm:h-7 sm:text-xs"
+                          className="h-8 px-2 text-[10px] text-gold sm:h-7 sm:text-xs"
                         >
-                          <History className="mr-1.5 h-3.5 w-3.5" />
+                          <History className="mr-1.5 h-3.5 w-3.5 text-gold"/>
 
                           {isHistoryOpen
                             ? "Hide history"
@@ -1869,7 +1869,7 @@ const availableDepartments =
                                 {history.map((log) => (
   <div
     key={`${log.type}-${log.id}`}
-    className="text-[10px] sm:text-xs"
+    className="text-[10px] sm:text-xs "
   >
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <span className="font-medium uppercase">

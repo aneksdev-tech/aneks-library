@@ -1,49 +1,15 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { useAuth } from "@/lib/auth";
 
 export function useAccess() {
-  const { user } = useAuth();
+  const { user, profile, loading } = useAuth();
 
-  const [loading, setLoading] = useState(true);
+  const isAdmin =
+    profile?.primary_role === "admin" ||
+    profile?.primary_role === "co-admin";
 
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  const [isPremium, setIsPremium] = useState(false);
-
-  useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      setIsAdmin(false);
-      setIsPremium(false);
-      return;
-    }
-
-    async function loadAccess() {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from("private_profiles")
-        .select("primary_role, subscription_plan")
-        .eq("id", user!.id)
-        .maybeSingle();
-
-      if (!error && data) {
-        setIsAdmin(
-          data.primary_role === "admin" ||
-          data.primary_role === "co-admin",
-        );
-        setIsPremium(data.subscription_plan === "premium");
-      } else {
-        setIsAdmin(false);
-        setIsPremium(false);
-      }
-
-      setLoading(false);
-    }
-
-    loadAccess();
-  }, [user]);
+  const isPremium =
+    profile?.subscription_plan === "premium";
 
   return {
     loading,

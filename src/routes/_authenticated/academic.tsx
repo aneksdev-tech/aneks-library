@@ -7,22 +7,24 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/academic")({
   beforeLoad: async ({ location }) => {
-    const { data: auth } = await supabase.auth.getUser();
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
 
-    if (!auth.user) {
-      throw redirect({
-        to: "/auth",
-        search: {
-          mode: "login",
-          next: location.pathname,
-        },
-      });
-    }
+    if (!session?.user) {
+  throw redirect({
+    to: "/auth",
+    search: {
+      mode: "login",
+      next: location.pathname,
+    },
+  });
+}
 
     const { data: profile, error } = await supabase
       .from("private_profiles")
       .select("primary_role, status")
-      .eq("id", auth.user.id)
+      .eq("id", session.user.id)
       .single();
 
     if (error || !profile) {

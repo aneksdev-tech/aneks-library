@@ -15,10 +15,12 @@ export const Route = createFileRoute(
   "/_authenticated/admin/users/$userId",
 )({
   beforeLoad: async () => {
-    const { data: u, error: authError } =
-      await supabase.auth.getUser();
+    const {
+  data: { session },
+  error: authError,
+} = await supabase.auth.getSession();
 
-    if (authError || !u.user) {
+if (authError || !session?.user) {
       throw redirect({
         to: "/auth",
         search: {
@@ -33,7 +35,7 @@ export const Route = createFileRoute(
     } = await supabase
       .from("private_profiles")
       .select("primary_role, status")
-      .eq("id", u.user.id)
+      .eq("id", session.user.id)
       .single();
 
     if (profileError || !profile) {
@@ -1397,7 +1399,7 @@ function UserDetailsPage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 shrink-0 px-1.5 text-[10px] sm:px-2 sm:text-xs"
+                      className="h-8 shrink-0 px-1.5 text-[10px] sm:px-2 sm:text-xs text-gold"
                       onClick={() =>
                         setShowHistory(
                           (value) =>

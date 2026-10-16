@@ -12,17 +12,19 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
 
   beforeLoad: async ({ location }) => {
-    const { data } = await supabase.auth.getUser();
+  const {
+  data: { session },
+} = await supabase.auth.getSession();
 
-    if (!data.user) {
-      throw redirect({
-        to: "/auth",
-        search: {
-          mode: "login",
-          next: location.pathname,
-        },
-      });
-    }
+if (!session?.user) {
+  throw redirect({
+    to: "/auth",
+    search: {
+      mode: "login",
+      next: location.pathname,
+    },
+  });
+}
 
     const {
       data: profile,
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/_authenticated")({
     } = await supabase
       .from("private_profiles")
       .select("status")
-      .eq("id", data.user.id)
+      .eq("id", session.user.id)
       .single();
 
     if (profileError) {
@@ -113,9 +115,9 @@ export const Route = createFileRoute("/_authenticated")({
     }
 
     return {
-      user: data.user,
-      profile,
-    };
+  user: session.user,
+  profile,
+};
   },
 
   component: AuthenticatedLayout,

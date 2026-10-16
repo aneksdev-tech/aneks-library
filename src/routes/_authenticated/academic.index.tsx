@@ -20,22 +20,24 @@ export const Route = createFileRoute(
   "/_authenticated/academic/",
 )({
   beforeLoad: async ({ location }) => {
-    const { data: auth } = await supabase.auth.getUser();
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
 
-    if (!auth.user) {
-      throw redirect({
-        to: "/auth",
-        search: {
-          mode: "login",
-          next: location.pathname,
-        },
-      });
-    }
+    if (!session?.user) {
+  throw redirect({
+    to: "/auth",
+    search: {
+      mode: "login",
+      next: location.pathname,
+    },
+  });
+}
 
     const { data: profile, error } = await supabase
       .from("private_profiles")
       .select("primary_role, status")
-      .eq("id", auth.user.id)
+      .eq("id", session.user.id)
       .single();
 
     if (error || !profile) {
@@ -739,7 +741,7 @@ useEffect(() => {
 
 {(hasActiveFilters || totalCount >= 0) && (
   <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
-    <p className="text-[10px] text-amber-700 dark:text-gold sm:text-xs">
+    <p className="text-[10px] text-gold sm:text-xs">
       {totalCount === 0 ? (
         "No matching pending resources"
       ) : (
@@ -756,7 +758,7 @@ useEffect(() => {
       <button
         type="button"
         onClick={clearFilters}
-        className="h-7 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+        className="h-7 px-2 text-xs text-gold sm:h-8"
         >
           <X className="h-3.5 w-3.5" />
           Clear filters

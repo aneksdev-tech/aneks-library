@@ -161,7 +161,7 @@ function Notifications() {
             </h1>
 
             {unreadCount > 0 && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:px-2.5 sm:py-1 sm:text-xs">
+              <span className="text-[10px] font-semibold text-gold sm:px-2.5 sm:py-1 sm:text-xs">
                 {unreadCount} unread
               </span>
             )}
@@ -175,7 +175,7 @@ function Notifications() {
         {unreadCount > 0 && (
           <button
             type="button"
-            className="mb-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-border px-2.5 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
+            className="mb-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-primary bg-primary px-2.5 py-1.5 text-[10px] font-medium text-primary-foreground transition-colors hover:border-border hover:bg-transparent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 sm:mb-1 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs"
             disabled={
               markAll.isPending
             }

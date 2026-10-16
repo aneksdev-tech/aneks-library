@@ -5,7 +5,7 @@ import { useAccess } from "@/hooks/useAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { colleges, levels, semesters, getDepartments, ALL_OPTION } from "@/lib/academicData";
 import { useAuth } from "@/lib/auth";
-import { Bookmark, ChevronLeft, ChevronRight, Download, Search, Filter, Eye, Loader2, X } from "lucide-react";
+import { Bookmark, ChevronLeft, BookOpen, Building2, GraduationCap, School, CalendarDays, ChevronRight, Download, Search, Filter, Eye, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -335,13 +335,13 @@ useEffect(() => {
 
         {/* Result count and clear filters */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-          <p className="text-xs text-amber-700 dark:text-gold sm:text-sm">
+          <p className="text-xs text-gold sm:text-sm">
             {isLoading ? (
               "Loading resource count…"
             ) : totalCount === 0 ? (
               <>
                 Showing{" "}
-                <span className="font-semibold text-amber-700 dark:text-gold">
+                <span className="font-semibold text-gold">
                   0
                 </span>{" "}
                 resources
@@ -349,11 +349,11 @@ useEffect(() => {
             ) : (
               <>
                 Showing{" "}
-                <span className="font-semibold text-amber-700 dark:text-gold">
+                <span className="font-semibold text-gold">
                   {firstResult}–{lastResult}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-amber-700 dark:text-gold">
+                <span className="font-semibold text-gold">
                   {totalCount}
                 </span>{" "}
                 {totalCount === 1 ? "resource" : "resources"}
@@ -367,7 +367,7 @@ useEffect(() => {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-7 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+              className="h-7 px-2 text-xs text-gold sm:h-8"
             >
               <X className="h-3.5 w-3.5" />
               Clear filters
@@ -588,7 +588,7 @@ const semesterLabel = getResourceScopeLabel(
   return (
     <article className="group flex flex-col rounded-sm border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
       <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-3">
-        <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-primary sm:text-xs">
+        <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-gold sm:text-xs">
           {categoryName}
         </span>
         <div className="shrink-0">
@@ -609,36 +609,41 @@ const semesterLabel = getResourceScopeLabel(
       )}
 
       <div className="mt-2.5 space-y-1.5 text-xs sm:mt-3 sm:space-y-2 sm:text-sm">
-        {r.course_code && (
-          <div className="text-muted-foreground">
-            📘 {r.course_code}
-          </div>
-        )}
+  {r.course_code && (
+    <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
+      <BookOpen className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <span>{r.course_code}</span>
+    </div>
+  )}
 
-        {r.college && (
-            <div className="text-muted-foreground">
-              🏛️ {collegeShort}
-            </div>
-          )}
+  {r.college && (
+    <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
+      <School className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <span>{collegeShort}</span>
+    </div>
+  )}
 
-          {r.department && (
-            <div className="text-muted-foreground">
-              🏢 {departmentLabel}
-            </div>
-          )}
+  {r.department && (
+    <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
+      <Building2 className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <span>{departmentLabel}</span>
+    </div>
+  )}
 
-          {r.level && (
-            <div className="text-muted-foreground">
-              🎓 {levelLabel}
-            </div>
-          )}
+  {r.level && (
+    <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
+      <GraduationCap className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <span>{levelLabel}</span>
+    </div>
+  )}
 
-          {r.semester && (
-            <div className="text-muted-foreground">
-              📅 {semesterLabel}
-            </div>
-          )}
-          </div>
+  {r.semester && (
+    <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
+      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <span>{semesterLabel}</span>
+    </div>
+  )}
+</div>
 
       <div className="mt-auto flex items-center justify-between pt-4 text-[10px] text-muted-foreground sm:pt-5 sm:text-xs">
         <span>

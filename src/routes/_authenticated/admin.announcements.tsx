@@ -1,38 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  Megaphone,
-  Plus,
-  Pencil,
-  Trash2,
-  Power,
-  PowerOff,
-  Loader2,
-  History,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Megaphone, Plus, Pencil, Trash2, Power, PowerOff, Loader2, History, ChevronDown, ChevronUp, Filter, X, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute(
   "/_authenticated/admin/announcements",
@@ -137,9 +114,27 @@ function AnnouncementsPage() {
 
   const [expandedHistoryIds, setExpandedHistoryIds] =
     useState<Set<string>>(new Set());
+  
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
+
+  const [announcementSearch, setAnnouncementSearch] =
+  useState("");
+
+  const [sortOrder, setSortOrder] = useState<
+    "newest" | "oldest"
+  >("newest");
+
+const [pendingRepublish, setPendingRepublish] =
+  useState<Announcement | null>(null);
+
+const [republishReason, setRepublishReason] =
+  useState("");
 
   const { data: announcements, isLoading } = useQuery({
-    queryKey: ["admin-announcements"],
+  queryKey: ["admin-announcements"],
+  staleTime: 60_000,
     queryFn: async (): Promise<Announcement[]> => {
       const { data: announcements, error } = await supabase
         .from("announcements")
@@ -231,10 +226,12 @@ function AnnouncementsPage() {
   });
 
   const {
-    data: auditLogs = [],
-    isLoading: isAuditLoading,
-  } = useQuery({
-    queryKey: ["admin-announcement-audits"],
+  data: auditLogs = [],
+  isLoading: isAuditLoading,
+} = useQuery({
+  queryKey: ["admin-announcement-audits"],
+  enabled: expandedHistoryIds.size > 0,
+  staleTime: 60_000,
     queryFn: async (): Promise<AnnouncementAudit[]> => {
       const { data: audits, error } = await supabase
         .from("announcement_audit_logs")
@@ -327,6 +324,68 @@ function AnnouncementsPage() {
     return history[0] ?? null;
   };
 
+  
+const activeAndInactiveAnnouncements = (
+  announcements ?? []
+)
+  .filter((announcement) => !announcement.deleted_at)
+  .filter((announcement) => {
+    const searchTerm = announcementSearch
+      .trim()
+      .toLowerCase();
+
+    const matchesSearch =
+      announcement.title.toLowerCase().includes(searchTerm) ||
+      announcement.body.toLowerCase().includes(searchTerm);
+
+    if (!matchesSearch) {
+      return false;
+    }
+
+    if (statusFilter === "active") {
+      return announcement.is_active;
+    }
+
+    if (statusFilter === "inactive") {
+      return !announcement.is_active;
+    }
+
+    return true;
+  })
+  .sort((a, b) => {
+    // Active announcements always appear first.
+    const statusDifference =
+      Number(b.is_active) - Number(a.is_active);
+
+    if (statusDifference !== 0) {
+      return statusDifference;
+    }
+
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+
+    return sortOrder === "newest"
+      ? dateB - dateA
+      : dateA - dateB;
+  });
+
+
+const deletedAnnouncements = (announcements ?? [])
+  .filter((announcement) => Boolean(announcement.deleted_at))
+  .sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+
+    return sortOrder === "newest"
+      ? dateB - dateA
+      : dateA - dateB;
+  });
+
+const clearAnnouncementFilters = () => {
+  setAnnouncementSearch("");
+  setStatusFilter("all");
+  setSortOrder("newest");
+};
   const toggleHistory = (announcementId: string) => {
     setExpandedHistoryIds((current) => {
       const next = new Set(current);
@@ -625,6 +684,93 @@ function AnnouncementsPage() {
     },
   });
 
+  const republishAnnouncement = useMutation({
+  mutationFn: async ({
+    announcement,
+    reason,
+  }: {
+    announcement: Announcement;
+    reason: string;
+  }) => {
+    if (!user) {
+      throw new Error(
+        "You must be signed in to republish announcements.",
+      );
+    }
+
+    if (!isAdminOrCoAdmin) {
+      throw new Error(
+        "Only Admin or Co-admin can republish announcements.",
+      );
+    }
+
+    if (announcement.deleted_at) {
+      throw new Error(
+        "Deleted announcements cannot be republished.",
+      );
+    }
+
+    const trimmedReason = reason.trim();
+
+    if (!trimmedReason) {
+      throw new Error("A republish reason is required.");
+    }
+
+    const { data, error } = await supabase.rpc(
+      "admin_republish_announcement",
+      {
+        _announcement_id: announcement.id,
+        _reason: trimmedReason,
+      },
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    const result = data as {
+      id?: string;
+      changed?: boolean;
+      read_records_reset?: number;
+    } | null;
+
+    if (!result?.id) {
+      throw new Error(
+        "The announcement could not be republished.",
+      );
+    }
+
+    return result;
+  },
+
+  onSuccess: (result) => {
+    toast.success(
+      `Announcement republished successfully. ${
+        result.read_records_reset ?? 0
+      } previous read record(s) reset.`,
+    );
+
+    setPendingRepublish(null);
+    setRepublishReason("");
+
+    qc.invalidateQueries({
+      queryKey: ["admin-announcements"],
+    });
+
+    qc.invalidateQueries({
+      queryKey: ["active-announcement"],
+    });
+
+    qc.invalidateQueries({
+      queryKey: ["admin-announcement-audits"],
+    });
+  },
+
+  onError: (error: Error) => {
+    toast.error(error.message);
+  },
+});
+
   const startEditing = (
   announcement: Announcement,
 ) => {
@@ -793,6 +939,48 @@ function AnnouncementsPage() {
     setDeleteReason("");
   };
 
+  const openRepublishDialog = (
+  announcement: Announcement,
+) => {
+  if (!isAdminOrCoAdmin || announcement.deleted_at) {
+    return;
+  }
+
+  setPendingRepublish(announcement);
+  setRepublishReason("");
+};
+
+
+  const closeRepublishDialog = () => {
+    if (republishAnnouncement.isPending) {
+      return;
+    }
+
+    setPendingRepublish(null);
+    setRepublishReason("");
+  };
+
+  const handleRepublish = () => {
+    if (!pendingRepublish) {
+      return;
+    }
+
+    const trimmedReason = republishReason.trim();
+
+    if (!trimmedReason) {
+      toast.error(
+        "Please provide a reason for republishing this announcement.",
+      );
+      return;
+    }
+
+    republishAnnouncement.mutate({
+      announcement: pendingRepublish,
+      reason: trimmedReason,
+    });
+  };
+
+
   const closeDeleteDialog = () => {
     if (deleteAnnouncement.isPending) {
       return;
@@ -834,6 +1022,8 @@ function AnnouncementsPage() {
         return "Deactivated";
       case "delete":
         return "Deleted";
+      case "republish":
+        return "Republished";
       default:
         return action;
     }
@@ -1005,6 +1195,98 @@ function AnnouncementsPage() {
           </p>
         </div>
 
+<div className="mx-3 mt-4 mb-6 rounded-sm border border-border bg-card p-3 shadow-soft sm:mx-5 sm:p-4">
+  <div className="mb-3 flex items-center gap-2">
+    <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
+
+    <h3 className="text-[10px] font-semibold text-muted-foreground sm:text-xs">
+      Find announcements
+    </h3>
+  </div>
+
+  <div className="grid gap-2.5 sm:gap-3 sm:grid-cols-2">
+    {/* Search */}
+    <div className="relative sm:col-span-2">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+
+      <Input
+        placeholder="Search announcement title or message…"
+        value={announcementSearch}
+        onChange={(e) => setAnnouncementSearch(e.target.value)}
+        className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+      />
+    </div>
+
+    {/* Status */}
+    <Select
+      value={statusFilter}
+      onValueChange={(value) =>
+        setStatusFilter(
+          value as "all" | "active" | "inactive",
+        )
+      }
+    >
+      <SelectTrigger
+        id="announcement-status-filter"
+        className="h-9 text-xs sm:h-10 sm:text-sm"
+      >
+        <SelectValue placeholder="All statuses" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="all">All statuses</SelectItem>
+        <SelectItem value="active">Active</SelectItem>
+        <SelectItem value="inactive">Inactive</SelectItem>
+      </SelectContent>
+    </Select>
+
+    {/* Date order */}
+    <Select
+      value={sortOrder}
+      onValueChange={(value) =>
+        setSortOrder(value as "newest" | "oldest")
+      }
+    >
+      <SelectTrigger
+        id="announcement-sort-order"
+        className="h-9 text-xs sm:h-10 sm:text-sm"
+      >
+        <SelectValue placeholder="Newest first" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="newest">Newest first</SelectItem>
+        <SelectItem value="oldest">Oldest first</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+    <p className="pl-1 text-[10px] text-gold sm:text-xs">
+      Showing {activeAndInactiveAnnouncements.length}{" "}
+      {activeAndInactiveAnnouncements.length === 1
+        ? "announcement"
+        : "announcements"}
+    </p>
+
+    {(announcementSearch.trim() !== "" ||
+      statusFilter !== "all" ||
+      sortOrder !== "newest") && (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={clearAnnouncementFilters}
+        className="h-7 px-2 text-xs text-gold sm:h-8"
+      >
+        <X className="h-3.5 w-3.5" />
+        Clear filters
+      </Button>
+    )}
+  </div>
+</div>
+
+
         {isLoading ? (
           <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
             <div className="flex items-center justify-center gap-1.5 sm:gap-2">
@@ -1012,10 +1294,9 @@ function AnnouncementsPage() {
               Loading announcements…
             </div>
           </div>
-        ) : announcements &&
-          announcements.length > 0 ? (
+        ) : activeAndInactiveAnnouncements.length > 0 ? (
           <ul className="divide-y divide-border">
-            {announcements.map((announcement) => {
+            {activeAndInactiveAnnouncements.map((announcement) => {
               const isToggling =
                 toggleAnnouncement.isPending &&
                 toggleAnnouncement.variables?.announcement
@@ -1055,12 +1336,12 @@ function AnnouncementsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span
-                          className={`rounded-sm border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:px-2 sm:text-[10px] ${
+                          className={`text-[9px] font-semibold uppercase tracking-wide sm:text-[10px] ${
                             isDeleted
-                              ? "border-destructive/20 bg-destructive/10 text-destructive"
+                              ? "text-destructive"
                               : announcement.is_active
-                                ? "border-primary/20 bg-primary/10 text-primary"
-                                : "border-border bg-muted/30 text-muted-foreground"
+                                ? "text-gold"
+                                : "text-muted-foreground"
                           }`}
                         >
                           {isDeleted
@@ -1086,327 +1367,245 @@ function AnnouncementsPage() {
                       )}
 
                       <div className="mt-2.5 space-y-1 text-[10px] leading-4 text-muted-foreground sm:mt-3 sm:text-xs sm:leading-normal">
-                        <p>
-                          <span className="font-medium text-foreground">
-                            Created by:
-                          </span>{" "}
-                          {announcement.creator
-                            ?.full_name ??
-                            announcement.creator?.email ??
-                            "Unknown user"}
-                        </p>
+  <p>
+    <span className="font-medium text-foreground">Created:</span>{" "}
+    {new Date(announcement.created_at).toLocaleString()}
+  </p>
 
-                        {announcement.creator
-                          ?.full_name &&
-                          announcement.creator.email && (
-                            <p>
-                              <span className="font-medium text-foreground">
-                                Email:
-                              </span>{" "}
-                              {
-                                announcement.creator
-                                  .email
-                              }
-                            </p>
-                          )}
+  <p>
+    <span className="font-medium text-foreground">By:</span>{" "}
+    {announcement.creator?.full_name ?? "Unknown user"}
+  </p>
 
-                        <p>
-                          <span className="font-medium text-foreground">
-                            Created:
-                          </span>{" "}
-                          {new Date(
-                            announcement.created_at,
-                          ).toLocaleString()}
-                        </p>
+  <p>
+    <span className="font-medium text-foreground">Email:</span>{" "}
+    {announcement.creator?.email ?? "Unavailable"}
+  </p>
 
-                        {!isDeleted &&
-                          latestAudit?.action ===
-                            "activate" && (
-                            <>
-                              <p>
-                                <span className="font-medium text-foreground">
-                                  Activated by:
-                                </span>{" "}
-                                {latestAudit.performer
-                                  ?.full_name ??
-                                  latestAudit.performer
-                                    ?.email ??
-                                  "Unknown user"}
-                              </p>
+  {!isDeleted && latestAudit && latestAudit.action !== "create" && (
+    <>
+      <p className="pt-1">
+        <span className="font-medium text-foreground">
+          {getAuditActionLabel(latestAudit.action)}:
+        </span>{" "}
+        {new Date(latestAudit.created_at).toLocaleString()}
+      </p>
 
-                              <p>
-                                <span className="font-medium text-foreground">
-                                  Activated:
-                                </span>{" "}
-                                {new Date(
-                                  latestAudit.created_at,
-                                ).toLocaleString()}
-                              </p>
-                            </>
-                          )}
+      <p>
+        <span className="font-medium text-foreground">By:</span>{" "}
+        {latestAudit.performer?.full_name ?? "Unknown user"}
+      </p>
 
-                        {!isDeleted &&
-                          latestAudit?.action ===
-                            "deactivate" && (
-                            <>
-                              <p>
-                                <span className="font-medium text-foreground">
-                                  Deactivated by:
-                                </span>{" "}
-                                {latestAudit.performer
-                                  ?.full_name ??
-                                  latestAudit.performer
-                                    ?.email ??
-                                  "Unknown user"}
-                              </p>
+      <p>
+        <span className="font-medium text-foreground">Email:</span>{" "}
+        {latestAudit.performer?.email ?? "Unavailable"}
+      </p>
 
-                              <p>
-                                <span className="font-medium text-foreground">
-                                  Deactivated:
-                                </span>{" "}
-                                {new Date(
-                                  latestAudit.created_at,
-                                ).toLocaleString()}
-                              </p>
-                            </>
-                          )}
+      {latestAudit.reason && (
+        <p>
+          <span className="font-medium text-foreground">
+            {latestAudit.action === "edit" ? "Summary:" : "Reason:"}
+          </span>{" "}
+          {latestAudit.reason}
+        </p>
+      )}
+    </>
+  )}
 
-                        {!isDeleted &&
-                          latestAudit?.action ===
-                            "edit" && (
-                            <>
-                              <p>
-                                <span className="font-medium text-foreground">
-                                  Updated by:
-                                </span>{" "}
-                                {announcement.updater
-                                  ?.full_name ??
-                                  announcement.updater
-                                    ?.email ??
-                                  "Unknown user"}
-                              </p>
+  {isDeleted && (
+    <>
+      <p className="pt-1">
+        <span className="font-medium text-foreground">Deleted by:</span>{" "}
+        {announcement.deleter?.full_name ?? "Unknown user"}
+      </p>
 
-                              <p>
-                                <span className="font-medium text-foreground">
-                                  Updated:
-                                </span>{" "}
-                                {new Date(
-                                  announcement.updated_at,
-                                ).toLocaleString()}
-                              </p>
-                            </>
-                          )}
+      <p>
+        <span className="font-medium text-foreground">Deleted:</span>{" "}
+        {announcement.deleted_at
+          ? new Date(announcement.deleted_at).toLocaleString()
+          : "Unknown"}
+      </p>
 
-                        {isDeleted && (
-                          <>
-                            <p>
-                              <span className="font-medium text-foreground">
-                                Deleted by:
-                              </span>{" "}
-                              {announcement.deleter
-                                ?.full_name ??
-                                announcement.deleter
-                                  ?.email ??
-                                "Unknown user"}
-                            </p>
+      {announcement.deletion_reason && (
+        <p>
+          <span className="font-medium text-foreground">
+            Deletion reason:
+          </span>{" "}
+          {announcement.deletion_reason}
+        </p>
+      )}
+    </>
+  )}
+</div>
 
-                            <p>
-                              <span className="font-medium text-foreground">
-                                Deleted:
-                              </span>{" "}
-                              {announcement.deleted_at
-                                ? new Date(
-                                    announcement.deleted_at,
-                                  ).toLocaleString()
-                                : "Unknown"}
-                            </p>
 
-                            {announcement.deletion_reason && (
-                              <p className="pt-1">
-                                <span className="font-medium text-foreground">
-                                  Deletion reason:
-                                </span>{" "}
-                                {
-                                  announcement.deletion_reason
-                                }
-                              </p>
-                            )}
-                          </>
-                        )}
-                      </div>
+<div className="mt-3 grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:mt-4 sm:grid-cols-4 sm:gap-3 sm:pt-4">
+  {!isDeleted && (
+    <>
+      {canPublishAnnouncements && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={
+            isToggling ||
+            toggleAnnouncement.isPending ||
+            deleteAnnouncement.isPending ||
+            saveAnnouncement.isPending
+          }
+          onClick={() => openToggleDialog(announcement)}
+          className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+        >
+          {isToggling ? (
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+          ) : announcement.is_active ? (
+            <PowerOff className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+          ) : (
+            <Power className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+          )}
+          {announcement.is_active ? "Deactivate" : "Activate"}
+        </Button>
+      )}
+
+      {canManageAnnouncement(announcement) && (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={
+              toggleAnnouncement.isPending ||
+              deleteAnnouncement.isPending ||
+              saveAnnouncement.isPending
+            }
+            onClick={() => startEditing(announcement)}
+            className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+          >
+            <Pencil className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+            Edit
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            disabled={
+              toggleAnnouncement.isPending ||
+              deleteAnnouncement.isPending ||
+              saveAnnouncement.isPending
+            }
+            onClick={() => openDeleteDialog(announcement)}
+            className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+          >
+            {isDeleting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+            ) : (
+              <Trash2 className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+            )}
+            Delete
+          </Button>
+        </>
+      )}
+
+      {isAdminOrCoAdmin && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={
+            republishAnnouncement.isPending ||
+            toggleAnnouncement.isPending ||
+            deleteAnnouncement.isPending ||
+            saveAnnouncement.isPending
+          }
+          onClick={() => openRepublishDialog(announcement)}
+          className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+        >
+          {republishAnnouncement.isPending &&
+          republishAnnouncement.variables?.announcement.id ===
+            announcement.id ? (
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+          ) : (
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+          )}
+          Republish
+        </Button>
+      )}
+    </>
+  )}
+</div>
 
                       {/* Audit history */}
-                      {history.length > 0 && (
-                        <div className="mt-3 border-t border-border pt-2.5 sm:mt-4 sm:pt-3">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              toggleHistory(
-                                announcement.id,
-                              )
-                            }
-                            className="h-8 px-1.5 text-[10px] sm:px-2 sm:text-xs"
-                          >
-                            <History className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+<div className="mt-3 border-t border-border pt-2.5 sm:mt-4 sm:pt-3 text-gold">
+  <Button
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={() => toggleHistory(announcement.id)}
+    className="h-8 px-1.5 text-[10px] sm:px-2 sm:text-xs"
+  >
+    <History className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
 
-                            {isHistoryExpanded
-                              ? "Hide history"
-                              : `History (${history.length})`}
+    {isHistoryExpanded
+      ? "Hide history"
+      : history.length > 0
+        ? `History (${history.length})`
+        : "History"}
 
-                            {isHistoryExpanded ? (
-                              <ChevronUp className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            ) : (
-                              <ChevronDown className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            )}
-                          </Button>
+    {isHistoryExpanded ? (
+      <ChevronUp className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+    ) : (
+      <ChevronDown className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+    )}
+  </Button>
 
-                          {isHistoryExpanded && (
-                            <div className="mt-2.5 space-y-3 border-l border-border pl-2.5 sm:mt-3 sm:pl-3">
-                              {isAuditLoading ? (
-                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground sm:gap-2 sm:text-xs">
-                                  <Loader2 className="h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                                  Loading history…
-                                </div>
-                              ) : (
-                                history.map((audit) => (
-                                  <div
-                                    key={audit.id}
-                                    className="space-y-1 text-[10px] leading-4 sm:text-xs sm:leading-normal"
-                                  >
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                      <span className="font-semibold text-foreground">
-                                        {getAuditActionLabel(
-                                          audit.action,
-                                        )}
-                                      </span>
+  {isHistoryExpanded && (
+    <div className="mt-2.5 space-y-3 border-l border-border pl-2.5 sm:mt-3 sm:pl-3">
+      {isAuditLoading ? (
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground sm:gap-2 sm:text-xs">
+          <Loader2 className="h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
+          Loading history…
+        </div>
+      ) : history.length > 0 ? (
+        history.map((audit) => (
+          <div
+            key={audit.id}
+            className="space-y-1 text-[10px] leading-4 sm:text-xs sm:leading-normal"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="font-semibold text-foreground">
+                {getAuditActionLabel(audit.action)}
+              </span>
 
-                                      <span className="text-muted-foreground">
-                                        {new Date(
-                                          audit.created_at,
-                                        ).toLocaleString()}
-                                      </span>
-                                    </div>
+              <span className="text-muted-foreground">
+                {new Date(audit.created_at).toLocaleString()}
+              </span>
+            </div>
 
-                                    <p className="text-muted-foreground">
-                                      <span className="font-medium text-foreground">
-                                        By:
-                                      </span>{" "}
-                                      {audit.performer
-                                        ?.full_name ??
-                                        audit.performer
-                                          ?.email ??
-                                        "Unknown user"}
-                                    </p>
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">
+                By:
+              </span>{" "}
+              {audit.performer?.full_name ??
+                audit.performer?.email ??
+                "Unknown user"}
+            </p>
 
-                                    {audit.reason && (
-                                      <p className="text-muted-foreground">
-                                        <span className="font-medium text-foreground">
-                                          {audit.action ===
-                                          "edit"
-                                            ? "Summary:"
-                                            : "Reason:"}
-                                        </span>{" "}
-                                        {audit.reason}
-                                      </p>
-                                    )}
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                      {!isDeleted && (
-                        <>
-                          {canPublishAnnouncements && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={
-                                isToggling ||
-                                toggleAnnouncement.isPending ||
-                                deleteAnnouncement.isPending ||
-                                saveAnnouncement.isPending
-                              }
-                              onClick={() =>
-                                openToggleDialog(
-                                  announcement,
-                                )
-                              }
-                              className="h-8 w-full text-[10px] sm:h-9 sm:w-auto sm:text-xs"
-                            >
-                              {isToggling ? (
-                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                              ) : announcement.is_active ? (
-                                <PowerOff className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              ) : (
-                                <Power className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              )}
-
-                              {announcement.is_active
-                                ? "Deactivate"
-                                : "Activate"}
-                            </Button>
-                          )}
-
-                          {canManageAnnouncement(
-                            announcement,
-                          ) && (
-                            <>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  toggleAnnouncement.isPending ||
-                                  deleteAnnouncement.isPending ||
-                                  saveAnnouncement.isPending
-                                }
-                                onClick={() =>
-                                  startEditing(
-                                    announcement,
-                                  )
-                                }
-                                className="h-8 w-full text-[10px] sm:h-9 sm:w-auto sm:text-xs"
-                              >
-                                <Pencil className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                Edit
-                              </Button>
-
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={
-                                  toggleAnnouncement.isPending ||
-                                  deleteAnnouncement.isPending ||
-                                  saveAnnouncement.isPending
-                                }
-                                onClick={() =>
-                                  openDeleteDialog(
-                                    announcement,
-                                  )
-                                }
-                                className="h-8 w-full text-[10px] text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-9 sm:w-auto sm:text-xs"
-                              >
-                                {isDeleting ? (
-                                  <Loader2 className="mr-1.5 h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
-                                ) : (
-                                  <Trash2 className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                )}
-
-                                Delete
-                              </Button>
-                            </>
-                          )}
-                        </>
-                      )}
+            {audit.reason && (
+              <p className="whitespace-pre-wrap break-words text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {audit.action === "edit" ? "Summary:" : "Reason:"}
+                </span>{" "}
+                {audit.reason}
+              </p>
+            )}
+          </div>
+        ))
+      ) : (
+        <p className="text-[10px] text-muted-foreground sm:text-xs">
+          No history available.
+        </p>
+      )}
+    </div>
+  )}
+</div>
+                    
                     </div>
                   </div>
                 </li>
@@ -1415,10 +1614,200 @@ function AnnouncementsPage() {
           </ul>
         ) : (
           <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
-            No announcements have been created yet.
+            No announcements match the selected filters.
           </div>
         )}
       </div>
+
+      {/* Deleted announcements */}
+
+      <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft">
+        <div className="border-b border-border p-3.5 sm:p-5">
+          <h2 className="font-display text-base font-semibold sm:text-lg">
+            Deleted Announcements
+          </h2>
+
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
+            Review deleted announcements, deletion reasons, and audit history.
+          </p>
+        </div>
+
+        {isLoading ? (
+          <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+              Loading deleted announcements…
+            </div>
+          </div>
+        ) : deletedAnnouncements.length > 0 ? (
+          <ul className="divide-y divide-border">
+            {deletedAnnouncements.map((announcement) => {
+              const history = getAnnouncementHistory(
+                announcement.id,
+              );
+
+              const isHistoryExpanded =
+                expandedHistoryIds.has(announcement.id);
+
+              return (
+                <li
+                  key={announcement.id}
+                  className="bg-muted/20 p-3.5 sm:p-5"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[9px] font-semibold uppercase tracking-wide text-destructive sm:text-[10px]">
+                        Deleted
+                      </span>
+                    </div>
+
+                    <h3 className="mt-2 text-sm font-medium sm:text-base">
+                      {announcement.title}
+                    </h3>
+
+                    <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
+                      {announcement.body}
+                    </p>
+
+                    {announcement.link && (
+                      <p className="mt-1.5 break-all text-[10px] text-primary sm:text-xs">
+                        Link: {announcement.link}
+                      </p>
+                    )}
+
+                    <div className="mt-3 space-y-1 text-[10px] leading-4 text-muted-foreground sm:mt-3 sm:text-xs sm:leading-normal">
+  <p>
+    <span className="font-medium text-foreground">Created:</span>{" "}
+    {new Date(announcement.created_at).toLocaleString()}
+  </p>
+
+  <p>
+    <span className="font-medium text-foreground">By:</span>{" "}
+    {announcement.creator?.full_name ?? "Unknown user"}
+  </p>
+
+  <p>
+    <span className="font-medium text-foreground">Email:</span>{" "}
+    {announcement.creator?.email ?? "Unavailable"}
+  </p>
+
+  {history.length > 0 && (
+    <>
+      <p className="pt-1">
+        <span className="font-medium text-foreground">
+          {getAuditActionLabel(history[0].action)}:
+        </span>{" "}
+        {new Date(history[0].created_at).toLocaleString()}
+      </p>
+
+      <p>
+        <span className="font-medium text-foreground">By:</span>{" "}
+        {history[0].performer?.full_name ?? "Unknown user"}
+      </p>
+
+      <p>
+        <span className="font-medium text-foreground">Email:</span>{" "}
+        {history[0].performer?.email ?? "Unavailable"}
+      </p>
+
+      {history[0].reason && (
+        <p>
+          <span className="font-medium text-foreground">
+            {history[0].action === "edit" ? "Summary:" : "Reason:"}
+          </span>{" "}
+          {history[0].reason}
+        </p>
+      )}
+    </>
+  )}
+</div>
+
+                    {/* Audit history */}
+<div className="mt-3 border-t border-border pt-2.5 sm:mt-4 sm:pt-3 text-gold">
+  <Button
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={() => toggleHistory(announcement.id)}
+    className="h-8 px-1.5 text-[10px] sm:px-2 sm:text-xs"
+  >
+    <History className="mr-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+
+    {isHistoryExpanded
+      ? "Hide history"
+      : history.length > 0
+        ? `History (${history.length})`
+        : "History"}
+
+    {isHistoryExpanded ? (
+      <ChevronUp className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+    ) : (
+      <ChevronDown className="ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+    )}
+  </Button>
+
+  {isHistoryExpanded && (
+    <div className="mt-2.5 space-y-3 border-l border-border pl-2.5 sm:mt-3 sm:pl-3">
+      {isAuditLoading ? (
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground sm:gap-2 sm:text-xs">
+          <Loader2 className="h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
+          Loading history…
+        </div>
+      ) : history.length > 0 ? (
+        history.map((audit) => (
+          <div
+            key={audit.id}
+            className="space-y-1 text-[10px] leading-4 sm:text-xs sm:leading-normal"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="font-semibold text-foreground">
+                {getAuditActionLabel(audit.action)}
+              </span>
+
+              <span className="text-muted-foreground">
+                {new Date(audit.created_at).toLocaleString()}
+              </span>
+            </div>
+
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">
+                By:
+              </span>{" "}
+              {audit.performer?.full_name ??
+                audit.performer?.email ??
+                "Unknown user"}
+            </p>
+
+            {audit.reason && (
+              <p className="whitespace-pre-wrap break-words text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {audit.action === "edit" ? "Summary:" : "Reason:"}
+                </span>{" "}
+                {audit.reason}
+              </p>
+            )}
+          </div>
+        ))
+      ) : (
+        <p className="text-[10px] text-muted-foreground sm:text-xs">
+          No history available.
+        </p>
+      )}
+    </div>
+  )}
+</div>
+             </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
+            No deleted announcements found.
+          </div>
+        )}
+      </div>
+
 
       {/* Edit confirmation */}
       <AlertDialog
@@ -1688,6 +2077,86 @@ function AnnouncementsPage() {
               )}
 
               Delete announcement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Republish confirmation */}
+      <AlertDialog
+        open={pendingRepublish !== null}
+        onOpenChange={(open) => {
+          if (!open && !republishAnnouncement.isPending) {
+            closeRepublishDialog();
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-sm sm:max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base sm:text-lg">
+              Republish announcement?
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-xs leading-5 sm:text-sm sm:leading-normal">
+              Republish{" "}
+              <strong>{pendingRepublish?.title}</strong>?
+              This will reset its previous read records so eligible
+              users can be prompted to read it again. The announcement
+              will be activated, and any other active announcement
+              will be automatically deactivated.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-1.5 sm:space-y-2">
+            <label
+              htmlFor="announcement-republish-reason"
+              className="text-xs font-medium sm:text-sm"
+            >
+              Republish reason
+              <span className="ml-1 text-destructive">*</span>
+            </label>
+
+            <textarea
+              id="announcement-republish-reason"
+              value={republishReason}
+              onChange={(event) =>
+                setRepublishReason(event.target.value)
+              }
+              placeholder="Explain why this announcement is being republished..."
+              rows={4}
+              disabled={republishAnnouncement.isPending}
+              className="w-full resize-y rounded-sm border border-input bg-background px-2.5 py-2 text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-3 sm:text-sm sm:leading-normal"
+            />
+
+            <p className="text-[10px] leading-4 text-muted-foreground sm:text-xs sm:leading-normal">
+              This reason will be retained in the announcement audit history.
+            </p>
+          </div>
+
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel
+              disabled={republishAnnouncement.isPending}
+              className="h-9 text-xs sm:h-10 sm:text-sm"
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                handleRepublish();
+              }}
+              disabled={
+                republishAnnouncement.isPending ||
+                !republishReason.trim()
+              }
+              className="h-9 text-xs sm:h-10 sm:text-sm"
+            >
+              {republishAnnouncement.isPending && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
+              )}
+
+              Confirm republish
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

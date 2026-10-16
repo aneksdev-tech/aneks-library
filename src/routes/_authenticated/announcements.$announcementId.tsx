@@ -4,7 +4,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   ExternalLink,
   Loader2,
   Megaphone,
@@ -29,6 +28,14 @@ export const Route = createFileRoute(
 function AnnouncementDetailsPage() {
   const { announcementId } = Route.useParams();
   const queryClient = useQueryClient();
+
+  const handleBack = () => {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "/announcements";
+  }
+};
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
@@ -63,14 +70,14 @@ function AnnouncementDetailsPage() {
 
     const markAsRead = async () => {
       const {
-        data: {
-          user,
-        },
-      } = await supabase.auth.getUser();
+  data: { session },
+} = await supabase.auth.getSession();
 
-      if (!user) {
-        return;
-      }
+const user = session?.user;
+
+if (!user) {
+  return;
+}
 
       const {
         error,
@@ -135,15 +142,13 @@ function AnnouncementDetailsPage() {
             longer available to you.
           </p>
 
-          <Button
-            asChild
-            className="mt-4 h-9 text-xs sm:mt-5 sm:h-10 sm:text-sm"
-          >
-            <Link to="/announcements">
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Back to Announcements
-            </Link>
-          </Button>
+          <button
+  type="button"
+  onClick={handleBack}
+  className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
+>
+  ← Back
+</button>
         </div>
       </section>
     );
@@ -151,19 +156,18 @@ function AnnouncementDetailsPage() {
 
   return (
     <section>
-      <Link
-        to="/announcements"
-        className="inline-flex items-center text-xs font-medium text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
-      >
-        <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        Back
-      </Link>
+      <button
+  type="button"
+  onClick={handleBack}
+  className="mb-4 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mb-6 sm:text-lg"
+>
+  ← Back
+</button>
 
       <article className="mt-4 border-y border-border sm:mt-6">
         <div className="py-3.5 sm:py-6">
-          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-primary sm:gap-2 sm:text-xs">
-            <Megaphone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Announcement
+          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
+            Announcement
           </div>
 
           <h1 className="mt-2 font-display text-base font-semibold leading-tight sm:mt-3 sm:text-2xl">

@@ -232,7 +232,7 @@ const semesterLabel = getResourceScopeLabel(
           </button>
 
           <div className="mb-3 flex flex-wrap gap-2 sm:mb-4">
-            <span className="rounded-sm bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary sm:px-3 sm:py-1 sm:text-sm">
+            <span className="text-[10px] font-medium text-gold sm:text-sm">
               {categoryName}
             </span>
           </div>
@@ -294,52 +294,48 @@ const semesterLabel = getResourceScopeLabel(
               </div>
 
               {uploader ? (
-                uploader.id ? (
-                  <Link
-                    to="/profile/$userId"
-                    params={{
-                      userId: uploader.id,
-                    }}
-                    className="group block rounded-xl border border-transparent p-2.5 transition-colors hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:p-3"
-                    aria-label={`View ${
-                      uploader.full_name ?? "uploader"
-                    }'s public profile`}
-                  >
-                    <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
-                      {uploader.avatar_url ? (
-                        <img
-                          src={uploader.avatar_url}
-                          alt={
-                            uploader.full_name ??
-                            "Uploader"
-                          }
-                          className="h-10 w-10 shrink-0 rounded-full border object-cover sm:h-12 sm:w-12"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">
-                          {uploaderInitials}
-                        </div>
-                      )}
+  uploader.id ? (
+    <Link
+      to="/profile/$userId"
+      params={{
+        userId: uploader.id,
+      }}
+      className="group block rounded-xl p-2.5 transition-colors sm:p-3"
+      aria-label={`View ${
+        uploader.full_name ?? "uploader"
+      }'s public profile`}
+    >
+      <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+        {uploader.avatar_url ? (
+          <img
+            src={uploader.avatar_url}
+            alt={uploader.full_name ?? "Uploader"}
+            className="h-14 w-14 shrink-0 rounded-full border object-cover sm:h-16 sm:w-16"
+          />
+        ) : (
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-16 sm:w-16 sm:text-lg">
+            {uploaderInitials}
+          </div>
+        )}
 
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium sm:text-base">
-                          {uploader.full_name ??
-                            "Unknown user"}
-                        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium sm:text-base">
+            {uploader.full_name ?? "Unknown user"}
+          </div>
 
-                        {uploader.bio && (
-                          <div className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:mt-1 sm:text-sm">
-                            {uploader.bio}
-                          </div>
-                        )}
+          {uploader.bio && (
+            <div className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground sm:mt-1 sm:text-sm">
+              {uploader.bio}
+            </div>
+          )}
 
-                        <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-primary opacity-80 transition-opacity group-hover:opacity-100 sm:mt-2 sm:text-xs">
-                          View profile
-                          <ArrowUpRight className="h-3 w-3 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+          <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-gold transition-opacity group-hover:opacity-80 sm:mt-2 sm:text-xs">
+            View profile
+            <ArrowUpRight className="h-3 w-3 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
+          </div>
+        </div>
+      </div>
+    </Link>
                 ) : (
                   <div className="flex items-center gap-2.5 rounded-xl border border-transparent p-2.5 sm:gap-3 sm:p-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-semibold sm:h-12 sm:w-12 sm:text-lg">

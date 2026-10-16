@@ -63,10 +63,11 @@ export const Route = createFileRoute(
   "/_authenticated/admin/users/",
 )({
   beforeLoad: async () => {
-    const { data: u } =
-      await supabase.auth.getUser();
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
 
-    if (!u.user) {
+if (!session?.user) {
       throw redirect({
         to: "/auth",
         search: {
@@ -79,7 +80,7 @@ export const Route = createFileRoute(
       await supabase
         .from("private_profiles")
         .select("primary_role")
-        .eq("id", u.user.id)
+        .eq("id", session.user.id)
         .single();
 
     if (
@@ -98,7 +99,7 @@ export const Route = createFileRoute(
   component: UsersPage,
 });
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 
 const STATUSES: AccountStatus[] = [
   "active",
@@ -228,6 +229,29 @@ function formatLabel(value: string) {
       char.toUpperCase(),
     );
 }
+
+
+
+function getStatusTextColor(status: AccountStatus) {
+  switch (status) {
+    case "active":
+      return "text-green-600 dark:text-green-400";
+
+    case "pending":
+      return "text-amber-600 dark:text-amber-400";
+
+    case "suspended":
+      return "text-gold";
+
+    case "rejected":
+      return "text-red-600 dark:text-red-400";
+
+    case "inactive":
+    default:
+      return "text-muted-foreground";
+  }
+}
+
 
 function formatDate(
   value: string | null | undefined,
@@ -506,8 +530,9 @@ function UsersPage() {
   const {
     data: auditLogs,
     isLoading: auditLogsLoading,
-  } = useQuery<UserAuditLog[]>({
+    } = useQuery<UserAuditLog[]>({
     queryKey: ["admin-user-audits"],
+    staleTime: 60_000,
 
     queryFn: async () => {
       const { data, error } =
@@ -1137,7 +1162,7 @@ function UsersPage() {
 
           {/* Result count and clear filters */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-            <p className="pl-1 text-xs text-amber-700 dark:text-gold sm:text-sm">
+            <p className="pl-1 text-xs text-gold sm:text-sm">
               {isLoading ? (
                 "Loading users..."
               ) : isError ? (
@@ -1145,7 +1170,7 @@ function UsersPage() {
               ) : totalCount === 0 ? (
                 <>
                   Showing{" "}
-                  <span className="font-semibold text-amber-700 dark:text-gold">
+                  <span className="font-semibold text-gold">
                     0
                   </span>{" "}
                   users
@@ -1153,11 +1178,11 @@ function UsersPage() {
               ) : (
                 <>
                   Showing{" "}
-                  <span className="font-semibold text-amber-700 dark:text-gold">
+                  <span className="font-semibold text-gold">
                     {firstResult}–{lastResult}
                   </span>{" "}
                   of{" "}
-                  <span className="font-semibold text-amber-700 dark:text-gold">
+                  <span className="font-semibold text-gold">
                     {totalCount}
                   </span>{" "}
                   {totalCount === 1 ? "user" : "users"}
@@ -1171,7 +1196,7 @@ function UsersPage() {
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="h-7 shrink-0 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+                className="h-7 shrink-0 px-2 text-xs text-gold sm:h-8"
               >
                 <X className="mr-1 h-3.5 w-3.5" />
                 Clear filters
@@ -1362,20 +1387,28 @@ function UsersPage() {
                                 setStatus.isPending
                               }
                             >
-                              <SelectTrigger className="h-8 w-[135px] text-[10px] sm:h-9 sm:w-[150px] sm:text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
+                              
+<SelectTrigger
+  className={`h-8 w-[135px] text-[10px] sm:h-9 sm:w-[150px] sm:text-xs ${getStatusTextColor(user.status)}`}
+>
+  <SelectValue />
+</SelectTrigger>
 
-                              <SelectContent>
-                                {STATUSES.map((status) => (
-                                  <SelectItem
-                                    key={status}
-                                    value={status}
-                                  >
-                                    {formatLabel(status)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
+
+                              
+<SelectContent>
+  {STATUSES.map((status) => (
+    <SelectItem
+      key={status}
+      value={status}
+    >
+      <span className={getStatusTextColor(status)}>
+        {formatLabel(status)}
+      </span>
+    </SelectItem>
+  ))}
+</SelectContent>
+
                             </Select>
                           </td>
 
@@ -1389,12 +1422,12 @@ function UsersPage() {
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 px-2 text-[10px] text-muted-foreground sm:h-9 sm:px-2.5 sm:text-xs"
+                                className="h-8 px-2 text-[10px] text-gold sm:h-9 sm:px-2.5 sm:text-xs"
                                 onClick={() =>
                                   toggleHistory(user.id)
                                 }
                               >
-                                <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                                <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5 text-gold" />
 
                                 {historyOpen ? (
                                   <>

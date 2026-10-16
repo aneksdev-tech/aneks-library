@@ -19,10 +19,11 @@ export const Route = createFileRoute(
   "/_authenticated/admin/approvals",
 )({
   beforeLoad: async ({ location }) => {
-    const { data: auth } =
-      await supabase.auth.getUser();
+    const {
+  data: { session },
+} = await supabase.auth.getSession();
 
-    if (!auth.user) {
+    if (!session?.user) {
       throw redirect({
         to: "/auth",
         search: {
@@ -38,7 +39,7 @@ export const Route = createFileRoute(
     } = await supabase
       .from("private_profiles")
       .select("primary_role, status")
-      .eq("id", auth.user.id)
+      .eq("id", session.user.id)
       .single();
 
     if (error || !profile) {
@@ -1197,7 +1198,7 @@ useEffect(() => {
 {!isLoading && !isError && (
   <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
     <p
-      className="min-w-0 pl-1.5 text-[10px] text-amber-700 dark:text-gold sm:text-xs"
+      className="min-w-0 pl-1.5 text-[10px] text-gold sm:text-xs"
       aria-live="polite"
     >
       {totalCount === 0 ? (
@@ -1205,12 +1206,12 @@ useEffect(() => {
       ) : (
         <>
           Showing{" "}
-          <span className="font-medium text-amber-700 dark:text-gold">
+          <span className="font-medium text-gold">
             {(page - 1) * PAGE_SIZE + 1}–
             {Math.min(page * PAGE_SIZE, totalCount)}
           </span>{" "}
           of{" "}
-          <span className="font-medium text-amber-700 dark:text-gold">
+          <span className="font-medium text-gold">
             {totalCount}
           </span>{" "}
           matching pending{" "}
@@ -1225,7 +1226,7 @@ useEffect(() => {
         variant="ghost"
         size="sm"
         onClick={clearFilters}
-        className="h-7 shrink-0 px-2 text-xs text-amber-700 dark:text-gold sm:h-8"
+        className="h-7 shrink-0 px-2 text-xs text-gold sm:h-8"
       >
         <X className="h-3.5 w-3.5" />
         Clear filters

@@ -237,7 +237,7 @@
 .aneks-horizontal-scroll {
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: #c9a227 #183a2b;
+  scrollbar-color: var(--gold) var(--secondary);
 }
 
 /* Chrome, Edge and Safari */
@@ -251,11 +251,11 @@
 }
 
 .aneks-horizontal-scroll::-webkit-scrollbar-thumb {
-  background: #c9a227;
+  background: var(--gold);
   border: 2px solid #183a2b;
   border-radius: 9999px;
 }
 
 .aneks-horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: #e5bd45;
+  background: oklch(0.89 0.12 85);
 }

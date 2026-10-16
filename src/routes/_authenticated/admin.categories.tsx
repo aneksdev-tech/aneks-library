@@ -38,33 +38,6 @@ import {
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/admin/categories")({
-  beforeLoad: async () => {
-    const { data: u } = await supabase.auth.getUser();
-
-    if (!u.user) {
-      throw redirect({
-        to: "/auth",
-        search: { mode: "login" },
-      });
-    }
-
-    const { data: profile } = await supabase
-      .from("private_profiles")
-      .select("primary_role")
-      .eq("id", u.user.id)
-      .maybeSingle();
-
-    if (
-      !profile ||
-      (profile.primary_role !== "admin" &&
-        profile.primary_role !== "co-admin")
-    ) {
-      throw redirect({
-        to: "/admin",
-      });
-    }
-  },
-
   component: CategoriesPage,
 });
 
@@ -942,9 +915,9 @@ function CategoriesPage() {
         <div className="rounded-sm border border-border bg-card p-4 shadow-soft sm:p-6">
           <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <FolderTree className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
+              <FolderTree className="h-3.5 w-3.5 text-gold sm:h-4 sm:w-4" />
 
-              <p className="text-xs font-semibold sm:text-sm">
+              <p className="text-xs font-semibold sm:text-sm text-gold">
                 Active categories
               </p>
             </div>
@@ -1135,7 +1108,7 @@ function CategoriesPage() {
                                 : category.id,
                             )
                           }
-                          className="h-7 px-1.5 text-[10px] text-muted-foreground sm:px-2 sm:text-xs"
+                          className="h-7 px-1.5 text-[10px] text-gold sm:px-2 sm:text-xs"
                         >
                           <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
 
@@ -1220,9 +1193,9 @@ function CategoriesPage() {
           <div className="rounded-sm border border-border bg-card p-4 shadow-soft sm:p-6">
             <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
+                <Trash2 className="h-3.5 w-3.5 text-destructive sm:h-4 sm:w-4" />
 
-                <p className="text-xs font-semibold sm:text-sm">
+                <p className="text-xs font-semibold sm:text-sm text-destructive">
                   Deleted categories
                 </p>
               </div>
@@ -1326,26 +1299,26 @@ function CategoriesPage() {
                         </Button>
                       </div>
 
-                      <div className="mt-2.5 sm:mt-3">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setExpandedHistory(
-                              isHistoryOpen
-                                ? null
-                                : category.id,
-                            )
-                          }
-                          className="h-7 px-1.5 text-[10px] text-muted-foreground sm:px-2 sm:text-xs"
-                        >
-                          <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
+                      
+<div className="mt-2.5 sm:mt-3">
+  <Button
+    type="button"
+    variant="ghost"
+    size="sm"
+    onClick={() =>
+      setExpandedHistory(
+        isHistoryOpen ? null : category.id,
+      )
+    }
+    className="h-7 px-1.5 text-[10px] text-gold sm:px-2 sm:text-xs"
+  >
+    <History className="mr-1 h-3 w-3 text-gold sm:mr-1.5 sm:h-3.5 sm:w-3.5" />
 
-                          {isHistoryOpen
-                            ? "Hide history"
-                            : `History (${history.length})`}
-                        </Button>
+    {isHistoryOpen
+      ? "Hide history"
+      : `History (${history.length})`}
+  </Button>
+
 
                         {isHistoryOpen && (
                           <div className="mt-2 border-l border-border pl-3 sm:pl-4">
