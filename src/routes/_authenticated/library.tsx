@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
 });
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 24;
 
 function LibraryPage() {
   const [q, setQ] = useState("");
