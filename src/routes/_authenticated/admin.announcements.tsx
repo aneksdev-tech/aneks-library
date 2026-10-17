@@ -1439,7 +1439,7 @@ const clearAnnouncementFilters = () => {
 </div>
 
 
-<div className="mt-3 grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:mt-4 sm:grid-cols-4 sm:gap-3 sm:pt-4">
+<div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
   {!isDeleted && (
     <>
       {canPublishAnnouncements && (
