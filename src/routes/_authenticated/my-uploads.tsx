@@ -429,8 +429,8 @@ function MyUploads() {
                     event.target.value as StatusFilter,
                   )
                 }
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
-                <option value="all">
+                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
+              <option value="all">
                   All statuses
                 </option>
                 <option value="pending">
@@ -552,8 +552,8 @@ function MyUploads() {
                   event.target.value as SortOption,
                 )
               }
-              className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm">
-              <option value="newest">
+              className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
+            <option value="newest">
                 Newest first
               </option>
               <option value="oldest">
