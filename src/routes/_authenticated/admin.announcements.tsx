@@ -1384,7 +1384,7 @@ const clearAnnouncementFilters = () => {
 
   {!isDeleted && latestAudit && latestAudit.action !== "create" && (
     <>
-      <p className="pt-1 pb-3">
+      <p className="pt-1">
         <span className="font-medium text-foreground">
           {getAuditActionLabel(latestAudit.action)}:
         </span>{" "}
@@ -1403,7 +1403,7 @@ const clearAnnouncementFilters = () => {
 
       {latestAudit.reason && (
         <p>
-          <span className="font-medium text-foreground">
+          <span className="font-medium text-foreground pb-3">
             {latestAudit.action === "edit" ? "Summary:" : "Reason:"}
           </span>{" "}
           {latestAudit.reason}
@@ -1428,7 +1428,7 @@ const clearAnnouncementFilters = () => {
 
       {announcement.deletion_reason && (
         <p>
-          <span className="font-medium text-foreground">
+          <span className="font-medium text-foreground pb-5">
             Deletion reason:
           </span>{" "}
           {announcement.deletion_reason}
