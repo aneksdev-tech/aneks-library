@@ -1439,7 +1439,7 @@ const clearAnnouncementFilters = () => {
 </div>
 
 
-<div className="grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:grid-cols-4 sm:gap-3 sm:pt-4">
+<div className="mt-3 grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:mt-4 sm:grid-cols-4 sm:gap-3 sm:pt-4">
   {!isDeleted && (
     <>
       {canPublishAnnouncements && (
@@ -1492,7 +1492,7 @@ const clearAnnouncementFilters = () => {
               saveAnnouncement.isPending
             }
             onClick={() => openDeleteDialog(announcement)}
-            className="mt-3 h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+            className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
           >
             {isDeleting ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
