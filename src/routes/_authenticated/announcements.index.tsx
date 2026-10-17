@@ -486,42 +486,42 @@ function Announcements() {
                 </Link>
 
                 
-{announcement.published_at && (
-  <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 sm:mt-2">
-    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-      <p className="text-[10px] text-muted-foreground sm:text-xs">
+          {announcement.published_at && (
+
+  <div className="mt-1.5 flex min-w-0 items-start justify-between gap-2 sm:mt-2">
+    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
+      <p className="min-w-0 text-[10px] leading-4 text-muted-foreground sm:text-xs">
         Published{" "}
         {new Date(
           announcement.published_at,
         ).toLocaleString()}
+      </p>  {announcement.updated_at &&
+    new Date(announcement.updated_at).getTime() >
+      new Date(announcement.published_at).getTime() && (
+      <p className="min-w-0 text-[10px] leading-4 text-muted-foreground sm:text-xs">
+        Updated{" "}
+        {new Date(
+          announcement.updated_at,
+        ).toLocaleString()}
       </p>
+    )}
+</div>
 
-      {announcement.updated_at &&
-        new Date(announcement.updated_at).getTime() >
-          new Date(announcement.published_at).getTime() && (
-          <p className="text-[10px] text-muted-foreground sm:text-xs">
-            Updated{" "}
-            {new Date(
-              announcement.updated_at,
-            ).toLocaleString()}
-          </p>
-        )}
-    </div>
+<Link
+  to="/announcements/$announcementId"
+  params={{
+    announcementId: announcement.id,
+  }}
+  className="shrink-0 whitespace-nowrap pt-0.5 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
+  onClick={() => {
+    if (!announcement.is_read) {
+      markAsRead.mutate(announcement.id);
+    }
+  }}
+>
+  View &gt;
+</Link>
 
-    <Link
-      to="/announcements/$announcementId"
-      params={{
-        announcementId: announcement.id,
-      }}
-      className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
-      onClick={() => {
-        if (!announcement.is_read) {
-          markAsRead.mutate(announcement.id);
-        }
-      }}
-    >
-      View &gt;
-    </Link>
   </div>
 )}
             </article>
