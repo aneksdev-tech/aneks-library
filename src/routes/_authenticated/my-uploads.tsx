@@ -417,8 +417,7 @@ function MyUploads() {
             <div className="min-w-0">
               <label
                 htmlFor="upload-status"
-                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
-              >
+                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs">
                 Status
               </label>
 
@@ -430,8 +429,7 @@ function MyUploads() {
                     event.target.value as StatusFilter,
                   )
                 }
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm"      
-                >
+                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
                 <option value="all">
                   All statuses
                 </option>
@@ -470,8 +468,7 @@ function MyUploads() {
                   )
                 }
                 disabled={categoriesLoading}
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm"      
-                >
+                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
                 <option value="all">
                   All categories
                 </option>
@@ -513,8 +510,7 @@ function MyUploads() {
                     event.target.value,
                   )
                 }
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm"      
-                />
+                className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"/>
             </div>
 
             <div className="min-w-0">
@@ -535,8 +531,7 @@ function MyUploads() {
                     event.target.value,
                   )
                 }
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm"      
-                />
+                className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"/>
             </div>
           </div>
 
@@ -557,8 +552,7 @@ function MyUploads() {
                   event.target.value as SortOption,
                 )
               }
-              className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm"      
-              >
+              className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm">
               <option value="newest">
                 Newest first
               </option>
