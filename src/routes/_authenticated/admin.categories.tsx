@@ -915,7 +915,7 @@ function CategoriesPage() {
         <div className="rounded-sm border border-border bg-card p-4 shadow-soft sm:p-6">
           <div className="mb-2.5 flex items-center justify-between gap-3 sm:mb-3">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <FolderTree className="h-3.5 w-3.5 text-gold sm:h-4 sm:w-4" />
+              <FolderTree className="h-3.5 w-3.5 text-muted-foreground sm:h-4 sm:w-4" />
 
               <p className="text-xs font-semibold sm:text-sm text-muted-foreground">
                 Active categories
