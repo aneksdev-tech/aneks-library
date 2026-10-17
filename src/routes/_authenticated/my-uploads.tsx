@@ -10,10 +10,12 @@ import {
   Edit3,
   Filter,
   Loader2,
+  Search,
   Trash2,
+  X,
 } from "lucide-react";
 import {
-  useMemo,
+  useEffect,
   useState,
 } from "react";
 import { toast } from "sonner";
@@ -64,10 +66,33 @@ type StatusFilter =
   | "deleted"
   | "draft";
 
-const STATUS_ORDER: Record<
-  string,
-  number
-> = {
+type UploadCategory = {
+  id: string;
+  name: string;
+  deleted_at: string | null;
+};
+
+type UploadResource = {
+  id: string;
+  title: string;
+  status: string;
+  rejection_reason: string | null;
+  download_count: number;
+  created_at: string;
+  category: {
+    name: string | null;
+    deleted_at: string | null;
+  } | null;
+};
+
+type MyUploadsResponse = {
+  totalCount: number;
+  resources: UploadResource[];
+};
+
+const PAGE_SIZE = 20;
+
+const STATUS_ORDER: Record<string, number> = {
   pending: 1,
   approved: 2,
   rejected: 3,
@@ -77,14 +102,18 @@ const STATUS_ORDER: Record<
 
 function MyUploads() {
   const { user } = useAuth();
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
-  const [sortBy, setSortBy] =
-    useState<SortOption>("newest");
-
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] =
+    useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortBy, setSortBy] =
+    useState<SortOption>("newest");
+  const [page, setPage] = useState(1);
 
   const [pendingDelete, setPendingDelete] =
     useState<{
@@ -95,223 +124,254 @@ function MyUploads() {
   const [deletingDraftId, setDeletingDraftId] =
     useState<string | null>(null);
 
+  // Debounce search input to avoid a database request
+  // for every keystroke.
+  const [debouncedSearch, setDebouncedSearch] =
+    useState("");
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
+  // Changing a filter or sort order starts from page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [
+    debouncedSearch,
+    statusFilter,
+    categoryFilter,
+    dateFrom,
+    dateTo,
+    sortBy,
+  ]);
+
   const {
-    data,
-    isLoading,
+    data: categories = [],
+    isLoading: categoriesLoading,
   } = useQuery({
-    queryKey: [
-      "my-uploads",
-      user?.id,
-    ],
-    enabled: !!user,
+    queryKey: ["my-uploads-categories"],
     queryFn: async () => {
-      const {
-        data,
-        error,
-      } = await supabase
-        .from("resources")
-        .select(
-          "id, title, status, rejection_reason, download_count, created_at, category:categories(name, deleted_at)",
-        )
-        .eq(
-          "uploader_id",
-          user!.id,
-        )
-        .order("created_at", {
-          ascending: false,
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name, deleted_at")
+        .order("name", {
+          ascending: true,
         });
 
       if (error) {
         throw error;
       }
 
-      return data ?? [];
+      return (data ?? []) as UploadCategory[];
     },
+    staleTime: 5 * 60 * 1000,
   });
 
-  const filteredAndSortedData =
-    useMemo(() => {
-      if (!data) {
-        return [];
+  const {
+    data: uploadsResponse,
+    isLoading,
+    isFetching,
+    error: uploadsError,
+  } = useQuery({
+    queryKey: [
+      "my-uploads",
+      user?.id,
+      debouncedSearch,
+      statusFilter,
+      categoryFilter,
+      dateFrom,
+      dateTo,
+      sortBy,
+      page,
+      PAGE_SIZE,
+    ],
+    enabled: !!user,
+    queryFn: async (): Promise<MyUploadsResponse> => {
+      if (!user) {
+        throw new Error(
+          "You must be signed in to view your uploads.",
+        );
       }
 
-      const filteredData =
-        statusFilter === "all"
-          ? [...data]
-          : data.filter(
-              (resource) =>
-                resource.status ===
-                statusFilter,
-            );
-
-      return filteredData.sort(
-        (a, b) => {
-          if (sortBy === "oldest") {
-            return (
-              new Date(
-                a.created_at,
-              ).getTime() -
-              new Date(
-                b.created_at,
-              ).getTime()
-            );
-          }
-
-          if (
-            sortBy === "status"
-          ) {
-            const statusDifference =
-              (STATUS_ORDER[
-                a.status
-              ] ?? 99) -
-              (STATUS_ORDER[
-                b.status
-              ] ?? 99);
-
-            if (
-              statusDifference !== 0
-            ) {
-              return statusDifference;
-            }
-
-            return (
-              new Date(
-                b.created_at,
-              ).getTime() -
-              new Date(
-                a.created_at,
-              ).getTime()
-            );
-          }
-
-          return (
-            new Date(
-              b.created_at,
-            ).getTime() -
-            new Date(
-              a.created_at,
-            ).getTime()
-          );
+      const { data, error } = await supabase.rpc(
+        "get_my_uploads",
+        {
+          p_search: debouncedSearch,
+          p_status: statusFilter,
+          p_category_id: categoryFilter,
+          p_date_from: dateFrom || null,
+          p_date_to: dateTo || null,
+          p_sort: sortBy,
+          p_page_size: PAGE_SIZE,
+          p_page: page,
         },
       );
-    }, [
-      data,
-      sortBy,
-      statusFilter,
-    ]);
 
-  const handleDeleteDraft =
-    async () => {
-      if (
-        !user ||
-        !pendingDelete
-      ) {
-        return;
+      if (error) {
+        throw error;
       }
 
-      const draftId =
-        pendingDelete.id;
+      const response = data as unknown as
+        | MyUploadsResponse
+        | null;
 
-      setDeletingDraftId(
-        draftId,
+      return {
+        totalCount: Number(
+          response?.totalCount ?? 0,
+        ),
+        resources: Array.isArray(
+          response?.resources,
+        )
+          ? response.resources
+          : [],
+      };
+    },
+    placeholderData: (previousData) =>
+      previousData,
+  });
+
+  const resources =
+    uploadsResponse?.resources ?? [];
+
+  const totalCount =
+    uploadsResponse?.totalCount ?? 0;
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalCount / PAGE_SIZE),
+  );
+
+  const handleDeleteDraft = async () => {
+    if (!user || !pendingDelete) {
+      return;
+    }
+
+    const draftId = pendingDelete.id;
+
+    setDeletingDraftId(draftId);
+
+    try {
+      const {
+        data: draft,
+        error: draftError,
+      } = await supabase
+        .from("resources")
+        .select("id, file_path")
+        .eq("id", draftId)
+        .eq("uploader_id", user.id)
+        .eq("status", "draft")
+        .maybeSingle();
+
+      if (draftError) {
+        throw draftError;
+      }
+
+      if (!draft) {
+        throw new Error(
+          "Draft not found.",
+        );
+      }
+
+      if (draft.file_path) {
+        const {
+          error: storageError,
+        } = await supabase.storage
+          .from("resources")
+          .remove([draft.file_path]);
+
+        if (storageError) {
+          throw storageError;
+        }
+      }
+
+      const {
+        data: deletedDraft,
+        error: deleteError,
+      } = await supabase
+        .from("resources")
+        .delete()
+        .eq("id", draftId)
+        .eq("uploader_id", user.id)
+        .eq("status", "draft")
+        .select("id")
+        .maybeSingle();
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      if (!deletedDraft) {
+        throw new Error(
+          "Draft could not be deleted. It may no longer exist or may have changed.",
+        );
+      }
+
+      await queryClient.invalidateQueries({
+        queryKey: ["my-uploads", user.id],
+      });
+
+      toast.success(
+        "Draft deleted successfully.",
       );
 
-      try {
-        const {
-          data: draft,
-          error: draftError,
-        } = await supabase
-          .from("resources")
-          .select(
-            "id, file_path",
-          )
-          .eq("id", draftId)
-          .eq(
-            "uploader_id",
-            user.id,
-          )
-          .eq("status", "draft")
-          .maybeSingle();
+      setPendingDelete(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete draft.",
+      );
+    } finally {
+      setDeletingDraftId(null);
+    }
+  };
 
-        if (draftError) {
-          throw draftError;
-        }
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setSortBy("newest");
+    setPage(1);
+  };
 
-        if (!draft) {
-          throw new Error(
-            "Draft not found.",
-          );
-        }
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    statusFilter !== "all" ||
+    categoryFilter !== "all" ||
+    dateFrom !== "" ||
+    dateTo !== "" ||
+    sortBy !== "newest";
 
-        if (draft.file_path) {
-          const {
-            error: storageError,
-          } =
-            await supabase.storage
-              .from("resources")
-              .remove([
-                draft.file_path,
-              ]);
+  const dateRangeInvalid =
+    dateFrom !== "" &&
+    dateTo !== "" &&
+    dateFrom > dateTo;
 
-          if (storageError) {
-            throw storageError;
-          }
-        }
+  const handleDateFromChange = (
+    value: string,
+  ) => {
+    setDateFrom(value);
 
-        const {
-          data: deletedDraft,
-          error: deleteError,
-        } =
-          await supabase
-            .from("resources")
-            .delete()
-            .eq("id", draftId)
-            .eq(
-              "uploader_id",
-              user.id,
-            )
-            .eq("status", "draft")
-            .select("id")
-            .maybeSingle();
+    if (dateTo && value && value > dateTo) {
+      setDateTo("");
+    }
+  };
 
-        if (deleteError) {
-          throw deleteError;
-        }
+  const handleDateToChange = (
+    value: string,
+  ) => {
+    setDateTo(value);
 
-        if (!deletedDraft) {
-          throw new Error(
-            "Draft could not be deleted. It may no longer exist or may have changed.",
-          );
-        }
-
-        await queryClient.invalidateQueries(
-          {
-            queryKey: [
-              "my-uploads",
-              user.id,
-            ],
-          },
-        );
-
-        toast.success(
-          "Draft deleted successfully.",
-        );
-
-        setPendingDelete(
-          null,
-        );
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to delete draft.",
-        );
-      } finally {
-        setDeletingDraftId(
-          null,
-        );
-      }
-    };
+    if (dateFrom && value && value < dateFrom) {
+      setDateFrom("");
+    }
+  };
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -327,7 +387,7 @@ function MyUploads() {
 
       {/* Filters */}
       <div className="border-y border-border py-3 sm:py-4">
-        <div className="mb-2.5 flex items-center gap-2 sm:mb-3">
+        <div className="mb-3 flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
           <p className="text-xs font-semibold sm:text-sm">
@@ -335,108 +395,249 @@ function MyUploads() {
           </p>
         </div>
 
-        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <label
-              htmlFor="upload-status"
-              className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm"
-            >
-              Status
-            </label>
+        <div className="space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
-            <select
-              id="upload-status"
-              value={statusFilter}
+            <input
+              type="search"
+              value={search}
               onChange={(event) =>
-                setStatusFilter(
-                  event.target
-                    .value as StatusFilter,
-                )
+                setSearch(event.target.value)
               }
-              className="h-9 w-full rounded-sm border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-              aria-label="Filter uploads by status"
-            >
-              <option value="all">
-                All statuses
-              </option>
-
-              <option value="pending">
-                Pending
-              </option>
-
-              <option value="approved">
-                Approved
-              </option>
-
-              <option value="rejected">
-                Rejected
-              </option>
-
-              <option value="deleted">
-                Deleted
-              </option>
-
-              <option value="draft">
-                Draft
-              </option>
-            </select>
+              placeholder="Search uploads by title..."
+              aria-label="Search uploads by title"
+              className="h-10 w-full rounded-sm border border-input bg-background pl-9 pr-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-sm"
+            />
           </div>
 
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <label
-              htmlFor="upload-sort"
-              className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm"
-            >
-              Sort by
-            </label>
-
-            <select
-              id="upload-sort"
-              value={sortBy}
-              onChange={(event) =>
-                setSortBy(
-                  event.target
-                    .value as SortOption,
-                )
-              }
-              className="h-9 w-full rounded-sm border border-input bg-background px-2.5 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-              aria-label="Sort uploads"
-            >
-              <option value="newest">
-                Newest first
-              </option>
-
-              <option value="oldest">
-                Oldest first
-              </option>
-
-              <option value="status">
+          {/* Status and category */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="min-w-0">
+              <label
+                htmlFor="upload-status"
+                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+              >
                 Status
-              </option>
-            </select>
+              </label>
+
+              <select
+                id="upload-status"
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(
+                    event.target.value as StatusFilter,
+                  )
+                }
+                className="h-9 w-full rounded-sm border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+              >
+                <option value="all">
+                  All statuses
+                </option>
+                <option value="pending">
+                  Pending
+                </option>
+                <option value="approved">
+                  Approved
+                </option>
+                <option value="rejected">
+                  Rejected
+                </option>
+                <option value="deleted">
+                  Deleted
+                </option>
+                <option value="draft">
+                  Draft
+                </option>
+              </select>
+            </div>
+
+            <div className="min-w-0">
+              <label
+                htmlFor="upload-category"
+                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+              >
+                Category
+              </label>
+
+              <select
+                id="upload-category"
+                value={categoryFilter}
+                onChange={(event) =>
+                  setCategoryFilter(
+                    event.target.value,
+                  )
+                }
+                disabled={categoriesLoading}
+                className="h-9 w-full rounded-sm border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:px-3 sm:text-sm"
+              >
+                <option value="all">
+                  All categories
+                </option>
+
+                {categories
+                  .filter(
+                    (category) =>
+                      category.deleted_at == null,
+                  )
+                  .map((category) => (
+                    <option
+                      key={category.id}
+                      value={category.id}
+                    >
+                      {category.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Date range */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="min-w-0">
+              <label
+                htmlFor="upload-date-from"
+                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+              >
+                Date from
+              </label>
+
+              <input
+                id="upload-date-from"
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(event) =>
+                  handleDateFromChange(
+                    event.target.value,
+                  )
+                }
+                className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+              />
+            </div>
+
+            <div className="min-w-0">
+              <label
+                htmlFor="upload-date-to"
+                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+              >
+                Date to
+              </label>
+
+              <input
+                id="upload-date-to"
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(event) =>
+                  handleDateToChange(
+                    event.target.value,
+                  )
+                }
+                className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Sorting and clear filters */}
+          <div className="grid grid-cols-2 items-end gap-2.5 sm:gap-3">
+            <div className="min-w-0">
+              <label
+                htmlFor="upload-sort"
+                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+              >
+                Sort by
+              </label>
+
+              <select
+                id="upload-sort"
+                value={sortBy}
+                onChange={(event) =>
+                  setSortBy(
+                    event.target.value as SortOption,
+                  )
+                }
+                className="h-9 w-full rounded-sm border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+              >
+                <option value="newest">
+                  Newest first
+                </option>
+                <option value="oldest">
+                  Oldest first
+                </option>
+                <option value="status">
+                  Status
+                </option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-sm border border-border px-2 text-xs font-medium transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50 sm:h-10 sm:gap-2 sm:px-3 sm:text-sm"
+            >
+              <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Clear filters
+            </button>
           </div>
         </div>
+
+        {dateRangeInvalid && (
+          <p className="mt-2 text-xs text-destructive">
+            The start date must not be later than the end date.
+          </p>
+        )}
       </div>
 
       {/* Upload list */}
       <div className="border-y border-border">
         {isLoading ? (
           <div className="grid min-h-[30vh] place-items-center">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
-              <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-              Loading…
+            <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading uploads…
             </div>
           </div>
-        ) : filteredAndSortedData.length ? (
-          <ul className="divide-y divide-border">
-            {filteredAndSortedData.map(
-              (resource) => {
+        ) : uploadsError ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-destructive">
+              Could not load your uploads.
+            </p>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              {uploadsError instanceof Error
+                ? uploadsError.message
+                : "Please try again."}
+            </p>
+
+            <button
+              type="button"
+              onClick={() =>
+                queryClient.invalidateQueries({
+                  queryKey: ["my-uploads", user?.id],
+                })
+              }
+              className="mt-3 text-xs font-medium text-primary hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : resources.length > 0 ? (
+          <>
+            {isFetching && (
+              <div className="flex items-center gap-2 border-b border-border py-2 text-[10px] text-muted-foreground sm:text-xs">
+                <Loader2 className="h-3 w-3 animate-spin sm:h-3.5 sm:w-3.5" />
+                Updating results…
+              </div>
+            )}
+
+            <ul className="divide-y divide-border">
+              {resources.map((resource) => {
                 const categoryName =
-                  resource.category
-                    ?.deleted_at ==
-                    null &&
-                  resource.category
-                    ?.name?.trim()
+                  resource.category?.deleted_at == null &&
+                  resource.category?.name?.trim()
                     ? resource.category.name.trim()
                     : "Uncategorized";
 
@@ -446,101 +647,153 @@ function MyUploads() {
                     className="group py-4 sm:py-5"
                   >
                     <div className="flex items-start justify-between gap-3 sm:gap-4">
-  <div className="min-w-0 flex-1">
-    <div className="mb-1.5">
-      <StatusPill
-        status={
-          resource.status as string
-        }
-      />
-    </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5">
+                          <StatusPill
+                            status={resource.status}
+                          />
+                        </div>
 
-    <p className="truncate text-sm font-medium sm:text-base">
-      {resource.title}
-    </p>
+                        <p className="break-words text-sm font-medium sm:text-base">
+                          {resource.title}
+                        </p>
 
-    <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-      {categoryName}{" "}
-      ·{" "}
-      {resource.download_count}{" "}
-      downloads
-      {" · "}
-      {new Date(
-        resource.created_at,
-      ).toLocaleDateString()}
-    </p>
+                        <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                          {categoryName}
+                          {" · "}
+                          {resource.download_count ?? 0}
+                          {" downloads · "}
+                          {new Date(
+                            resource.created_at,
+                          ).toLocaleDateString()}
+                        </p>
 
-    {resource.status ===
-      "rejected" &&
-      resource.rejection_reason && (
-        <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
-          <span className="font-medium text-foreground">
-            Reason:
-          </span>{" "}
-          {resource.rejection_reason}
-        </p>
-      )}
-  </div>
+                        {resource.status === "rejected" &&
+                          resource.rejection_reason && (
+                            <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+                              <span className="font-medium text-foreground">
+                                Reason:
+                              </span>{" "}
+                              {resource.rejection_reason}
+                            </p>
+                          )}
+                      </div>
 
-  {resource.status === "draft" && (
-    <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:gap-2">
-      <Link
-        to="/upload/$draftId"
-        params={{
-          draftId: resource.id,
-        }}
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
-      >
-        <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        Edit draft
-      </Link>
+                      {resource.status === "draft" && (
+                        <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:gap-2">
+                          <Link
+                            to="/upload/$draftId"
+                            params={{
+                              draftId: resource.id,
+                            }}
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            Edit draft
+                          </Link>
 
-      <button
-        type="button"
-        onClick={() =>
-          setPendingDelete({
-            id: resource.id,
-            title: resource.title,
-          })
-        }
-        disabled={
-          deletingDraftId ===
-          resource.id
-        }
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-3 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:py-2 sm:text-sm"
-      >
-        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPendingDelete({
+                                id: resource.id,
+                                title: resource.title,
+                              })
+                            }
+                            disabled={
+                              deletingDraftId === resource.id
+                            }
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 
-        {deletingDraftId ===
-        resource.id
-          ? "Deleting…"
-          : "Delete draft"}
-      </button>
-    </div>
-  )}
-</div>
+                            {deletingDraftId === resource.id
+                              ? "Deleting…"
+                              : "Delete draft"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </li>
                 );
-              },
-            )}
-          </ul>
+              })}
+            </ul>
+          </>
         ) : (
           <EmptyState
             title="No uploads found"
-            desc="There are no uploads matching the selected status."
+            desc={
+              hasActiveFilters
+                ? "No uploads match your search and selected filters. Try adjusting them or clearing the filters."
+                : "You have not uploaded any resources yet."
+            }
           />
         )}
       </div>
 
+      {/* Pagination */}
+      {!isLoading &&
+        !uploadsError &&
+        totalCount > 0 && (
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div className="justify-self-start">
+              <button
+                type="button"
+                onClick={() =>
+                  setPage((current) =>
+                    Math.max(1, current - 1),
+                  )
+                }
+                disabled={page <= 1 || isFetching}
+                className="inline-flex h-8 items-center justify-center rounded-sm border border-border px-2.5 text-xs font-medium transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40 sm:h-9 sm:px-3 sm:text-sm"
+              >
+                Previous
+              </button>
+            </div>
+
+            <p
+              className="whitespace-nowrap text-center text-[10px] text-muted-foreground sm:text-sm"
+              aria-live="polite"
+            >
+              Page {page} of {totalPages}
+            </p>
+
+            <div className="justify-self-end">
+              <button
+                type="button"
+                onClick={() =>
+                  setPage((current) =>
+                    Math.min(totalPages, current + 1),
+                  )
+                }
+                disabled={
+                  page >= totalPages || isFetching
+                }
+                className="inline-flex h-8 items-center justify-center rounded-sm border border-border px-2.5 text-xs font-medium transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40 sm:h-9 sm:px-3 sm:text-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+      {!isLoading &&
+        !uploadsError &&
+        totalCount > 0 && (
+          <p className="text-center text-[10px] text-muted-foreground sm:text-xs">
+            Showing{" "}
+            {(page - 1) * PAGE_SIZE + 1}
+            {"–"}
+            {Math.min(page * PAGE_SIZE, totalCount)}
+            {" of "}
+            {totalCount} uploads
+          </p>
+        )}
+
       <AlertDialog
-        open={
-          pendingDelete !== null
-        }
+        open={pendingDelete !== null}
         onOpenChange={(open) => {
-          if (
-            !open &&
-            !deletingDraftId
-          ) {
+          if (!open && !deletingDraftId) {
             setPendingDelete(null);
           }
         }}
@@ -553,22 +806,16 @@ function MyUploads() {
 
             <AlertDialogDescription className="text-sm">
               Delete{" "}
-              <strong>
-                {pendingDelete?.title}
-              </strong>
-              ? This will permanently
-              remove the draft and its
-              attached file. This action
-              cannot be undone.
+              <strong>{pendingDelete?.title}</strong>
+              ? This will permanently remove the draft
+              and its attached file. This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
-              disabled={
-                deletingDraftId !==
-                null
-              }
+              disabled={deletingDraftId !== null}
             >
               Cancel
             </AlertDialogCancel>
@@ -576,16 +823,12 @@ function MyUploads() {
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();
-                handleDeleteDraft();
+                void handleDeleteDraft();
               }}
-              disabled={
-                deletingDraftId !==
-                null
-              }
+              disabled={deletingDraftId !== null}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingDraftId !==
-                null && (
+              {deletingDraftId !== null && (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
               )}
 
