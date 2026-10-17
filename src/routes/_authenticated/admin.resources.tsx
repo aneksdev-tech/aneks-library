@@ -292,16 +292,16 @@ function ResourcesPage() {
   }, [user, roles, navigate]);
 
 const [search, setSearch] = useState("");
-const [status, setStatus] =
-  useState<"all" | ResourceStatus>("all");
+const [status, setStatus] = useState<"all" | ResourceStatus>("all");
 const [category, setCategory] = useState("all");
 const [college, setCollege] = useState(ALL_OPTION);
 const [department, setDepartment] = useState(ALL_OPTION);
 const [level, setLevel] = useState("all");
 const [semester, setSemester] = useState("all");
+const [dateFrom, setDateFrom] = useState("");
+const [dateTo, setDateTo] = useState("");
 
-const [sortOrder, setSortOrder] =
-  useState<"newest" | "oldest">("newest");
+const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 const [page, setPage] = useState(1);
 
 const resourcesTopRef = useRef<HTMLDivElement>(null);
@@ -358,17 +358,19 @@ const departments = useMemo(
   refetch: refetchResources,
 } = useQuery({
   queryKey: [
-    "admin-resources",
-    search.trim(),
-    status,
-    category,
-    college,
-    department,
-    level,
-    semester,
-    sortOrder,
-    page,
-  ],
+  "admin-resources",
+  search.trim(),
+  status,
+  category,
+  college,
+  department,
+  level,
+  semester,
+  dateFrom,
+  dateTo,
+  sortOrder,
+  page,
+],
   queryFn: async (): Promise<AdminResourcesPage> => {
     const { data, error } = await supabase.rpc("get_admin_resources", {
       p_search: search.trim(),
@@ -378,6 +380,8 @@ const departments = useMemo(
       p_department: department,
       p_level: level,
       p_semester: semester,
+      p_date_from: dateFrom || null,
+      p_date_to: dateTo || null,
       p_sort: sortOrder,
       p_page_size: PAGE_SIZE,
       p_page: page,
@@ -1443,37 +1447,76 @@ const availableDepartments =
       </SelectContent>
     </Select>
 
-    {/* Sort */}
-    <Select
-      value={sortOrder}
-      onValueChange={(value) => {
-  setSortOrder(value as "newest" | "oldest");
-  setPage(1);
-}}
-    >
-      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-        <SelectValue />
-      </SelectTrigger>
+        {/* Sort and date range */}
+    <div className="col-span-full grid grid-cols-3 items-end gap-2.5 sm:gap-3">
+      {/* Sort */}
+      <div className="min-w-0">
+        <Select
+          value={sortOrder}
+          onValueChange={(value) => {
+            setSortOrder(value as "newest" | "oldest");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger
+            id="admin-resources-sort"
+            className="h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
+          >
+            <SelectValue />
+          </SelectTrigger>
 
-      <SelectContent>
-        <SelectItem value="newest">Newest first</SelectItem>
-        <SelectItem value="oldest">Oldest first</SelectItem>
-      </SelectContent>
-    </Select>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Date from */}
+<div className="min-w-0">
+  <input
+    id="library-date-from"
+    type="date"
+    value={dateFrom}
+    max={dateTo || undefined}
+    onChange={(event) =>
+      setDateFrom(event.target.value)
+    }
+    className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+  />
+</div>
+
+{/* Date to */}
+<div className="min-w-0">
+  <input
+    id="library-date-to"
+    type="date"
+    value={dateTo}
+    min={dateFrom || undefined}
+    onChange={(event) =>
+      setDateTo(event.target.value)
+    }
+    className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+  />
+</div>
+    </div>
   </div>
 
   <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-      <p className="pl-1 text-[10px] text-gold sm:text-xs">
+      <p className="pl-2 text-[10px] text-gold sm:text-xs">
   Showing {firstResource}–{lastResource} of {totalCount} resources
 </p>
 
-      {(search.trim() !== "" ||
+        {(search.trim() !== "" ||
         status !== "all" ||
         category !== "all" ||
         college !== ALL_OPTION ||
         department !== ALL_OPTION ||
         level !== "all" ||
-        semester !== "all") && (
+        semester !== "all" ||
+        dateFrom !== "" ||
+        dateTo !== "" ||
+        sortOrder !== "newest") && (
         <Button
           type="button"
           size="sm"
@@ -1486,10 +1529,12 @@ const availableDepartments =
             setDepartment(ALL_OPTION);
             setLevel("all");
             setSemester("all");
+            setDateFrom("");
+            setDateTo("");
             setSortOrder("newest");
             setPage(1);
           }}
-  className="h-7 px-2 text-xs text-gold sm:h-8"
+  className="h-7 px-2 pr-3 text-xs text-gold sm:h-8"
 >
   <X className="h-3.5 w-3.5" />
   Clear filters

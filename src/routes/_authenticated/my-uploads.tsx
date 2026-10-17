@@ -15,6 +15,13 @@ import {
   X,
 } from "lucide-react";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   useEffect,
   useState,
 } from "react";
@@ -203,8 +210,8 @@ function MyUploads() {
           p_search: debouncedSearch,
           p_status: statusFilter,
           p_category_id: categoryFilter,
-          p_date_from: dateFrom || null,
-          p_date_to: dateTo || null,
+          p_date_from: dateFrom || undefined,
+          p_date_to: dateTo || undefined,
           p_sort: sortBy,
           p_page_size: PAGE_SIZE,
           p_page: page,
@@ -386,7 +393,7 @@ function MyUploads() {
       </div>
 
       {/* Filters */}
-      <div className="border-y border-border py-3 sm:py-4">
+      <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
         <div className="mb-3 flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
@@ -408,166 +415,148 @@ function MyUploads() {
               }
               placeholder="Search uploads by title..."
               aria-label="Search uploads by title"
-              className="h-10 w-full rounded-sm border border-input bg-background pl-9 pr-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-sm"
+              className="h-10 w-full rounded-sm border border-input bg-card pl-9 pr-3 text-xs outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-sm"
             />
           </div>
 
           {/* Status and category */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
             <div className="min-w-0">
-              <label
-                htmlFor="upload-status"
-                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs">
-                Status
-              </label>
-
-              <select
-                id="upload-status"
+              <Select
                 value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(
-                    event.target.value as StatusFilter,
-                  )
+                onValueChange={(value) =>
+                  setStatusFilter(value as StatusFilter)
                 }
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
-              <option value="all">
-                  All statuses
-                </option>
-                <option value="pending">
-                  Pending
-                </option>
-                <option value="approved">
-                  Approved
-                </option>
-                <option value="rejected">
-                  Rejected
-                </option>
-                <option value="deleted">
-                  Deleted
-                </option>
-                <option value="draft">
-                  Draft
-                </option>
-              </select>
+              >
+                <SelectTrigger
+                  id="upload-status"
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
+                >
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="all">
+                    All statuses
+                  </SelectItem>
+                  <SelectItem value="pending">
+                    Pending
+                  </SelectItem>
+                  <SelectItem value="approved">
+                    Approved
+                  </SelectItem>
+                  <SelectItem value="rejected">
+                    Rejected
+                  </SelectItem>
+                  <SelectItem value="deleted">
+                    Deleted
+                  </SelectItem>
+                  <SelectItem value="draft">
+                    Draft
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="min-w-0">
-              <label
-                htmlFor="upload-category"
-                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
-              >
-                Category
-              </label>
-
-              <select
-                id="upload-category"
+              <Select
                 value={categoryFilter}
-                onChange={(event) =>
-                  setCategoryFilter(
-                    event.target.value,
-                  )
-                }
+                onValueChange={setCategoryFilter}
                 disabled={categoriesLoading}
-                className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
-                <option value="all">
-                  All categories
-                </option>
+              >
+                <SelectTrigger
+                  id="upload-category"
+                  className="h-9 text-xs sm:h-10 sm:text-sm"
+                >
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
 
-                {categories
-                  .filter(
-                    (category) =>
-                      category.deleted_at == null,
-                  )
-                  .map((category) => (
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
-                    </option>
-                  ))}
-              </select>
+                <SelectContent>
+                  <SelectItem value="all">
+                    All categories
+                  </SelectItem>
+
+                  {categories
+                    .filter(
+                      (category) =>
+                        category.deleted_at == null,
+                    )
+                    .map((category) => (
+                      <SelectItem
+                        key={category.id}
+                        value={category.id}
+                      >
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-
-          {/* Date range */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+        </div>
+        {/* Sorting and date range */}
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+            {/* Sort */}
             <div className="min-w-0">
-              <label
-                htmlFor="upload-date-from"
-                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+              <Select
+                value={sortBy}
+                onValueChange={(value) =>
+                  setSortBy(value as SortOption)
+                }
               >
-                Date from
-              </label>
+                <SelectTrigger
+                  id="upload-sort"
+                  className="h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
+                >
+                  <SelectValue placeholder="Newest first" />
+                </SelectTrigger>
 
+                <SelectContent>
+                  <SelectItem value="newest">
+                    Newest
+                  </SelectItem>
+                  <SelectItem value="oldest">
+                    Oldest
+                  </SelectItem>
+                  <SelectItem value="status">
+                    Status
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date from */}
+            <div className="min-w-0">
               <input
                 id="upload-date-from"
                 type="date"
                 value={dateFrom}
                 max={dateTo || undefined}
                 onChange={(event) =>
-                  handleDateFromChange(
-                    event.target.value,
-                  )
+                  handleDateFromChange(event.target.value)
                 }
-                className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"/>
+                className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+              />
             </div>
 
+            {/* Date to */}
             <div className="min-w-0">
-              <label
-                htmlFor="upload-date-to"
-                className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
-              >
-                Date to
-              </label>
-
               <input
                 id="upload-date-to"
                 type="date"
                 value={dateTo}
                 min={dateFrom || undefined}
                 onChange={(event) =>
-                  handleDateToChange(
-                    event.target.value,
-                  )
+                  handleDateToChange(event.target.value)
                 }
-                className="h-9 w-full min-w-0 rounded-sm border border-input bg-background px-2 text-[11px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"/>
+                className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+              />
             </div>
-          </div>
-
-          {/* Sorting */}
-          <div className="min-w-0">
-            <label
-              htmlFor="upload-sort"
-              className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
-            >
-              Sort by
-            </label>
-
-            <select
-              id="upload-sort"
-              value={sortBy}
-              onChange={(event) =>
-                setSortBy(
-                  event.target.value as SortOption,
-                )
-              }
-              className="h-9 w-full rounded-sm border border-input bg-background pl-2 pr-4 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:pl-3 sm:pr-5 sm:text-sm">
-            <option value="newest">
-                Newest first
-              </option>
-              <option value="oldest">
-                Oldest first
-              </option>
-              <option value="status">
-                Status
-              </option>
-            </select>
           </div>
 
           {/* Filter footer */}
           <div className="flex items-center justify-between gap-3 pt-1">
-            <p className="text-[10px] font-medium text-gold sm:text-xs">
+            <p className="ml-2 mt-3 text-[10px] font-medium text-gold sm:text-xs">
               {totalCount > 0
                 ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
                     page * PAGE_SIZE,
@@ -580,24 +569,21 @@ function MyUploads() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-gold transition-opacity hover:opacity-75 sm:gap-1.5 sm:text-xs"
+                className="ml-3 mt-3 pr-3 inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-gold transition-opacity hover:opacity-75 sm:gap-1.5 sm:text-xs"
               >
                 <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Clear filters
               </button>
             )}
           </div>
-        </div>
-
-        {dateRangeInvalid && (
+          {dateRangeInvalid && (
           <p className="mt-2 text-xs text-destructive">
             The start date must not be later than the end date.
           </p>
         )}
       </div>
-
       {/* Upload list */}
-      <div className="border-y border-border">
+      <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
         {isLoading ? (
           <div className="grid min-h-[30vh] place-items-center">
             <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
@@ -691,7 +677,7 @@ function MyUploads() {
                             params={{
                               draftId: resource.id,
                             }}
-                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                           >
                             <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             Edit draft

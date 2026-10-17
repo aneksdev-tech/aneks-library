@@ -1034,7 +1034,7 @@ const clearAnnouncementFilters = () => {
       {/* Announcement form */}
       <div
         ref={announcementFormRef}
-        className="scroll-mt-4 rounded-sm border border-border bg-card p-3.5 shadow-soft sm:rounded-sm sm:p-5"
+        className="scroll-mt-4 rounded-sm border border-border bg-card p-3.5 sm:rounded-sm sm:p-5"
       >
         <div className="mb-4 flex items-start gap-2 sm:mb-5 sm:items-center">
           <div className="min-w-0">
@@ -1184,8 +1184,8 @@ const clearAnnouncementFilters = () => {
       </div>
 
       {/* Announcement history */}
-      <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
-        <div className="border-b border-border p-3.5 sm:p-5">
+      <div className="overflow-hidden rounded-sm border border-border bg-card sm:rounded-sm">
+        <div className="border-border p-3.5 sm:p-5">
           <h2 className="font-display text-base font-semibold sm:text-lg">
             Announcements
           </h2>
@@ -1195,7 +1195,7 @@ const clearAnnouncementFilters = () => {
           </p>
         </div>
 
-<div className="mx-3 mt-4 mb-6 rounded-sm border border-border bg-card p-3 shadow-soft sm:mx-5 sm:p-4">
+<div className="mx-3 mb-3 rounded-sm border border-border bg-card p-3 sm:mx-5 sm:p-4">
   <div className="mb-3 flex items-center gap-2">
     <Filter className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
 
@@ -1328,11 +1328,11 @@ const clearAnnouncementFilters = () => {
                     isDeleted
                       ? "bg-muted/40"
                       : announcement.is_active
-                        ? "bg-primary/[0.03]"
+                        ? "bg-card/[0.03]"
                         : "hover:bg-muted/30"
                   }`}
                 >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-4 border-t pt-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span
@@ -1620,14 +1620,13 @@ const clearAnnouncementFilters = () => {
       </div>
 
       {/* Deleted announcements */}
-
-      <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft">
-        <div className="border-b border-border p-3.5 sm:p-5">
+      <div className="overflow-hidden rounded-sm border border-border bg-card">
+        <div className="border-border p-3.5 sm:p-5">
           <h2 className="font-display text-base font-semibold sm:text-lg">
             Deleted Announcements
           </h2>
 
-          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
+          <p className="border-b mt-0.5 pb-6 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             Review deleted announcements, deletion reasons, and audit history.
           </p>
         </div>
@@ -1652,7 +1651,7 @@ const clearAnnouncementFilters = () => {
               return (
                 <li
                   key={announcement.id}
-                  className="bg-muted/20 p-3.5 sm:p-5"
+                  className="bg-card/20 p-3.5 sm:p-5"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

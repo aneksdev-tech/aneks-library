@@ -257,5 +257,15 @@
 }
 
 .aneks-horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.89 0.12 85);
+  background: oklch(99.405% 0.00011 271.152);
+}
+
+/* Dark mode: make the calendar icon light */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Light mode: keep the calendar icon dark */
+:root:not(.dark) input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
 }

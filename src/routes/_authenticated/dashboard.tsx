@@ -435,7 +435,7 @@ function DashboardPage() {
               <>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-muted sm:mt-3 sm:h-2">
                   <div
-                    className="h-full rounded-sm bg-gradient-emerald transition-all duration-500"
+                    className="h-full rounded-sm bg-gradient-gold transition-all duration-500"
                     style={{
                       width: `${progress}%`,
                     }}

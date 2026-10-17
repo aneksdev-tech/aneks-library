@@ -403,8 +403,8 @@ function Announcements() {
 
       {/* Announcement list */}
       {isLoading ? (
-        <div className="grid min-h-[30vh] place-items-center">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+        <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
+          <div className="mb-3 flex items-center gap-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
             Loading announcements…
           </div>
@@ -441,8 +441,9 @@ function Announcements() {
             return (
               <article
                 key={announcement.id}
-                className="group py-3.5 sm:py-5"
-              >
+                 className="group py-4 sm:py-5">
+                  <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
+                    <div className="min-w-0 flex-1">
                 {announcement.is_active && (
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gold sm:mb-2.5 sm:text-xs">
                     ACTIVE
@@ -524,6 +525,8 @@ function Announcements() {
 
   </div>
 )}
+</div>
+</div>
             </article>
             );
           })}

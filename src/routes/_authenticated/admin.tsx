@@ -222,13 +222,13 @@ const tabs = [
             const Icon = tab.icon;
 
             return (
-              <Link
+            <Link
   key={tab.to}
   to={tab.to}
   preload={false}
   className={`group relative flex min-h-9 min-w-0 items-center justify-start gap-1 rounded-sm px-1.5 py-1.5 pb-2 text-[9px] font-medium transition-colors duration-200 sm:min-h-11 sm:flex-1 sm:gap-2 sm:px-4 sm:py-2.5 sm:pb-3 sm:text-sm ${
     active
-      ? "text-gold after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-gold"
+      ? "text-gold"
       : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
   }`}
 >
@@ -245,12 +245,22 @@ const tabs = [
   {tab.to === "/admin/approvals" &&
   approvalCount > 0 ? (
     <span
-      className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-sm bg-gold px-1 text-[8px] font-semibold text-gold-foreground sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
+      className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[8px] font-semibold text-gold-foreground sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
       aria-label={`${approvalCount} pending approval items`}
     >
       {approvalCount > 99 ? "99+" : approvalCount}
     </span>
   ) : null}
+
+  {/* Gold active indicator */}
+  <span
+    aria-hidden="true"
+    className={`absolute inset-x-2 bottom-0 h-0.5 origin-left rounded-full bg-gold transition-all duration-2000 ease-in-out ${
+  active
+    ? "scale-x-100 opacity-100"
+    : "scale-x-0 opacity-0"
+}`}
+  />
 </Link>
             );
           })}

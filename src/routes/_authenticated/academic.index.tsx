@@ -152,6 +152,13 @@ function AcademicApprovals() {
   const [levelFilter, setLevelFilter] = useState(ALL_OPTION);
   const [semesterFilter, setSemesterFilter] = useState(ALL_OPTION);
   const [categoryFilter, setCategoryFilter] = useState(ALL_OPTION);
+
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">(
+    "newest",
+  );
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
   const [page, setPage] = useState(1);
 
   const pendingResourcesHeaderRef = useRef<HTMLDivElement>(null);
@@ -164,19 +171,23 @@ const departments =
     ? []
     : getDepartments(collegeFilter);
 
-/*
- * Reset pagination whenever a filter or search term changes.
- */
-useEffect(() => {
-  setPage(1);
-}, [
-  searchQuery,
-  collegeFilter,
-  departmentFilter,
-  levelFilter,
-  semesterFilter,
-  categoryFilter,
-]);
+  /*
+   * Reset pagination whenever a filter, sort order,
+   * or search term changes.
+   */
+  useEffect(() => {
+    setPage(1);
+  }, [
+    searchQuery,
+    collegeFilter,
+    departmentFilter,
+    levelFilter,
+    semesterFilter,
+    categoryFilter,
+    sortOrder,
+    dateFrom,
+    dateTo,
+  ]);
 
 /*
  * Keep the page reactive if the lecturer's role or status
@@ -202,50 +213,56 @@ useEffect(() => {
   }
 }, [loading, profile, user, roles, navigate]);
 
-/*
- * The RPC performs filtering, counting and pagination in Supabase.
- * Only the current page of resources is returned to the browser.
- */
-const {
-  data: queueData,
-  isLoading,
-  isError,
-  error: queueError,
-} = useQuery({
-  queryKey: [
-    "academic-pending-resources",
-    searchQuery.trim(),
-    collegeFilter,
-    departmentFilter,
-    levelFilter,
-    semesterFilter,
-    categoryFilter,
-    page,
-    PAGE_SIZE,
-  ],
+  /*
+   * The RPC performs filtering, sorting, counting and pagination
+   * in Supabase. Only the current page is returned to the browser.
+   */
+  const {
+    data: queueData,
+    isLoading,
+    isError,
+    error: queueError,
+  } = useQuery({
+    queryKey: [
+      "academic-pending-resources",
+      searchQuery.trim(),
+      collegeFilter,
+      departmentFilter,
+      levelFilter,
+      semesterFilter,
+      categoryFilter,
+      sortOrder,
+      dateFrom,
+      dateTo,
+      page,
+      PAGE_SIZE,
+    ],
 
-  queryFn: async (): Promise<PendingQueueResponse> => {
-    const { data, error } = await supabase.rpc(
-      "get_academic_pending_resources",
-      {
-        p_search: searchQuery.trim(),
-        p_category_id: categoryFilter,
-        p_college: collegeFilter,
-        p_department: departmentFilter,
-        p_level: levelFilter,
-        p_semester: semesterFilter,
-        p_page_size: PAGE_SIZE,
-        p_page: page,
-      },
-    );
+    queryFn: async (): Promise<PendingQueueResponse> => {
+      const { data, error } = await supabase.rpc(
+        "get_academic_pending_resources",
+        {
+          p_search: searchQuery.trim(),
+          p_category_id: categoryFilter,
+          p_college: collegeFilter,
+          p_department: departmentFilter,
+          p_level: levelFilter,
+          p_semester: semesterFilter,
+          p_page_size: PAGE_SIZE,
+          p_page: page,
+          p_sort: sortOrder,
+          p_date_from: dateFrom || null,
+          p_date_to: dateTo || null,
+        },
+      );
 
-    if (error) {
-      throw error;
-    }
+      if (error) {
+        throw error;
+      }
 
-    return data as unknown as PendingQueueResponse;
-  },
-});
+      return data as unknown as PendingQueueResponse;
+    },
+  });
 
 const resources = queueData?.resources ?? [];
 const totalCount = queueData?.totalCount ?? 0;
@@ -334,7 +351,10 @@ useEffect(() => {
     departmentFilter !== ALL_OPTION ||
     levelFilter !== ALL_OPTION ||
     semesterFilter !== ALL_OPTION ||
-    categoryFilter !== ALL_OPTION;
+    categoryFilter !== ALL_OPTION ||
+    sortOrder !== "newest" ||
+    dateFrom !== "" ||
+    dateTo !== "";
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -343,6 +363,9 @@ useEffect(() => {
     setLevelFilter(ALL_OPTION);
     setSemesterFilter(ALL_OPTION);
     setCategoryFilter(ALL_OPTION);
+    setSortOrder("newest");
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
   };
 
@@ -559,7 +582,7 @@ useEffect(() => {
               </p>
 
               <span
-                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gold text-[10px] font-semibold leading-none text-gold-foreground sm:h-5 sm:w-5"
+                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] font-semibold leading-none text-gold-foreground sm:h-5 sm:w-5"
                 aria-label={`${pendingCount} pending resources`}
               >
                 {pendingCount > 99 ? "99+" : pendingCount}
@@ -572,202 +595,282 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
-          <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {/* Search */}
-            <div className="relative md:col-span-2 xl:col-span-3">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+{/* Filters */}
+<div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
+  <div className="space-y-2.5 sm:space-y-3">
+    {/* Search */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
 
-              <Input
-                placeholder="Search title, course code, description…"
-                value={searchQuery}
-                onChange={(event) =>
-                  setSearchQuery(event.target.value)
-                }
-                aria-label="Search pending resources"
-                className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
-              />
-            </div>
-            
-            {/* Category */}
-            <div className="md:col-span-2 xl:col-span-3">
-              <Select
-                value={categoryFilter}
-                onValueChange={setCategoryFilter}
+      <Input
+        placeholder="Search title, course code, description…"
+        value={searchQuery}
+        onChange={(event) =>
+          setSearchQuery(event.target.value)
+        }
+        aria-label="Search pending resources"
+        className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+      />
+    </div>
+
+    {/* Category */}
+    <div className="min-w-0">
+      <Select
+        value={categoryFilter}
+        onValueChange={setCategoryFilter}
+      >
+        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+          <SelectValue placeholder="Category" />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value={ALL_OPTION}>
+            All Categories
+          </SelectItem>
+
+          {cats?.map((category) => (
+            <SelectItem
+              key={category.id}
+              value={category.id}
+            >
+              {category.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+
+    {/* College and department */}
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+      {/* College */}
+      <div className="min-w-0">
+        <Select
+          value={collegeFilter}
+          onValueChange={(value) => {
+            setCollegeFilter(value);
+            setDepartmentFilter(ALL_OPTION);
+          }}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue placeholder="College" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Colleges
+            </SelectItem>
+
+            {colleges.map((college) => (
+              <SelectItem
+                key={college.id}
+                value={college.id}
               >
-                <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
+                <>
+                  <span className="sm:hidden">
+                    {college.id}
+                  </span>
 
-                <SelectContent>
-                  <SelectItem value={ALL_OPTION}>
-                    All Categories
-                  </SelectItem>
+                  <span className="hidden sm:inline">
+                    {college.name} ({college.id})
+                  </span>
+                </>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-                  {cats?.map((category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.id}
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Department */}
+      <div className="min-w-0">
+        <Select
+          value={departmentFilter}
+          onValueChange={setDepartmentFilter}
+          disabled={collegeFilter === ALL_OPTION}
+        >
+          <SelectTrigger
+            className={`h-9 text-xs sm:h-10 sm:text-sm ${
+              collegeFilter === ALL_OPTION
+                ? "opacity-60"
+                : ""
+            }`}
+          >
+            <SelectValue placeholder="Department" />
+          </SelectTrigger>
 
-            {/* College */}
-            <Select
-              value={collegeFilter}
-              onValueChange={(value) => {
-                setCollegeFilter(value);
-                setDepartmentFilter(ALL_OPTION);
-              }}
-            >
-              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                <SelectValue placeholder="College" />
-              </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Departments
+            </SelectItem>
 
-              <SelectContent>
-                <SelectItem value={ALL_OPTION}>
-                  All Colleges
-                </SelectItem>
-
-                {colleges.map((college) => (
-                  <SelectItem
-                    key={college.id}
-                    value={college.id}
-                  >
-                    <>
-                      <span className="sm:hidden">
-                        {college.id}
-                      </span>
-                      <span className="hidden sm:inline">
-                        {college.name} ({college.id})
-                      </span>
-                    </>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Department */}
-            <Select
-              value={departmentFilter}
-              onValueChange={setDepartmentFilter}
-            >
-              <SelectTrigger
-                className={`h-9 text-xs sm:h-10 sm:text-sm ${
-                  collegeFilter === ALL_OPTION ? "opacity-60" : ""
-                }`}
+            {departments.map((department) => (
+              <SelectItem
+                key={department}
+                value={department}
               >
-                <span>
-                  {departmentFilter === ALL_OPTION
-                    ? "All Departments"
-                    : departmentFilter}
-                </span>
-              </SelectTrigger>
+                {department}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
 
-              <SelectContent>
-                {collegeFilter === ALL_OPTION ? (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Select College first
-                  </div>
-                ) : (
-                  <>
-                    <SelectItem value={ALL_OPTION}>
-                      All Departments
-                    </SelectItem>
+    {/* Level and semester */}
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+      {/* Level */}
+      <div className="min-w-0">
+        <Select
+          value={levelFilter}
+          onValueChange={setLevelFilter}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue placeholder="Level" />
+          </SelectTrigger>
 
-                    {departments.map((department) => (
-                      <SelectItem
-                        key={department}
-                        value={department}
-                      >
-                        {department}
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Levels
+            </SelectItem>
 
-            {/* Level */}
-            <Select
-              value={levelFilter}
-              onValueChange={setLevelFilter}
-            >
-              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                <SelectValue placeholder="Level" />
-              </SelectTrigger>
+            {levels.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-              <SelectContent>
-                <SelectItem value={ALL_OPTION}>
-                  All Levels
-                </SelectItem>
+      {/* Semester */}
+      <div className="min-w-0">
+        <Select
+          value={semesterFilter}
+          onValueChange={setSemesterFilter}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue placeholder="Semester" />
+          </SelectTrigger>
 
-                {levels.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Semesters
+            </SelectItem>
 
-            {/* Semester */}
-            <Select
-              value={semesterFilter}
-              onValueChange={setSemesterFilter}
-            >
-              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                <SelectValue placeholder="Semester" />
-              </SelectTrigger>
+            {semesters.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
 
-              <SelectContent>
-                <SelectItem value={ALL_OPTION}>
-                  All Semesters
-                </SelectItem>
+    {/* Sort and date range */}
+    <div className="grid grid-cols-3 items-end gap-2.5 sm:gap-3">
+      {/* Sort */}
+      <div className="min-w-0">
+        <Select
+          value={sortOrder}
+          onValueChange={(value) =>
+            setSortOrder(value as "newest" | "oldest")
+          }
+        >
+          <SelectTrigger
+            id="academic-sort"
+            className="mt-0 h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
+          >
+            <SelectValue />
+          </SelectTrigger>
 
-                {semesters.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+          <SelectContent>
+            <SelectItem value="newest">
+              Newest
+            </SelectItem>
 
-{(hasActiveFilters || totalCount >= 0) && (
-  <div className="mt-2.5 flex items-center justify-between gap-2 sm:mt-3">
-    <p className="text-[10px] text-gold sm:text-xs">
-      {totalCount === 0 ? (
-        "No matching pending resources"
+            <SelectItem value="oldest">
+              Oldest
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Date from */}
+      <div className="min-w-0">
+        <input
+          id="academic-date-from"
+          type="date"
+          value={dateFrom}
+          max={dateTo || undefined}
+          onChange={(event) =>
+            setDateFrom(event.target.value)
+          }
+          aria-label="Filter resources from this date"
+          className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+        />
+      </div>
+
+      {/* Date to */}
+      <div className="min-w-0">
+        <input
+          id="academic-date-to"
+          type="date"
+          value={dateTo}
+          min={dateFrom || undefined}
+          onChange={(event) =>
+            setDateTo(event.target.value)
+          }
+          aria-label="Filter resources up to this date"
+          className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Result count and clear filters */}
+  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+    <p className="pl-2 text-xs text-gold sm:text-sm">
+      {isLoading ? (
+        "Loading resource count…"
+      ) : totalCount === 0 ? (
+        <>
+          Showing{" "}
+          <span className="font-semibold text-gold">
+            0
+          </span>{" "}
+          resources
+        </>
       ) : (
         <>
-          Showing {(page - 1) * PAGE_SIZE + 1}–
-          {Math.min(page * PAGE_SIZE, totalCount)} of{" "}
-          {totalCount} matching pending{" "}
+          Showing{" "}
+          <span className="font-semibold text-gold">
+            {firstResult}–{lastResult}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-gold">
+            {totalCount}
+          </span>{" "}
+          matching pending{" "}
           {totalCount === 1 ? "resource" : "resources"}
         </>
       )}
     </p>
 
     {hasActiveFilters && (
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={clearFilters}
-        className="h-7 px-2 text-xs text-gold sm:h-8"
-        >
-          <X className="h-3.5 w-3.5" />
-          Clear filters
-        </button>
+        className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-2 pr-3 text-xs text-gold sm:h-8"
+      >
+        <X className="h-3.5 w-3.5 shrink-0" />
+        <span>Clear filters</span>
+      </Button>
     )}
   </div>
-)}
-
-        {/* Resource queue */}
+</div>
+{/* Resource queue */}
         <div>
         <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
           {isLoading ? (

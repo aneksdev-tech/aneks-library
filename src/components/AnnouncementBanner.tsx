@@ -42,7 +42,7 @@ style={{ animationDuration: "10s" }}
 <strong>{announcement.title}</strong>
 <span>—</span>
 <span>{announcement.body}</span>
-<span className="font-medium text-primary">
+<span className="font-medium text-gold">
 Read More →
 </span>
 </span>

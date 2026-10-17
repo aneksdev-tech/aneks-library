@@ -30,13 +30,15 @@ function LibraryPage() {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string>(ALL_OPTION);
   const [sort, setSort] = useState<
-    "newest" | "downloads" | "bookmarks"
-  >("newest");
+  "newest" | "oldest" | "downloads" | "bookmarks"
+>("newest");
 
   const [college, setCollege] = useState(ALL_OPTION);
   const [department, setDepartment] = useState(ALL_OPTION);
   const [level, setLevel] = useState(ALL_OPTION);
   const [semester, setSemester] = useState(ALL_OPTION);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
 
   const findResourcesRef = useRef<HTMLDivElement>(null);
@@ -49,9 +51,19 @@ function LibraryPage() {
   const { canDownload } = useAccess();
 
   // Reset pagination whenever a filter or sort option changes.
-  useEffect(() => {
+    useEffect(() => {
     setPage(1);
-  }, [q, category, college, department, level, semester, sort]);
+  }, [
+    q,
+    category,
+    college,
+    department,
+    level,
+    semester,
+    dateFrom,
+    dateTo,
+    sort,
+  ]);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -80,6 +92,8 @@ function LibraryPage() {
       department,
       level,
       semester,
+      dateFrom,
+      dateTo,
       sort,
       page,
       PAGE_SIZE,
@@ -97,6 +111,8 @@ function LibraryPage() {
           p_sort: sort,
           p_page_size: PAGE_SIZE,
           p_page: page,
+          p_date_from: dateFrom || undefined,
+          p_date_to: dateTo || undefined,
         },
       );
 
@@ -155,21 +171,27 @@ useEffect(() => {
   });
 }, [page, isLoading, isError, libraryResult]);
 
-  const hasActiveFilters =
+    const hasActiveFilters =
     q.trim() !== "" ||
     category !== ALL_OPTION ||
     college !== ALL_OPTION ||
     department !== ALL_OPTION ||
     level !== ALL_OPTION ||
-    semester !== ALL_OPTION;
+    semester !== ALL_OPTION ||
+    dateFrom !== "" ||
+    dateTo !== "" ||
+    sort !== "newest";
 
-  const clearFilters = () => {
+    const clearFilters = () => {
     setQ("");
     setCategory(ALL_OPTION);
     setCollege(ALL_OPTION);
     setDepartment(ALL_OPTION);
     setLevel(ALL_OPTION);
     setSemester(ALL_OPTION);
+    setDateFrom("");
+    setDateTo("");
+    setSort("newest");
   };
 
   return (
@@ -201,10 +223,11 @@ useEffect(() => {
           </p>
         </div>
 
-        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-2.5 sm:space-y-3">
           {/* Search */}
-          <div className="relative md:col-span-2 xl:col-span-3">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+
             <Input
               placeholder="Search title, course code, description…"
               value={q}
@@ -214,128 +237,221 @@ useEffect(() => {
           </div>
 
           {/* Category */}
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_OPTION}>
-                All Categories
-              </SelectItem>
-              {cats?.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* College */}
-          <Select
-            value={college}
-            onValueChange={(value) => {
-              setCollege(value);
-              setDepartment(ALL_OPTION);
-            }}
-          >
-            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-              <SelectValue placeholder="College" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_OPTION}>
-                All Colleges
-              </SelectItem>
-              {colleges.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  <>
-                    <span className="sm:hidden">{item.id}</span>
-                    <span className="hidden sm:inline">
-                      {item.name} ({item.id})
-                    </span>
-                  </>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Department */}
-          <Select
-            value={department}
-            onValueChange={setDepartment}
-            disabled={college === ALL_OPTION}
-          >
-            <SelectTrigger
-              className={`h-9 text-xs sm:h-10 sm:text-sm ${
-                college === ALL_OPTION ? "opacity-60" : ""
-              }`}
+          <div className="min-w-0">
+            <Select
+              value={category}
+              onValueChange={setCategory}
             >
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_OPTION}>
-                All Departments
-              </SelectItem>
-              {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
 
-          {/* Level */}
-          <Select value={level} onValueChange={setLevel}>
-            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-              <SelectValue placeholder="Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_OPTION}>All Levels</SelectItem>
-              {levels.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
+              <SelectContent>
+                <SelectItem value={ALL_OPTION}>
+                  All Categories
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          {/* Semester */}
-          <Select value={semester} onValueChange={setSemester}>
-            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-              <SelectValue placeholder="Semester" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_OPTION}>
-                All Semesters
-              </SelectItem>
-              {semesters.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {cats?.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Sort */}
-          <Select
-            value={sort}
-            onValueChange={(value) =>
-              setSort(value as typeof sort)
-            }
-          >
-            <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest first</SelectItem>
-              <SelectItem value="downloads">Most downloaded</SelectItem>
-              <SelectItem value="bookmarks">Most bookmarked</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* College and department */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+            {/* College */}
+            <div className="min-w-0">
+              <Select
+                value={college}
+                onValueChange={(value) => {
+                  setCollege(value);
+                  setDepartment(ALL_OPTION);
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                  <SelectValue placeholder="College" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value={ALL_OPTION}>
+                    All Colleges
+                  </SelectItem>
+
+                  {colleges.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      <>
+                        <span className="sm:hidden">
+                          {item.id}
+                        </span>
+
+                        <span className="hidden sm:inline">
+                          {item.name} ({item.id})
+                        </span>
+                      </>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Department */}
+            <div className="min-w-0">
+              <Select
+                value={department}
+                onValueChange={setDepartment}
+                disabled={college === ALL_OPTION}
+              >
+                <SelectTrigger
+                  className={`h-9 text-xs sm:h-10 sm:text-sm ${
+                    college === ALL_OPTION
+                      ? "opacity-60"
+                      : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value={ALL_OPTION}>
+                    All Departments
+                  </SelectItem>
+
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Level and semester */}
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+            {/* Level */}
+            <div className="min-w-0">
+              <Select
+                value={level}
+                onValueChange={setLevel}
+              >
+                <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                  <SelectValue placeholder="Level" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value={ALL_OPTION}>
+                    All Levels
+                  </SelectItem>
+
+                  {levels.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Semester */}
+            <div className="min-w-0">
+              <Select
+                value={semester}
+                onValueChange={setSemester}
+              >
+                <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+                  <SelectValue placeholder="Semester" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value={ALL_OPTION}>
+                    All Semesters
+                  </SelectItem>
+
+                  {semesters.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Sort and date range */}
+          <div className="grid grid-cols-3 items-end gap-2.5 sm:gap-3">
+            {/* Sort */}
+            <div className="min-w-0">
+              <Select
+                value={sort}
+                onValueChange={(value) =>
+                  setSort(value as typeof sort)
+                }
+              >
+                <SelectTrigger
+                  id="library-sort"
+                  className="mt-0 h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="newest">
+                    Newest
+                  </SelectItem>
+
+                  <SelectItem value="oldest">
+                    Oldest
+                  </SelectItem>
+
+                  <SelectItem value="downloads">
+                    Most downloaded
+                  </SelectItem>
+
+                  <SelectItem value="bookmarks">
+                    Most bookmarked
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date from */}
+            <div className="min-w-0">
+              <input
+                id="library-date-from"
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(event) =>
+                  setDateFrom(event.target.value)
+                }
+                aria-label="Filter resources from this date"
+                className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+              />
+            </div>
+
+            {/* Date to */}
+            <div className="min-w-0">
+              <input
+                id="library-date-to"
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(event) =>
+                  setDateTo(event.target.value)
+                }
+                aria-label="Filter resources up to this date"
+                className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Result count and clear filters */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-          <p className="text-xs text-gold sm:text-sm">
+          <p className="pl-2 text-xs text-gold sm:text-sm">
             {isLoading ? (
               "Loading resource count…"
             ) : totalCount === 0 ? (
@@ -367,10 +483,10 @@ useEffect(() => {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-7 px-2 text-xs text-gold sm:h-8"
+              className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-2 pr-3 text-xs text-gold sm:h-8"
             >
-              <X className="h-3.5 w-3.5" />
-              Clear filters
+              <X className="h-3.5 w-3.5 shrink-0" />
+              <span>Clear filters</span>
             </Button>
           )}
         </div>

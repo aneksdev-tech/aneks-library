@@ -260,10 +260,17 @@ function Approvals() {
   const [semesterFilter, setSemesterFilter] =
     useState(ALL_OPTION);
 
-  const [categoryFilter, setCategoryFilter] =
-    useState(ALL_OPTION);
+const [categoryFilter, setCategoryFilter] =
+  useState(ALL_OPTION);
 
-  const [page, setPage] = useState(1);
+const [sortOrder, setSortOrder] = useState<
+  "newest" | "oldest"
+>("newest");
+
+const [dateFrom, setDateFrom] = useState("");
+const [dateTo, setDateTo] = useState("");
+
+const [page, setPage] = useState(1);
 
   const matchingCountRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(page);
@@ -277,16 +284,19 @@ function Approvals() {
     refetch,
   } = useQuery({
     queryKey: [
-      "pending-resources",
-      searchQuery.trim(),
-      categoryFilter,
-      collegeFilter,
-      departmentFilter,
-      levelFilter,
-      semesterFilter,
-      page,
-      PAGE_SIZE,
-    ],
+  "pending-resources",
+  searchQuery.trim(),
+  categoryFilter,
+  collegeFilter,
+  departmentFilter,
+  levelFilter,
+  semesterFilter,
+  sortOrder,
+  dateFrom,
+  dateTo,
+  page,
+  PAGE_SIZE,
+],
 
     queryFn: async () => {
       const {
@@ -295,15 +305,18 @@ function Approvals() {
       } = await supabase.rpc(
         "get_academic_pending_resources",
         {
-          p_search: searchQuery.trim(),
-          p_category_id: categoryFilter,
-          p_college: collegeFilter,
-          p_department: departmentFilter,
-          p_level: levelFilter,
-          p_semester: semesterFilter,
-          p_page_size: PAGE_SIZE,
-          p_page: page,
-        },
+  p_search: searchQuery.trim(),
+  p_category_id: categoryFilter,
+  p_college: collegeFilter,
+  p_department: departmentFilter,
+  p_level: levelFilter,
+  p_semester: semesterFilter,
+  p_page_size: PAGE_SIZE,
+  p_page: page,
+  p_sort: sortOrder,
+  p_date_from: dateFrom || null,
+  p_date_to: dateTo || null,
+}
       );
 
       if (error) {
@@ -387,17 +400,30 @@ function Approvals() {
     Math.ceil(totalCount / PAGE_SIZE),
   );
 
-  // Start from the first page whenever the filters change.
-  useEffect(() => {
-    setPage(1);
-  }, [
-    searchQuery,
-    categoryFilter,
-    collegeFilter,
-    departmentFilter,
-    levelFilter,
-    semesterFilter,
-  ]);
+  const firstResult =
+  totalCount === 0
+    ? 0
+    : (page - 1) * PAGE_SIZE + 1;
+
+const lastResult = Math.min(
+  page * PAGE_SIZE,
+  totalCount,
+);
+
+ // Start from the first page whenever a filter changes.
+useEffect(() => {
+  setPage(1);
+}, [
+  searchQuery,
+  categoryFilter,
+  collegeFilter,
+  departmentFilter,
+  levelFilter,
+  semesterFilter,
+  sortOrder,
+  dateFrom,
+  dateTo,
+]);
 
  /*
  * Remember that a page change requires scrolling to the matching-count row.
@@ -450,22 +476,28 @@ useEffect(() => {
       : getDepartments(collegeFilter);
 
   const hasActiveFilters =
-    searchQuery.trim() !== "" ||
-    collegeFilter !== ALL_OPTION ||
-    departmentFilter !== ALL_OPTION ||
-    levelFilter !== ALL_OPTION ||
-    semesterFilter !== ALL_OPTION ||
-    categoryFilter !== ALL_OPTION;
+  searchQuery.trim() !== "" ||
+  collegeFilter !== ALL_OPTION ||
+  departmentFilter !== ALL_OPTION ||
+  levelFilter !== ALL_OPTION ||
+  semesterFilter !== ALL_OPTION ||
+  categoryFilter !== ALL_OPTION ||
+  sortOrder !== "newest" ||
+  dateFrom !== "" ||
+  dateTo !== "";
 
   const clearFilters = () => {
-    setSearchQuery("");
-    setCollegeFilter(ALL_OPTION);
-    setDepartmentFilter(ALL_OPTION);
-    setLevelFilter(ALL_OPTION);
-    setSemesterFilter(ALL_OPTION);
-    setCategoryFilter(ALL_OPTION);
-    setPage(1);
-  };
+  setSearchQuery("");
+  setCollegeFilter(ALL_OPTION);
+  setDepartmentFilter(ALL_OPTION);
+  setLevelFilter(ALL_OPTION);
+  setSemesterFilter(ALL_OPTION);
+  setCategoryFilter(ALL_OPTION);
+  setSortOrder("newest");
+  setDateFrom("");
+  setDateTo("");
+  setPage(1);
+};
 
   const decide = useMutation({
     mutationFn: async (v: {
@@ -833,7 +865,7 @@ useEffect(() => {
 
                 {pendingUsers &&
                   pendingUsers.length > 0 && (
-                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
+                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
                       {pendingUsers.length}
                     </span>
                   )}
@@ -859,7 +891,7 @@ useEffect(() => {
               Resources
 
               {pendingCount > 0 && (
-                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
+                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gold text-[10px] leading-none font-semibold text-gold-foreground sm:h-5 sm:w-5 sm:text-[10px]">
                   {pendingCount}
                 </span>
               )}
@@ -928,37 +960,38 @@ useEffect(() => {
                             </div>
                           </div>
 
-                          {/* Account metadata */}
-                          {pendingUser.college?.trim() && (
-                            <AuditItem
-                              label="College"
-                              value={pendingUser.college.trim()}
-                            />
-                          )}
+{/* Account metadata */}
+<div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 xl:grid-cols-3">
+  {pendingUser.college?.trim() && (
+    <AuditItem
+      label="College"
+      value={pendingUser.college.trim()}
+    />
+  )}
 
-                          {pendingUser.department?.trim() && (
-                            <AuditItem
-                              label="Department"
-                              value={pendingUser.department.trim()}
-                            />
-                          )}
+  {pendingUser.department?.trim() && (
+    <AuditItem
+      label="Department"
+      value={pendingUser.department.trim()}
+    />
+  )}
 
-                          {pendingUser.primary_role ===
-                            "student" &&
-                            pendingUser.level?.trim() && (
-                              <AuditItem
-                                label="Level"
-                                value={pendingUser.level.trim()}
-                              />
-                            )}
+  {pendingUser.primary_role === "student" &&
+    pendingUser.level?.trim() && (
+      <AuditItem
+        label="Level"
+        value={pendingUser.level.trim()}
+      />
+    )}
 
-                          <AuditItem
-                            label="Registered"
-                            value="Pending approval"
-                            detail={formatDateTime(
-                              pendingUser.created_at,
-                            )}
-                          />
+  <AuditItem
+    label="Registered"
+    value="Pending approval"
+    detail={formatDateTime(
+      pendingUser.created_at,
+    )}
+  />
+</div>
 
                           {/* Account actions */}
                           <div className="grid w-full grid-cols-2 gap-2 border-t border-border pt-3 sm:gap-3 sm:pt-4">
@@ -1024,490 +1057,576 @@ useEffect(() => {
 
         {/* Resources */}
         {activeSection === "resources" && (
-          <div>
-            <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft sm:rounded-sm">
-            {/* Resource filters */}
-            {!isLoading &&
-              !isError &&
-              pendingCount > 0 && (
-                <div className="border-b border-border p-3 sm:p-4">
-                  <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div className="relative md:col-span-2 xl:col-span-3">
-                      <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
-
-                      <Input
-                        placeholder="Search title, course code, description…"
-                        value={searchQuery}
-                        onChange={(event) =>
-                          setSearchQuery(event.target.value)
-                        }
-                        aria-label="Search pending resources"
-                        className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
-                      />
-                    </div>
-
-                    {/* Category */}
-                    <div className="md:col-span-2 xl:col-span-3">
-                      <Select
-                        value={categoryFilter}
-                        onValueChange={setCategoryFilter}
-                      >
-                        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                          <SelectValue placeholder="Category" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                          <SelectItem value={ALL_OPTION}>
-                            All Categories
-                          </SelectItem>
-
-                          {cats?.map((category) => (
-                            <SelectItem
-                              key={category.id}
-                              value={category.id}
-                            >
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Select
-                      value={collegeFilter}
-                      onValueChange={(value) => {
-                        setCollegeFilter(value);
-                        setDepartmentFilter(ALL_OPTION);
-                      }}
-                    >
-                      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                        <SelectValue placeholder="College" />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectItem value={ALL_OPTION}>
-                          All Colleges
-                        </SelectItem>
-
-                        {colleges.map((college) => (
-                          <SelectItem
-                            key={college.id}
-                            value={college.id}
-                          >
-                            <>
-                              <span className="sm:hidden">
-                                {college.id}
-                              </span>
-                              <span className="hidden sm:inline">
-                                {college.name} ({college.id})
-                              </span>
-                            </>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={departmentFilter}
-                      onValueChange={setDepartmentFilter}
-                    >
-                      <SelectTrigger
-                        className={`h-9 text-xs sm:h-10 sm:text-sm ${
-                          collegeFilter === ALL_OPTION
-                            ? "opacity-60"
-                            : ""
-                        }`}
-                      >
-                        <span>
-                          {departmentFilter === ALL_OPTION
-                            ? "All Departments"
-                            : departmentFilter}
-                        </span>
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        {collegeFilter === ALL_OPTION ? (
-                          <div className="px-3 py-2 text-sm text-muted-foreground">
-                            Select College first
-                          </div>
-                        ) : (
-                          <>
-                            <SelectItem value={ALL_OPTION}>
-                              All Departments
-                            </SelectItem>
-
-                            {departments.map((department) => (
-                              <SelectItem
-                                key={department}
-                                value={department}
-                              >
-                                {department}
-                              </SelectItem>
-                            ))}
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={levelFilter}
-                      onValueChange={setLevelFilter}
-                    >
-                      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                        <SelectValue placeholder="Level" />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectItem value={ALL_OPTION}>
-                          All Levels
-                        </SelectItem>
-
-                        {levels.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {item}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={semesterFilter}
-                      onValueChange={setSemesterFilter}
-                    >
-                      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-                        <SelectValue placeholder="Semester" />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectItem value={ALL_OPTION}>
-                          All Semesters
-                        </SelectItem>
-
-                        {semesters.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {item}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-{/* Matching count */}
-{!isLoading && !isError && (
-  <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5 sm:px-4 sm:py-3">
-    <p
-      className="min-w-0 pl-1.5 text-[10px] text-gold sm:text-xs"
-      aria-live="polite"
-    >
-      {totalCount === 0 ? (
-        "No matching pending resources"
-      ) : (
-        <>
-          Showing{" "}
-          <span className="font-medium text-gold">
-            {(page - 1) * PAGE_SIZE + 1}–
-            {Math.min(page * PAGE_SIZE, totalCount)}
-          </span>{" "}
-          of{" "}
-          <span className="font-medium text-gold">
-            {totalCount}
-          </span>{" "}
-          matching pending{" "}
-          {totalCount === 1 ? "resource" : "resources"}
-        </>
-      )}
-    </p>
-
-    {hasActiveFilters && (
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={clearFilters}
-        className="h-7 shrink-0 px-2 text-xs text-gold sm:h-8"
-      >
-        <X className="h-3.5 w-3.5" />
-        Clear filters
-      </Button>
-    )}
-  </div>
-)}
-
-            {isLoading ? (
-              <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-                  Loading review queue…
-                </div>
+          <div className="space-y-4">
+            {/* Resource filters — always visible */}
+            <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Search className="h-3.5 w-3.5 text-primary sm:h-4 sm:w-4" />
+                <p className="text-xs font-semibold sm:text-sm">
+                  Find resources
+                </p>
               </div>
-            ) : isError ? (
-              <div className="p-7 text-center sm:p-10">
-                <p className="text-xs text-muted-foreground sm:text-sm">
-                  Could not load pending resources. Please try again.
+
+      <div className="space-y-2.5 sm:space-y-3">
+  {/* Search */}
+  <div className="relative">
+    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4" />
+
+    <Input
+      placeholder="Search title, course code, description…"
+      value={searchQuery}
+      onChange={(event) =>
+        setSearchQuery(event.target.value)
+      }
+      aria-label="Search pending resources"
+      className="h-9 pl-9 text-xs sm:h-10 sm:text-sm"
+    />
+  </div>
+
+  {/* Category */}
+    <div className="min-w-0">
+      <Select
+        value={categoryFilter}
+        onValueChange={setCategoryFilter}
+      >
+        <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+          <SelectValue placeholder="Category" />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value={ALL_OPTION}>
+            All Categories
+          </SelectItem>
+
+          {cats?.map((category) => (
+            <SelectItem
+              key={category.id}
+              value={category.id}
+            >
+              {category.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+
+    {/* College and department */}
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+      {/* College */}
+      <div className="min-w-0">
+        <Select
+          value={collegeFilter}
+          onValueChange={(value) => {
+            setCollegeFilter(value);
+            setDepartmentFilter(ALL_OPTION);
+          }}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue placeholder="College" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Colleges
+            </SelectItem>
+
+            {colleges.map((college) => (
+              <SelectItem
+                key={college.id}
+                value={college.id}
+              >
+                <>
+                  <span className="sm:hidden">
+                    {college.id}
+                  </span>
+
+                  <span className="hidden sm:inline">
+                    {college.name} ({college.id})
+                  </span>
+                </>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Department */}
+      <div className="min-w-0">
+        <Select
+          value={departmentFilter}
+          onValueChange={setDepartmentFilter}
+          disabled={collegeFilter === ALL_OPTION}
+        >
+          <SelectTrigger
+            className={`h-9 text-xs sm:h-10 sm:text-sm ${
+              collegeFilter === ALL_OPTION
+                ? "opacity-60"
+                : ""
+            }`}
+          >
+            <SelectValue placeholder="Department" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Departments
+            </SelectItem>
+
+            {departments.map((department) => (
+              <SelectItem
+                key={department}
+                value={department}
+              >
+                {department}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+
+    {/* Level and semester */}
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+      {/* Level */}
+      <div className="min-w-0">
+        <Select
+          value={levelFilter}
+          onValueChange={setLevelFilter}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue placeholder="Level" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Levels
+            </SelectItem>
+
+            {levels.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Semester */}
+      <div className="min-w-0">
+        <Select
+          value={semesterFilter}
+          onValueChange={setSemesterFilter}
+        >
+          <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+            <SelectValue placeholder="Semester" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value={ALL_OPTION}>
+              All Semesters
+            </SelectItem>
+
+            {semesters.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+
+    {/* Sort and date range */}
+    <div className="grid grid-cols-3 items-end gap-2.5 sm:gap-3">
+      {/* Sort */}
+      <div className="min-w-0">
+        <Select
+          value={sortOrder}
+          onValueChange={(value) =>
+            setSortOrder(value as "newest" | "oldest")
+          }
+        >
+          <SelectTrigger
+            id="academic-sort"
+            className="mt-0 h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
+          >
+            <SelectValue />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="newest">
+              Newest
+            </SelectItem>
+
+            <SelectItem value="oldest">
+              Oldest
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Date from */}
+      <div className="min-w-0">
+        <input
+          id="academic-date-from"
+          type="date"
+          value={dateFrom}
+          max={dateTo || undefined}
+          onChange={(event) =>
+            setDateFrom(event.target.value)
+          }
+          aria-label="Filter resources from this date"
+          className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+        />
+      </div>
+
+      {/* Date to */}
+      <div className="min-w-0">
+        <input
+          id="academic-date-to"
+          type="date"
+          value={dateTo}
+          min={dateFrom || undefined}
+          onChange={(event) =>
+            setDateTo(event.target.value)
+          }
+          aria-label="Filter resources up to this date"
+          className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+        />
+      </div>
+    </div>
+  </div>
+
+              {/* Matching count and clear filters */}
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                <p
+                  className="min-w-0 pl-2 text-xs text-gold sm:text-sm"
+                  aria-live="polite"
+                >
+                  {isLoading ? (
+                    "Loading resource count…"
+                  ) : isError ? (
+                    "Resource count unavailable"
+                  ) : totalCount === 0 ? (
+                    <>
+                      Showing{" "}
+                      <span className="font-semibold text-gold">
+                        0
+                      </span>{" "}
+                      resources
+                    </>
+                  ) : (
+                    <>
+                      Showing{" "}
+                      <span className="font-semibold text-gold">
+                        {firstResult}–{lastResult}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-gold">
+                        {totalCount}
+                      </span>{" "}
+                      matching pending{" "}
+                      {totalCount === 1
+                        ? "resource"
+                        : "resources"}
+                    </>
+                  )}
                 </p>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void refetch()}
-                  className="mt-3 h-9 text-xs sm:text-sm"
-                >
-                  Try again
-                </Button>
+                {hasActiveFilters && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="inline-flex h-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-2 pr-3 text-xs text-gold sm:h-8"
+                  >
+                    <X className="h-3.5 w-3.5 shrink-0" />
+                    <span>Clear filters</span>
+                  </Button>
+                )}
               </div>
-            ) : filteredResources.length > 0 ? (
-              <>
-                <ul className="divide-y-0">
-                  {filteredResources.map((resource) => {
-                    const isProcessing =
-                      decisionLoading &&
-                      decide.variables?.id === resource.id;
+            </div>
 
-                    const canPreview =
-                      resource.file_size > 0 &&
-                      resource.status === "pending";
+            {/* Resource results — separate from filters */}
+            <div className="overflow-hidden rounded-sm border border-border bg-card shadow-soft">
+              {isLoading ? (
+                <div className="p-8 text-center text-xs text-muted-foreground sm:p-10 sm:text-sm">
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
+                    Loading review queue…
+                  </div>
+                </div>
+              ) : isError ? (
+                <div className="p-7 text-center sm:p-10">
+                  <p className="text-xs text-muted-foreground sm:text-sm">
+                    Could not load pending resources. Please try again.
+                  </p>
 
-                    const categoryName =
-                      resource.category?.deleted_at == null &&
-                      resource.category?.name?.trim()
-                        ? resource.category.name.trim()
-                        : "Uncategorized";
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void refetch()}
+                    className="mt-3 h-9 text-xs sm:text-sm"
+                  >
+                    Try again
+                  </Button>
+                </div>
+              ) : filteredResources.length > 0 ? (
+                <>
+                  <ul className="divide-y-0">
+                    {filteredResources.map((resource) => {
+                      const isProcessing =
+                        decisionLoading &&
+                        decide.variables?.id === resource.id;
 
-                    return (
-                      <li
-                        key={resource.id}
-                        className="group border-b-2 border-border/70 p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
-                      >
-                        <div className="flex flex-col gap-3.5 sm:gap-4">
-                          <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                <StatusPill
-                                  status={resource.status}
-                                />
+                      const canPreview =
+                        resource.file_size > 0 &&
+                        resource.status === "pending";
 
-                                <span className="max-w-[180px] truncate rounded-sm border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
-                                  {categoryName}
-                                </span>
-                              </div>
+                      const categoryName =
+                        resource.category?.deleted_at == null &&
+                        resource.category?.name?.trim()
+                          ? resource.category.name.trim()
+                          : "Uncategorized";
 
-                              <div className="mt-1.5 min-w-0 sm:mt-2">
-                                <p className="break-words text-sm font-semibold leading-5 text-foreground sm:text-lg sm:leading-6">
-                                  {resource.title}
-                                </p>
+                      return (
+                        <li
+                          key={resource.id}
+                          className="group border-b-2 border-border/70 p-3.5 transition-colors odd:bg-card even:bg-muted/40 hover:bg-muted/50 sm:p-5"
+                        >
+                          <div className="flex flex-col gap-3.5 sm:gap-4">
+                            <div className="flex flex-col gap-3.5 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                                  <StatusPill
+                                    status={resource.status}
+                                  />
 
-                                <p className="mt-1 break-all text-[10px] text-muted-foreground sm:text-xs">
-                                  {resource.file_name || "Unnamed file"}
-                                </p>
+                                  <span className="max-w-[180px] truncate rounded-sm border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground sm:max-w-[220px] sm:px-2 sm:text-[10px]">
+                                    {categoryName}
+                                  </span>
+                                </div>
 
-                                {resource.description && (
-                                  <p className="mt-2 max-w-4xl line-clamp-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
-                                    {resource.description}
+                                <div className="mt-1.5 min-w-0 sm:mt-2">
+                                  <p className="break-words text-sm font-semibold leading-5 text-foreground sm:text-lg sm:leading-6">
+                                    {resource.title}
                                   </p>
-                                )}
-                              </div>
 
-                              <div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
-                                <AuditItem
-                                  label="File size"
-                                  value={formatFileSize(resource.file_size)}
-                                />
+                                  <p className="mt-1 break-all text-[10px] text-muted-foreground sm:text-xs">
+                                    {resource.file_name || "Unnamed file"}
+                                  </p>
 
-                                <AuditItem
-                                  label="Course code"
-                                  value={resource.course_code || "Not provided"}
-                                />
+                                  {resource.description && (
+                                    <p className="mt-2 max-w-4xl line-clamp-2 text-xs leading-5 text-muted-foreground sm:mt-3 sm:text-sm sm:leading-6">
+                                      {resource.description}
+                                    </p>
+                                  )}
+                                </div>
 
-                                <AuditItem
-                                  label="College"
-                                  value={resource.college || "Not provided"}
-                                />
+                                <div className="mt-3 grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
+                                  <AuditItem
+                                    label="File size"
+                                    value={formatFileSize(resource.file_size)}
+                                  />
 
-                                <AuditItem
-                                  label="Department"
-                                  value={resource.department || "Not provided"}
-                                />
+                                  <AuditItem
+                                    label="Course code"
+                                    value={resource.course_code || "Not provided"}
+                                  />
 
-                                <AuditItem
-                                  label="Level"
-                                  value={resource.level || "Not provided"}
-                                />
+                                  <AuditItem
+                                    label="College"
+                                    value={resource.college || "Not provided"}
+                                  />
 
-                                <AuditItem
-                                  label="Semester"
-                                  value={resource.semester || "Not provided"}
-                                />
+                                  <AuditItem
+                                    label="Department"
+                                    value={resource.department || "Not provided"}
+                                  />
 
-                                <AuditItem
-                                  label="Year"
-                                  value={
-                                    resource.year?.toString() ||
-                                    "Not provided"
-                                  }
-                                />
+                                  <AuditItem
+                                    label="Level"
+                                    value={resource.level || "Not provided"}
+                                  />
+
+                                  <AuditItem
+                                    label="Semester"
+                                    value={resource.semester || "Not provided"}
+                                  />
+
+                                  <AuditItem
+                                    label="Year"
+                                    value={
+                                      resource.year?.toString() ||
+                                      "Not provided"
+                                    }
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
-                            <AuditItem
-                              label="Uploader"
-                              value={
-                                resource.uploader?.full_name ||
-                                resource.uploader?.email ||
-                                "Unknown"
-                              }
-                              detail={formatDateTime(
-                                resource.created_at,
+                            <div className="grid gap-3 text-[10px] sm:grid-cols-2 sm:gap-4 sm:text-xs xl:grid-cols-3">
+                              <AuditItem
+                                label="Uploader"
+                                value={
+                                  resource.uploader?.full_name ||
+                                  resource.uploader?.email ||
+                                  "Unknown"
+                                }
+                                detail={formatDateTime(
+                                  resource.created_at,
+                                )}
+                              />
+
+                              <AuditItem
+                                label="Submitted"
+                                value="Pending review"
+                                detail={formatDateTime(
+                                  resource.created_at,
+                                )}
+                              />
+                            </div>
+
+                            {/* Resource actions */}
+                            <div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-3 sm:gap-3 sm:pt-4">
+                              {canPreview && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={decisionLoading}
+                                  onClick={() =>
+                                    setPreviewResource({
+                                      id: resource.id,
+                                      title: resource.title,
+                                      file_path: resource.file_path,
+                                    })
+                                  }
+                                  className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+                                >
+                                  <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                                  Preview
+                                </Button>
                               )}
-                            />
 
-                            <AuditItem
-                              label="Submitted"
-                              value="Pending review"
-                              detail={formatDateTime(
-                                resource.created_at,
-                              )}
-                            />
-                          </div>
-
-                          {/* Resource actions */}
-                          <div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-3 sm:gap-3 sm:pt-4">
-                            {canPreview && (
                               <Button
                                 type="button"
                                 variant="outline"
                                 disabled={decisionLoading}
                                 onClick={() =>
-                                  setPreviewResource({
-                                    id: resource.id,
-                                    title: resource.title,
-                                    file_path: resource.file_path,
-                                  })
+                                  requestReject(
+                                    resource.id,
+                                    resource.file_path,
+                                    resource.title,
+                                  )
                                 }
-                                className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+                                className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
                               >
-                                <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                                Preview
+                                {isProcessing &&
+                                !decide.variables?.approve ? (
+                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                                ) : (
+                                  <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                                )}
+                                Reject
                               </Button>
-                            )}
 
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={decisionLoading}
-                              onClick={() =>
-                                requestReject(
-                                  resource.id,
-                                  resource.file_path,
-                                  resource.title,
-                                )
-                              }
-                              className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
-                            >
-                              {isProcessing &&
-                              !decide.variables?.approve ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-                              ) : (
-                                <X className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                              )}
-                              Reject
-                            </Button>
-
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={decisionLoading}
-                              onClick={() =>
-                                requestApprove(
-                                  resource.id,
-                                  resource.file_path,
-                                  resource.title,
-                                )
-                              }
-                              className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
-                            >
-                              {isProcessing &&
-                              decide.variables?.approve ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-                              ) : (
-                                <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                              )}
-                              Approve
-                            </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={decisionLoading}
+                                onClick={() =>
+                                  requestApprove(
+                                    resource.id,
+                                    resource.file_path,
+                                    resource.title,
+                                  )
+                                }
+                                className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
+                              >
+                                {isProcessing &&
+                                decide.variables?.approve ? (
+                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                                ) : (
+                                  <Check className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+                                )}
+                                Approve
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                        </li>
+                      );
+                    })}
+                  </ul>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between gap-3 border-t border-border p-3 sm:p-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={page <= 1}
-                      onClick={() =>
-                        setPage((current) =>
-                          Math.max(1, current - 1),
-                        )
-                      }
-                      className="h-9 px-2.5 text-xs sm:px-3 sm:text-sm"
-                    >
-                      <ChevronLeft className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      Previous
-                    </Button>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="grid grid-cols-3 items-center gap-2 border-t border-border p-3 sm:p-4">
+                      <div className="flex justify-start">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={page <= 1}
+                          onClick={() =>
+                            setPage((current) =>
+                              Math.max(1, current - 1),
+                            )
+                          }
+                          className="h-9 px-2.5 text-xs sm:px-3 sm:text-sm"
+                        >
+                          <ChevronLeft className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          Previous
+                        </Button>
+                      </div>
 
-                    <span className="text-[10px] text-muted-foreground sm:text-xs">
-                      Page{" "}
-                      <span className="font-medium text-foreground">
-                        {page}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-medium text-foreground">
-                        {totalPages}
+                      <span className="text-center text-[10px] text-muted-foreground sm:text-xs">
+                        Page{" "}
+                        <span className="font-medium text-foreground">
+                          {page}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium text-foreground">
+                          {totalPages}
+                        </span>
                       </span>
-                    </span>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={page >= totalPages}
-                      onClick={() =>
-                        setPage((current) =>
-                          Math.min(
-                            totalPages,
-                            current + 1,
-                          ),
-                        )
-                      }
-                      className="h-9 px-2.5 text-xs sm:px-3 sm:text-sm"
-                    >
-                      Next
-                      <ChevronRight className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
-                )}
-              </>
-            ) : hasActiveFilters ? (
-              <EmptyState
-                title="No matching resources"
-                desc="No pending resources match the selected filters."
-              />
-            ) : (
-              <EmptyState
-                title="No pending resources"
-                desc="No resources are waiting for review right now."
-              />
-            )}
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={page >= totalPages}
+                          onClick={() =>
+                            setPage((current) =>
+                              Math.min(
+                                totalPages,
+                                current + 1,
+                              ),
+                            )
+                          }
+                          className="h-9 px-2.5 text-xs sm:px-3 sm:text-sm"
+                        >
+                          Next
+                          <ChevronRight className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : hasActiveFilters ? (
+                <EmptyState
+                  title="No matching resources"
+                  desc="No pending resources match the selected filters."
+                />
+              ) : (
+                <EmptyState
+                  title="No pending resources"
+                  desc="No resources are waiting for review right now."
+                />
+              )}
+            </div>
           </div>
-        </div>
         )}
-      </section>
+        </section>
 
       {/* Resource decision dialog */}
       <AlertDialog

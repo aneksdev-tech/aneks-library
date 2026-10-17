@@ -194,8 +194,8 @@ function Notifications() {
 
       {/* Notification list */}
       {isLoading ? (
-        <div className="grid min-h-[30vh] place-items-center">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground sm:gap-2 sm:text-sm">
+        <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
+  <div className="mb-3 flex items-center gap-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
             Loading notifications…
           </div>
@@ -259,7 +259,7 @@ function Notifications() {
                 key={n.id}
               >
                 <div className="group py-4 sm:py-5">
-                  <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-baseline gap-2">
                         <p
