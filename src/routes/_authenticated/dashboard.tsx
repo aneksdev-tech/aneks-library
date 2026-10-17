@@ -421,8 +421,14 @@ function DashboardPage() {
             </div>
 
             <div className="mt-1 truncate text-[10px] text-muted-foreground sm:text-xs">
-              {c.sub}
-            </div>
+  {c.label === "Reputation" ? (
+    <span className="text-gold">
+      {contributor.emoji} {contributor.name}
+    </span>
+  ) : (
+    c.sub
+  )}
+</div>
 
             {c.label ===
               "Reputation" && (
