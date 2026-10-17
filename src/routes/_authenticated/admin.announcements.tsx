@@ -1384,7 +1384,7 @@ const clearAnnouncementFilters = () => {
 
   {!isDeleted && latestAudit && latestAudit.action !== "create" && (
     <>
-      <p className="pt-1">
+      <p className="pt-1 pb-3">
         <span className="font-medium text-foreground">
           {getAuditActionLabel(latestAudit.action)}:
         </span>{" "}
