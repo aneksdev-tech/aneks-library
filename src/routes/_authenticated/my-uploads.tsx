@@ -540,59 +540,59 @@ function MyUploads() {
             </div>
           </div>
 
-          {/* Sorting and clear filters */}
           {/* Sorting */}
+          <div className="min-w-0">
+            <label
+              htmlFor="upload-sort"
+              className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
+            >
+              Sort by
+            </label>
 
-<div className="min-w-0">
-  <label
-    htmlFor="upload-sort"
-    className="mb-1.5 block text-[10px] text-muted-foreground sm:text-xs"
-  >
-    Sort by
-  </label><select
-id="upload-sort"
-value={sortBy}
-onChange={(event) =>
-setSortBy(
-event.target.value as SortOption,
-)
-}
-className="h-9 w-full rounded-sm border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+            <select
+              id="upload-sort"
+              value={sortBy}
+              onChange={(event) =>
+                setSortBy(
+                  event.target.value as SortOption,
+                )
+              }
+              className="h-9 w-full rounded-sm border border-input bg-background px-2 text-xs outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+            >
+              <option value="newest">
+                Newest first
+              </option>
+              <option value="oldest">
+                Oldest first
+              </option>
+              <option value="status">
+                Status
+              </option>
+            </select>
+          </div>
 
-«»
+          {/* Filter footer */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <p className="text-[10px] font-medium text-gold sm:text-xs">
+              {totalCount > 0
+                ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
+                    page * PAGE_SIZE,
+                    totalCount,
+                  )} of ${totalCount} uploads`
+                : "0 uploads"}
+            </p>
 
-<option value="newest">
-  Newest first
-</option>
-<option value="oldest">
-  Oldest first
-</option>
-<option value="status">
-  Status
-</option>
-
-  </select>
-</div>{/* Filter footer */}
-
-<div className="flex items-center justify-between gap-3 pt-1">
-  <p className="text-[10px] font-medium text-gold sm:text-xs">
-    {totalCount > 0
-      ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
-          page * PAGE_SIZE,
-          totalCount,
-        )} of ${totalCount} uploads`
-      : "0 uploads"}
-  </p>{hasActiveFilters && (
-<button
-type="button"
-onClick={clearFilters}
-className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-gold transition-opacity hover:opacity-75 sm:gap-1.5 sm:text-xs"
->
-<X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-Clear filters
-</button>
-)}
-</div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-gold transition-opacity hover:opacity-75 sm:gap-1.5 sm:text-xs"
+              >
+                <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
 
         {dateRangeInvalid && (
