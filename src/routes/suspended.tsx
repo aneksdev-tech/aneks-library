@@ -41,7 +41,6 @@ function SuspendedPage() {
             onClick={() => signOut()}
           >
             Sign Out
-            <LogOut className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </div>
