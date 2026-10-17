@@ -159,12 +159,12 @@ if (!user) {
       <button
   type="button"
   onClick={handleBack}
-  className="mb-4 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mb-6 sm:text-lg"
+  className="mb-2 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mb-2 sm:text-lg"
 >
   ← Back
 </button>
 
-      <article className="mt-4 border-y border-border sm:mt-6">
+      <article className="mt-2 border-y border-border sm:mt-2">
         <div className="py-3.5 sm:py-6">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
             Announcement
