@@ -1492,7 +1492,7 @@ const clearAnnouncementFilters = () => {
               saveAnnouncement.isPending
             }
             onClick={() => openDeleteDialog(announcement)}
-            className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+            className="mt-3 h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
           >
             {isDeleting ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
