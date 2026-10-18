@@ -169,7 +169,7 @@ if (!user) {
         </Button>
 
       <article className="mt-2 sm:mt-2">
-        <div className="py-3.5 sm:py-6">
+        <div className="py-2 sm:py-2">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
             Announcement
           </div>
