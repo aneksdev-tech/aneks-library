@@ -156,15 +156,17 @@ if (!user) {
 
   return (
     <section>
-      <button
-  type="button"
-  onClick={handleBack}
-  className="mb-2 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:text-lg"
->
-  ← Back
-</button>
+      <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.history.back()}
+          className="-ml-2 h-8 gap-1.5 px-2 text-xs sm:h-9 sm:gap-2 sm:text-sm"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          Back
+        </Button>
 
-      <article className="mt-2 border-y border-border sm:mt-2">
+      <article className="mt-2 sm:mt-2">
         <div className="py-3.5 sm:py-6">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
             Announcement
