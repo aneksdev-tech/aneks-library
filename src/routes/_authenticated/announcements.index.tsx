@@ -396,7 +396,7 @@ function Announcements() {
 
             {markAllAsRead.isPending
               ? "Marking…"
-              : "Mark all as read"}
+              : "Read all"}
           </button>
         )}
       </div>
