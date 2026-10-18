@@ -126,15 +126,6 @@ const tabs = [
     label: "Overview",
     icon: LayoutDashboard,
   },
-  ...(canManagePlatform
-    ? [
-        {
-          to: "/admin/users",
-          label: "Users",
-          icon: Users,
-        },
-      ]
-    : []),
   {
     to: "/admin/approvals",
     label: "Approvals",
@@ -152,14 +143,19 @@ const tabs = [
   ...(canManagePlatform
     ? [
         {
+          to: "/admin/categories",
+          label: "Categories",
+          icon: Tags,
+        },
+        {
           to: "/admin/resources",
           label: "Resources",
           icon: Files,
         },
         {
-          to: "/admin/categories",
-          label: "Categories",
-          icon: Tags,
+          to: "/admin/users",
+          label: "Users",
+          icon: Users,
         },
       ]
     : []),
