@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Loader2,
   Megaphone,
+  ArrowBack,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -161,8 +162,10 @@ if (!user) {
   onClick={handleBack}
   className="mb-2 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:text-lg"
 >
-  ← Back
+  <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+    Back
 </button>
+  </div>
       <article className="border-border">
         <div className="py-3 sm:py-3">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
