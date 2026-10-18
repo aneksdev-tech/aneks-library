@@ -12,7 +12,7 @@ function RejectedPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center px-4">
-      <div className="w-full max-w-lg rounded-sml border border-border bg-card p-4 shadow-elegant sm:rounded-smxl sm:p-8">
+      <div className="w-full max-w-lg rounded-sm border border-border bg-card p-4 shadow-elegant sm:rounded-smxl sm:p-8">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 sm:h-16 sm:w-16">
           <CircleX
             className="h-6 w-6 text-destructive sm:h-8 sm:w-8"
