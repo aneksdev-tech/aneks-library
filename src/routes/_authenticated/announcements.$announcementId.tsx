@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   useQuery,
   useQueryClient,
@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Loader2,
   Megaphone,
-  ArrowLeft,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -29,33 +28,20 @@ export const Route = createFileRoute(
 function AnnouncementDetailsPage() {
   const { announcementId } = Route.useParams();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const handleBack = () => {
-    const previousPath = window.history.state?.__TSR_key
-      ? window.history.state?.__TSR_index
-      : undefined;
-
-    const currentIndex = window.history.state?.__TSR_index;
-
-    const hasPreviousEntry =
-      typeof currentIndex === "number" &&
-      typeof previousPath === "number" &&
-      currentIndex > previousPath;
-
-    if (hasPreviousEntry) {
-      window.history.back();
-      return;
-    }
-
-    void navigate({
-      to: "/announcements",
-      replace: true,
-    });
-  };
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "/announcements";
+  }
+};
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["announcement", announcementId],
+    queryKey: [
+      "announcement",
+      announcementId,
+    ],
     queryFn: async () => {
       const {
         data: announcement,
@@ -84,42 +70,50 @@ function AnnouncementDetailsPage() {
 
     const markAsRead = async () => {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  data: { session },
+} = await supabase.auth.getSession();
 
-      const user = session?.user;
+const user = session?.user;
 
-      if (!user) {
-        return;
-      }
+if (!user) {
+  return;
+}
 
-      const { error: markAsReadError } = await supabase.rpc(
+      const {
+        error,
+      } = await supabase.rpc(
         "mark_announcement_as_read",
         {
-          _announcement_id: data.id,
+          _announcement_id:
+            data.id,
         },
       );
 
-      if (markAsReadError) {
+      if (error) {
         console.error(
           "Failed to mark announcement as read:",
-          markAsReadError,
+          error,
         );
 
         return;
       }
 
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["announcements", user.id],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["announcement-count", user.id],
-        }),
-      ]);
+      queryClient.invalidateQueries({
+        queryKey: [
+          "announcements",
+          user.id,
+        ],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: [
+          "announcement-count",
+          user.id,
+        ],
+      });
     };
 
-    void markAsRead();
+    markAsRead();
   }, [data, queryClient]);
 
   if (isLoading) {
@@ -149,13 +143,12 @@ function AnnouncementDetailsPage() {
           </p>
 
           <button
-            type="button"
-            onClick={handleBack}
-            className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back
-          </button>
+  type="button"
+  onClick={handleBack}
+  className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
+>
+  ← Back
+</button>
         </div>
       </section>
     );
@@ -163,18 +156,15 @@ function AnnouncementDetailsPage() {
 
   return (
     <section>
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={handleBack}
-        className="-ml-2 h-8 gap-1.5 px-2 text-xs sm:h-9 sm:gap-2 sm:text-sm"
-      >
-        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        Back
-      </Button>
-
-      <article className="mt-2">
-        <div className="py-3.5 sm:py-6">
+      <button
+  type="button"
+  onClick={handleBack}
+  className="mb-2 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:text-lg"
+>
+  ← Back
+</button>
+      <article className="border-border">
+        <div className="py-3 sm:py-3">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
             Announcement
           </div>
@@ -190,7 +180,9 @@ function AnnouncementDetailsPage() {
 
         <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
           <div className="whitespace-pre-wrap text-xs leading-5 text-foreground sm:text-base sm:leading-7">
-            {data.content?.trim() ? data.content : data.body}
+            {data.content?.trim()
+              ? data.content
+              : data.body}
           </div>
 
           {data.link && (
@@ -202,7 +194,9 @@ function AnnouncementDetailsPage() {
                 <a
                   href={data.link}
                   target={
-                    data.link.startsWith("/") ? undefined : "_blank"
+                    data.link.startsWith("/")
+                      ? undefined
+                      : "_blank"
                   }
                   rel={
                     data.link.startsWith("/")
