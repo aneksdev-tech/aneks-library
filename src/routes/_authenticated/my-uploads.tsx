@@ -527,32 +527,34 @@ function MyUploads() {
             </div>
 
             {/* Date from */}
-            <div className="min-w-0">
-              <input
-                id="upload-date-from"
-                type="date"
-                value={dateFrom}
-                max={dateTo || undefined}
-                onChange={(event) =>
-                  handleDateFromChange(event.target.value)
-                }
-                className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
-              />
-            </div>
+<div className="min-w-0">
+  <input
+    id="library-date-from"
+    type="date"
+    value={dateFrom}
+    max={dateTo || undefined}
+    onChange={(event) =>
+      setDateFrom(event.target.value)
+    }
+    aria-label="Filter resources from this date"
+    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+  />
+</div>
 
-            {/* Date to */}
-            <div className="min-w-0">
-              <input
-                id="upload-date-to"
-                type="date"
-                value={dateTo}
-                min={dateFrom || undefined}
-                onChange={(event) =>
-                  handleDateToChange(event.target.value)
-                }
-                className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
-              />
-            </div>
+{/* Date to */}
+<div className="min-w-0">
+  <input
+    id="library-date-to"
+    type="date"
+    value={dateTo}
+    min={dateFrom || undefined}
+    onChange={(event) =>
+      setDateTo(event.target.value)
+    }
+    aria-label="Filter resources up to this date"
+    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+  />
+</div>
           </div>
 
           {/* Filter footer */}
@@ -583,8 +585,9 @@ function MyUploads() {
           </p>
         )}
       </div>
+      
       {/* Upload list */}
-      <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
+      <div className="rounded-sm border border-border bg-card py-1 px-4 shadow-soft">
         {isLoading ? (
           <div className="grid min-h-[30vh] place-items-center">
             <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
@@ -645,12 +648,16 @@ function MyUploads() {
                             status={resource.status}
                           />
                         </div>
-
-                        <p className="break-words text-sm font-medium sm:text-base">
+                        <p
+                        className={
+                            resource.status === "draft"
+                              ? "truncate text-sm font-medium sm:text-base"
+                              : "break-words text-sm font-medium sm:text-base"
+                          }
+                        >
                           {resource.title}
-                        </p>
-
-                        <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                        </p>                        
+                          <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                           {categoryName}
                           {" · "}
                           {resource.download_count ?? 0}
@@ -675,16 +682,15 @@ function MyUploads() {
   )}
   </div>
                        {resource.status === "draft" && (
-                        <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:gap-2">
+                        <div className="flex shrink-0 flex-col gap-2">
                           <Link
                             to="/upload/$draftId"
                             params={{
                               draftId: resource.id,
                             }}
-                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-border bg-card px-2.5 text-xs font-medium transition-colors hover:bg-muted sm:h-auto sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+                            className="inline-flex h-9 w-16 items-center justify-center rounded-sm border border-border bg-card px-2 text-sm font-medium transition-colors hover:bg-primary"
                           >
-                            <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            Edit draft
+                            Edit
                           </Link>
 
                           <button
@@ -698,13 +704,11 @@ function MyUploads() {
                             disabled={
                               deletingDraftId === resource.id
                             }
-                            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-sm border border-destructive/30 bg-destructive/5 px-2.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 sm:h-auto sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+                            className="inline-flex h-9 w-16 items-center justify-center rounded-sm border border-destructive/30 bg-destructive/5 px-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-muted-foreground disabled:pointer-events-none disabled:opacity-50"
                           >
-                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-
                             {deletingDraftId === resource.id
                               ? "Deleting…"
-                              : "Delete draft"}
+                              : "Delete"}
                           </button>
                         </div>
                       )}

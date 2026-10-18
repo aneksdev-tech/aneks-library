@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AnnouncementBanner() {
@@ -38,7 +37,6 @@ style={{ animationDuration: "10s" }}
 >
 <div className="flex items-center gap-8 px-4">
 <span className="flex items-center gap-1.5">
-<Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" />
 <strong>{announcement.title}</strong>
 <span>—</span>
 <span>{announcement.body}</span>
@@ -52,11 +50,10 @@ Read More →
 
   <div className="flex items-center gap-8 px-4">
     <span className="flex items-center gap-1.5">
-      <Sparkles className="h-3.5 w-3.5 shrink-0 text-gold" />
       <strong>{announcement.title}</strong>
       <span>—</span>
       <span>{announcement.body}</span>
-      <span className="font-medium text-primary">
+      <span className="font-medium text-gold">
         Read More →
       </span>
     </span>

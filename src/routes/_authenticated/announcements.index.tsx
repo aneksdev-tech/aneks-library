@@ -473,7 +473,7 @@ function Announcements() {
                     </h2>
 
                     {!announcement.is_read && (
-                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gold sm:text-xs">
+                      <span className="shrink-0 animate-pulse text-[10px] font-semibold uppercase tracking-wide text-gold sm:text-xs">
                         New
                       </span>
                     )}
@@ -513,7 +513,7 @@ function Announcements() {
   params={{
     announcementId: announcement.id,
   }}
-  className="shrink-0 whitespace-nowrap pt-0.5 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
+  className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
   onClick={() => {
     if (!announcement.is_read) {
       markAsRead.mutate(announcement.id);

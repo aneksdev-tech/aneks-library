@@ -856,7 +856,7 @@ useEffect(() => {
                 }
                 className={`relative flex shrink-0 items-center gap-1.5 border-b-2 px-1 pb-2.5 text-xs font-semibold transition-colors sm:gap-2 sm:pb-3 sm:text-sm ${
                   activeSection === "users"
-                    ? "border-primary text-foreground"
+                    ? "border-gold text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -883,7 +883,7 @@ useEffect(() => {
               }
               className={`relative flex shrink-0 items-center gap-1.5 border-b-2 px-1 pb-2.5 text-xs font-semibold transition-colors sm:gap-2 sm:pb-3 sm:text-sm ${
                 activeSection === "resources"
-                  ? "border-primary text-foreground"
+                  ? "border-gold text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -1266,34 +1266,34 @@ useEffect(() => {
       </div>
 
       {/* Date from */}
-      <div className="min-w-0">
-        <input
-          id="academic-date-from"
-          type="date"
-          value={dateFrom}
-          max={dateTo || undefined}
-          onChange={(event) =>
-            setDateFrom(event.target.value)
-          }
-          aria-label="Filter resources from this date"
-          className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
-        />
-      </div>
+<div className="min-w-0">
+  <input
+    id="library-date-from"
+    type="date"
+    value={dateFrom}
+    max={dateTo || undefined}
+    onChange={(event) =>
+      setDateFrom(event.target.value)
+    }
+    aria-label="Filter resources from this date"
+    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+  />
+</div>
 
-      {/* Date to */}
-      <div className="min-w-0">
-        <input
-          id="academic-date-to"
-          type="date"
-          value={dateTo}
-          min={dateFrom || undefined}
-          onChange={(event) =>
-            setDateTo(event.target.value)
-          }
-          aria-label="Filter resources up to this date"
-          className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
-        />
-      </div>
+{/* Date to */}
+<div className="min-w-0">
+  <input
+    id="library-date-to"
+    type="date"
+    value={dateTo}
+    min={dateFrom || undefined}
+    onChange={(event) =>
+      setDateTo(event.target.value)
+    }
+    aria-label="Filter resources up to this date"
+    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
+  />
+</div>
     </div>
   </div>
 

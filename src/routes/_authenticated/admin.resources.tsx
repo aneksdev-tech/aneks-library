@@ -1482,7 +1482,8 @@ const availableDepartments =
     onChange={(event) =>
       setDateFrom(event.target.value)
     }
-    className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+    aria-label="Filter resources from this date"
+    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
   />
 </div>
 
@@ -1496,7 +1497,8 @@ const availableDepartments =
     onChange={(event) =>
       setDateTo(event.target.value)
     }
-    className="h-9 w-full min-w-0 px-3 rounded-sm border border-input bg-card px-0 text-[9px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+    aria-label="Filter resources up to this date"
+    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
   />
 </div>
     </div>
@@ -1506,8 +1508,7 @@ const availableDepartments =
       <p className="pl-2 text-[10px] text-gold sm:text-xs">
   Showing {firstResource}–{lastResource} of {totalCount} resources
 </p>
-
-        {(search.trim() !== "" ||
+      {(search.trim() !== "" ||
         status !== "all" ||
         category !== "all" ||
         college !== ALL_OPTION ||

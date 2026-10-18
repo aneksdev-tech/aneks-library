@@ -31,7 +31,7 @@ import {
 import { useTheme } from "@/lib/theme";
 import logo from "@/assets/Aneks_Library_Logo.png";
 import { useAuth } from "@/lib/auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -407,18 +407,24 @@ useEffect(() => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-sm border border-border px-2 py-1.5 text-sm hover:bg-accent">
+                <button className="flex cursor-pointer items-center gap-2 rounded-sm border border-border px-2 py-1.5 text-sm transition-colors hover:text-gold">
                   <Avatar className="h-6 w-6">
-                    <AvatarFallback className="bg-gradient-emerald text-[10px] text-primary-foreground">
-                      {(
-                        profile?.full_name ||
-                        user?.email ||
-                        "?"
-                      )
-                        .slice(0, 1)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+  <AvatarImage
+    src={profile?.avatar_url || undefined}
+    alt={profile?.full_name || "Profile picture"}
+    className="object-cover"
+  />
+
+  <AvatarFallback className="bg-gold text-[10px] text-text-foreground">
+    {(
+      profile?.full_name ||
+      user?.email ||
+      "?"
+    )
+      .slice(0, 1)
+      .toUpperCase()}
+  </AvatarFallback>
+</Avatar>
 
                   <span className="hidden max-w-[10rem] truncate sm:inline">
                     {profile?.full_name || user?.email}

@@ -270,11 +270,11 @@ if (isRejected || isDeleted) {
 >
   {statusLabel}
 </p>
-                  {!n.read && (
-                          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gold sm:text-xs">
-                            New
-                          </span>
-                        )}
+{!n.read && (
+  <span className="shrink-0 animate-pulse text-[10px] font-semibold uppercase tracking-wide text-gold sm:text-xs">
+  New
+</span>
+)}
                       </div>
 
                       {mainMessage && (
@@ -301,7 +301,7 @@ if (isRejected || isDeleted) {
                         {!n.read && (
                           <button
                             type="button"
-                            className="shrink-0 text-[10px] font-medium text-primary transition-colors hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
+                            className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
                             disabled={
                               markRead.isPending
                             }
@@ -311,7 +311,7 @@ if (isRejected || isDeleted) {
                               )
                             }
                           >
-                            Read all
+                            Mark as Read
                           </button>
                         )}
                       </div>
