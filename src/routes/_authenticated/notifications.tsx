@@ -187,7 +187,7 @@ function Notifications() {
 
             {markAll.isPending
               ? "Marking…"
-              : "Mark all as read"}
+              : "Read all"}
           </button>
         )}
       </div>
@@ -203,49 +203,50 @@ function Notifications() {
       ) : data && data.length ? (
         <div className="divide-y divide-border border-y border-border">
           {data.map((n) => {
-            const isRejected =
-              n.title ===
-                "Resource rejected" ||
-              n.title ===
-                "Upload rejected";
+          const isRejected =
+  n.title === "Resource rejected" ||
+  n.title === "Upload rejected";
 
-            const isApproved =
-              n.title ===
-                "Resource approved" ||
-              n.title ===
-                "Upload approved";
+const isApproved =
+  n.title === "Resource approved" ||
+  n.title === "Upload approved";
+
+const isDeleted =
+  n.title === "Resource deleted" ||
+  n.title === "Upload deleted";
+
+const statusLabel = isApproved
+  ? "Approved"
+  : isRejected
+    ? "Rejected"
+    : isDeleted
+      ? "Deleted"
+      : n.title;
+
+const statusColor = isApproved
+  ? "text-emerald-500"
+  : isRejected || isDeleted
+    ? "text-red-500"
+    : "text-foreground";
+
 
             const body =
               n.body ?? "";
+let mainMessage = body;
+let notificationReason: string | null = null;
 
-            let mainMessage = body;
-            let rejectionReason:
-              | string
-              | null = null;
+if (isRejected || isDeleted) {
+  const reasonMarker = " Reason: ";
+  const reasonIndex = body.indexOf(reasonMarker);
 
-            if (isRejected) {
-              const reasonMarker =
-                " Reason: ";
+  if (reasonIndex !== -1) {
+    mainMessage = body.slice(0, reasonIndex);
 
-              const reasonIndex =
-                body.indexOf(
-                  reasonMarker,
-                );
-
-              if (reasonIndex !== -1) {
-                mainMessage =
-                  body.slice(
-                    0,
-                    reasonIndex,
-                  );
-
-                rejectionReason =
-                  body.slice(
-                    reasonIndex +
-                      reasonMarker.length,
-                  );
-              }
-            }
+    notificationReason = body
+      .slice(reasonIndex + reasonMarker.length)
+      .trim();
+  }
+}
 
             if (isApproved) {
               mainMessage = body.replace(
@@ -262,17 +263,14 @@ function Notifications() {
                   <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-baseline gap-2">
-                        <p
-                          className={`min-w-0 flex-1 font-display text-base leading-snug sm:text-lg ${
-                            !n.read
-                              ? "font-semibold"
-                              : "font-medium"
-                          }`}
-                        >
-                          {n.title}
-                        </p>
-
-                        {!n.read && (
+<p
+  className={`min-w-0 flex-1 text-xs font-medium leading-snug ${
+    !n.read ? "font-semibold" : ""
+  } ${statusColor}`}
+>
+  {statusLabel}
+</p>
+                  {!n.read && (
                           <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gold sm:text-xs">
                             New
                           </span>
@@ -284,18 +282,16 @@ function Notifications() {
                           {mainMessage}
                         </p>
                       )}
-
-                      {isRejected &&
-                        rejectionReason && (
-                          <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
-                            <span className="font-medium text-foreground">
-                              Reason:
-                            </span>{" "}
-                            {rejectionReason}
-                          </p>
-                        )}
-
-                      <div className="mt-1.5 flex items-center justify-between gap-2 sm:mt-2">
+{(isRejected || isDeleted) &&
+  notificationReason && (
+    <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+      <span className="font-medium text-foreground">
+        Reason:
+      </span>{" "}
+      {notificationReason}
+    </p>
+  )}
+                        <div className="mt-1.5 flex items-center justify-between gap-2 sm:mt-2">
                         <p className="min-w-0 text-[10px] text-muted-foreground sm:text-xs">
                           {new Date(
                             n.created_at,
@@ -315,7 +311,7 @@ function Notifications() {
                               )
                             }
                           >
-                            Mark as read
+                            Read all
                           </button>
                         )}
                       </div>

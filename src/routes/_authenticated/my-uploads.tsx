@@ -84,6 +84,7 @@ type UploadResource = {
   title: string;
   status: string;
   rejection_reason: string | null;
+  deletion_reason: string | null;
   download_count: number;
   created_at: string;
   category: {
@@ -658,19 +659,22 @@ function MyUploads() {
                             resource.created_at,
                           ).toLocaleDateString()}
                         </p>
-
-                        {resource.status === "rejected" &&
-                          resource.rejection_reason && (
-                            <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
-                              <span className="font-medium text-foreground">
-                                Reason:
-                              </span>{" "}
-                              {resource.rejection_reason}
-                            </p>
-                          )}
-                      </div>
-
-                      {resource.status === "draft" && (
+                        {(resource.status === "rejected" ||
+  resource.status === "deleted") &&
+  (resource.status === "rejected"
+    ? resource.rejection_reason
+    : resource.deletion_reason) && (
+    <p className="mt-1.5 text-xs leading-5 text-muted-foreground sm:mt-2 sm:text-sm sm:leading-6">
+      <span className="font-medium text-foreground">
+        Reason:
+      </span>{" "}
+      {resource.status === "rejected"
+        ? resource.rejection_reason
+        : resource.deletion_reason}
+    </p>
+  )}
+  </div>
+                       {resource.status === "draft" && (
                         <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:gap-2">
                           <Link
                             to="/upload/$draftId"
