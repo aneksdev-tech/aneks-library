@@ -727,35 +727,35 @@ const semesterLabel = getResourceScopeLabel(
       <div className="mt-2.5 space-y-1.5 text-xs sm:mt-3 sm:space-y-2 sm:text-sm">
   {r.course_code && (
     <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
-      <BookOpen className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
       <span>{r.course_code}</span>
     </div>
   )}
 
   {r.college && (
     <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
-      <School className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <School className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
       <span>{collegeShort}</span>
     </div>
   )}
 
   {r.department && (
     <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
-      <Building2 className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
       <span>{departmentLabel}</span>
     </div>
   )}
 
   {r.level && (
     <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
-      <GraduationCap className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <GraduationCap className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
       <span>{levelLabel}</span>
     </div>
   )}
 
   {r.semester && (
     <div className="flex items-center gap-2.5 text-muted-foreground sm:gap-3">
-      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+      <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
       <span>{semesterLabel}</span>
     </div>
   )}
@@ -784,7 +784,7 @@ const semesterLabel = getResourceScopeLabel(
             asChild
             variant="outline"
             size="sm"
-            className="h-8 w-full text-xs sm:h-9 sm:text-sm"
+            className="h-8 w-full text-xs sm:h-9 sm:text-sm bg-muted"
             disabled={previewing}
           >
             <Link
@@ -813,7 +813,7 @@ const semesterLabel = getResourceScopeLabel(
         </div>
 
         <Button
-          className="h-8 shrink-0 px-2 sm:h-9"
+          className="h-8 shrink-0 px-2 sm:h-9 bg-muted"
           variant="outline"
           size="sm"
           onClick={() => toggleBookmark.mutate()}

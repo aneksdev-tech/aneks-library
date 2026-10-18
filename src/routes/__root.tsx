@@ -49,12 +49,27 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: ErrorComponentProps) {
+function ErrorComponent({
+  error,
+  reset,
+}: ErrorComponentProps) {
   const router = useRouter();
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : String(error);
 
   useEffect(() => {
     const normalizedError =
-      error instanceof Error ? error : new Error(String(error));
+      error instanceof Error
+        ? error
+        : new Error(String(error));
+
+    console.error(
+      "[Aneks Library] Root route error:",
+      normalizedError,
+    );
 
     reportLovableError(normalizedError, {
       boundary: "tanstack_root_error_component",
@@ -72,8 +87,19 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
           Something went wrong. Refresh or head back home.
         </p>
 
+        <div className="mt-4 rounded-md border border-border bg-muted/50 p-3 text-left">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
+            Diagnostic details
+          </p>
+
+          <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-5 text-foreground sm:text-xs">
+            {errorMessage || "No error message was provided."}
+          </pre>
+        </div>
+
         <div className="mt-5 flex flex-wrap justify-center gap-2 sm:mt-6">
           <button
+            type="button"
             onClick={() => {
               router.invalidate();
               reset();

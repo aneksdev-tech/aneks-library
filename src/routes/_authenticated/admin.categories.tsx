@@ -1287,7 +1287,7 @@ function CategoriesPage() {
                           onClick={() =>
                             setPendingRestore(category)
                           }
-                          className="h-8 w-full shrink-0 text-[10px] sm:h-9 sm:w-auto sm:text-xs"
+                          className="h-8 w-full shrink-0 text-[10px] sm:h-9 sm:w-auto sm:text-xs bg-muted"
                         >
                           {isRestoring ? (
                             <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />

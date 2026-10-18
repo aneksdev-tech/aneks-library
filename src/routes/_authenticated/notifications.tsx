@@ -301,7 +301,7 @@ if (isRejected || isDeleted) {
                         {!n.read && (
                           <button
                             type="button"
-                            className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-sm"
+                            className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-xs"
                             disabled={
                               markRead.isPending
                             }

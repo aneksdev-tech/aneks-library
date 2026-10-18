@@ -1453,7 +1453,7 @@ const clearAnnouncementFilters = () => {
             saveAnnouncement.isPending
           }
           onClick={() => openToggleDialog(announcement)}
-          className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+          className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
         >
           {isToggling ? (
             <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
@@ -1477,7 +1477,7 @@ const clearAnnouncementFilters = () => {
               saveAnnouncement.isPending
             }
             onClick={() => startEditing(announcement)}
-            className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+            className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
           >
             <Pencil className="mr-1.5 h-3.5 w-3.5 shrink-0" />
             Edit
@@ -1492,7 +1492,7 @@ const clearAnnouncementFilters = () => {
               saveAnnouncement.isPending
             }
             onClick={() => openDeleteDialog(announcement)}
-            className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+            className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm bg-muted"
           >
             {isDeleting ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
@@ -1515,7 +1515,7 @@ const clearAnnouncementFilters = () => {
             saveAnnouncement.isPending
           }
           onClick={() => openRepublishDialog(announcement)}
-          className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+          className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
         >
           {republishAnnouncement.isPending &&
           republishAnnouncement.variables?.announcement.id ===

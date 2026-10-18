@@ -413,7 +413,7 @@ function DashboardPage() {
                 {c.label}
               </span>
 
-              <c.icon className="h-3.5 w-3.5 shrink-0 text-gold sm:h-4 sm:w-4" />
+              <c.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
             </div>
 
             <div className="mt-3 font-display text-2xl font-semibold sm:mt-4 sm:text-3xl">
@@ -457,7 +457,7 @@ function DashboardPage() {
         {/* Section heading outside the card */}
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="font-display text-base font-semibold text-gold sm:text-lg">
+            <h2 className="font-display text-base font-semibold sm:text-lg">
               Recent uploads
             </h2>
 
@@ -468,7 +468,7 @@ function DashboardPage() {
 
           <Link
             to="/my-uploads"
-            className="inline-flex shrink-0 items-center text-xs font-medium text-gold transition-colors hover:text-gold/80 sm:text-sm"
+            className="inline-flex shrink-0 items-center text-xs font-medium text-base transition-colors hover:text-muted-foreground sm:text-sm"
           >
             View all
             <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
@@ -568,14 +568,14 @@ function DashboardPage() {
             <div className="py-8">
               <EmptyState
                 title="No uploads yet"
-                desc="Contribute your first resource — a past question, project or lecture note."
+                desc="Contribute your first resource. A past question, handout, lecture note, publication, etc."
                 cta={
                   <Button
   asChild
-  className="bg-gradient-emerald text-primary-foreground hover:bg-none hover:bg-primary"
+  className="bg-gradient-emerald text-primary-foreground transition-all duration-300 hover:brightness-130 hover:text-white"
 >
   <Link to="/upload">
-    Upload something
+    Upload
   </Link>
 </Button>
                 }

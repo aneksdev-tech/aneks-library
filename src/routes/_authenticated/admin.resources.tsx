@@ -1994,9 +1994,9 @@ const availableDepartments =
           file_path: resource.file_path,
         })
       }
-      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
     >
-      <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+      <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0"/>
       Preview
     </Button>
   )}
@@ -2011,7 +2011,7 @@ const availableDepartments =
         Boolean(downloadingResourceId)
       }
       onClick={() => handleDownload(resource)}
-      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
     >
       {isDownloading ? (
         <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
@@ -2032,7 +2032,7 @@ const availableDepartments =
         Boolean(downloadingResourceId)
       }
       onClick={() => openEdit(resource)}
-      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+      className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
     >
       {isEditing ? (
         <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />
@@ -2053,7 +2053,7 @@ const availableDepartments =
         Boolean(downloadingResourceId)
       }
       onClick={() => handleDelete(resource)}
-      className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+      className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm bg-muted"
     >
       {isDeleting ? (
         <Loader2 className="mr-1.5 h-3.5 w-3.5 shrink-0 animate-spin" />

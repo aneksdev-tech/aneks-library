@@ -302,7 +302,7 @@ function AdminOverview() {
           return (
             <div
               key={stat.label}
-              className={`group flex min-h-24 flex-col justify-between bg-card p-3 transition-colors hover:bg-muted/30 sm:min-h-32 sm:p-5 ${
+              className={`group flex min-h-24 flex-col justify-between bg-card p-3 sm:min-h-32 sm:p-5 ${
                 index === 4
                   ? "col-span-2 sm:col-span-1"
                   : ""
@@ -317,7 +317,7 @@ function AdminOverview() {
                   {stat.label}
                 </span>
 
-                <Icon className="h-3.5 w-3.5 shrink-0 text-primary transition-transform duration-200 group-hover:scale-105 sm:h-4 sm:w-4" />
+                <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:scale-105 sm:h-4 sm:w-4" />
               </div>
 
               <div

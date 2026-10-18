@@ -1016,7 +1016,7 @@ useEffect(() => {
                                 file_path: resource.file_path,
                               })
                             }
-                            className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm"
+                            className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm bg-muted"
                           >
                             <Eye className="mr-1.5 h-3.5 w-3.5 shrink-0" />
                             Preview
@@ -1034,7 +1034,7 @@ useEffect(() => {
                               resource.title,
                             )
                           }
-                          className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm"
+                          className="h-9 w-full min-w-0 text-xs text-destructive transition-colors hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive sm:h-10 sm:text-sm bg-muted"
                         >
                           {isProcessing &&
                           !decide.variables?.approve ? (
@@ -1056,7 +1056,7 @@ useEffect(() => {
                               resource.title,
                             )
                           }
-                          className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm"
+                          className="h-9 w-full min-w-0 text-xs text-primary transition-colors hover:border-primary/30 hover:bg-primary/5 sm:h-10 sm:text-sm bg-muted"
                         >
                           {isProcessing &&
                           decide.variables?.approve ? (

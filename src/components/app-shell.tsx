@@ -407,7 +407,7 @@ useEffect(() => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex cursor-pointer items-center gap-2 rounded-sm border border-border px-2 py-1.5 text-sm transition-colors hover:text-gold">
+                <button className="flex cursor-pointer items-center gap-2 rounded-sm border border-border px-2 py-1.5 text-sm transition-colors hover:text-muted-foreground">
                   <Avatar className="h-6 w-6">
   <AvatarImage
     src={profile?.avatar_url || undefined}
@@ -415,7 +415,7 @@ useEffect(() => {
     className="object-cover"
   />
 
-  <AvatarFallback className="bg-gold text-[10px] text-text-foreground">
+  <AvatarFallback className="bg-gradient-emerald text-[10px] text-white">
     {(
       profile?.full_name ||
       user?.email ||

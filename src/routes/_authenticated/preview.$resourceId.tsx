@@ -226,7 +226,7 @@ const semesterLabel = getResourceScopeLabel(
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="mb-4 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mb-6 sm:text-lg"
+            className="mb-4 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-6 sm:text-lg"
           >
             ← Back
           </button>
@@ -250,14 +250,14 @@ const semesterLabel = getResourceScopeLabel(
           <div className="mt-4 grid gap-2.5 text-xs sm:mt-6 sm:gap-3 sm:text-sm">
             {resource.course_code && (
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <BookOpen className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+                <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
                 <span>{resource.course_code}</span>
               </div>
             )}
 
             {resource.college && (
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <School className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+                <School className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
 
                 <span>
                   {college
@@ -269,21 +269,21 @@ const semesterLabel = getResourceScopeLabel(
 
             {resource.department && (
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <Building2 className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+                <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
                 <span>{departmentLabel}</span>
               </div>
             )}
 
             {resource.level && (
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <GraduationCap className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+                <GraduationCap className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
                 <span>{levelLabel}</span>
               </div>
             )}
 
             {resource.semester && (
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
+                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
                 <span>{semesterLabel}</span>
               </div>
             )}
@@ -380,7 +380,7 @@ const semesterLabel = getResourceScopeLabel(
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 w-full border-primary/40 bg-transparent text-xs text-primary hover:bg-primary hover:text-primary-foreground sm:h-9 sm:text-sm"
+                className="h-9 w-full border-primary/40 bg-gradient-emerald text-primary-foreground transition-all duration-300 hover:brightness-130 hover:text-white lg:w-49 md:w-49"
                 onClick={download}
                 disabled={downloading}
               >

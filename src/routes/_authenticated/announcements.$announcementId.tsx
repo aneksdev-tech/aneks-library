@@ -159,7 +159,7 @@ if (!user) {
       <button
   type="button"
   onClick={handleBack}
-  className="mb-2 inline-flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mb-2 sm:text-lg"
+  className="mb-2 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:text-lg"
 >
   ← Back
 </button>
@@ -179,7 +179,7 @@ if (!user) {
           </p>
         </div>
 
-        <div className="border-t border-border py-3.5 sm:py-6">
+        <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
           <div className="whitespace-pre-wrap text-xs leading-5 text-foreground sm:text-base sm:leading-7">
             {data.content?.trim()
               ? data.content
