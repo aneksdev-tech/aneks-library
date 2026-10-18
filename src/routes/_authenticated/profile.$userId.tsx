@@ -177,7 +177,7 @@ function PublicProfilePage() {
 
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">
-          Profile
+          Public Profile
         </p>
 
         <h1 className="mt-1 font-display text-xl font-semibold sm:text-3xl">
