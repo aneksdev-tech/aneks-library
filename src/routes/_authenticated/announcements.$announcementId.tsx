@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   useQuery,
   useQueryClient,
@@ -8,7 +8,6 @@ import {
   Loader2,
   Megaphone,
   ArrowLeft,
-  ArrowRight,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -30,20 +29,33 @@ export const Route = createFileRoute(
 function AnnouncementDetailsPage() {
   const { announcementId } = Route.useParams();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleBack = () => {
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.location.href = "/announcements";
-  }
-};
+    const previousPath = window.history.state?.__TSR_key
+      ? window.history.state?.__TSR_index
+      : undefined;
+
+    const currentIndex = window.history.state?.__TSR_index;
+
+    const hasPreviousEntry =
+      typeof currentIndex === "number" &&
+      typeof previousPath === "number" &&
+      currentIndex > previousPath;
+
+    if (hasPreviousEntry) {
+      window.history.back();
+      return;
+    }
+
+    void navigate({
+      to: "/announcements",
+      replace: true,
+    });
+  };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: [
-      "announcement",
-      announcementId,
-    ],
+    queryKey: ["announcement", announcementId],
     queryFn: async () => {
       const {
         data: announcement,
@@ -72,50 +84,42 @@ function AnnouncementDetailsPage() {
 
     const markAsRead = async () => {
       const {
-  data: { session },
-} = await supabase.auth.getSession();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-const user = session?.user;
+      const user = session?.user;
 
-if (!user) {
-  return;
-}
+      if (!user) {
+        return;
+      }
 
-      const {
-        error,
-      } = await supabase.rpc(
+      const { error: markAsReadError } = await supabase.rpc(
         "mark_announcement_as_read",
         {
-          _announcement_id:
-            data.id,
+          _announcement_id: data.id,
         },
       );
 
-      if (error) {
+      if (markAsReadError) {
         console.error(
           "Failed to mark announcement as read:",
-          error,
+          markAsReadError,
         );
 
         return;
       }
 
-      queryClient.invalidateQueries({
-        queryKey: [
-          "announcements",
-          user.id,
-        ],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [
-          "announcement-count",
-          user.id,
-        ],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["announcements", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["announcement-count", user.id],
+        }),
+      ]);
     };
 
-    markAsRead();
+    void markAsRead();
   }, [data, queryClient]);
 
   if (isLoading) {
@@ -145,12 +149,13 @@ if (!user) {
           </p>
 
           <button
-  type="button"
-  onClick={handleBack}
-  className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
->
-  ← Back
-</button>
+            type="button"
+            onClick={handleBack}
+            className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back
+          </button>
         </div>
       </section>
     );
@@ -159,17 +164,17 @@ if (!user) {
   return (
     <section>
       <Button
-          type="button"
-          variant="ghost"
-          onClick={() => router.back()}
-          className="-ml-2 h-8 gap-1.5 px-2 text-xs sm:h-9 sm:gap-2 sm:text-sm"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          Back
-        </Button>
+        type="button"
+        variant="ghost"
+        onClick={handleBack}
+        className="-ml-2 h-8 gap-1.5 px-2 text-xs sm:h-9 sm:gap-2 sm:text-sm"
+      >
+        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        Back
+      </Button>
 
-      <article className="mt-2 sm:mt-2">
-        <div className="py-2 sm:py-2">
+      <article className="mt-2">
+        <div className="py-3.5 sm:py-6">
           <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-gold sm:gap-2 sm:text-xs">
             Announcement
           </div>
@@ -185,9 +190,7 @@ if (!user) {
 
         <div className="rounded-sm border border-border bg-card p-3 shadow-soft sm:p-4">
           <div className="whitespace-pre-wrap text-xs leading-5 text-foreground sm:text-base sm:leading-7">
-            {data.content?.trim()
-              ? data.content
-              : data.body}
+            {data.content?.trim() ? data.content : data.body}
           </div>
 
           {data.link && (
@@ -199,9 +202,7 @@ if (!user) {
                 <a
                   href={data.link}
                   target={
-                    data.link.startsWith("/")
-                      ? undefined
-                      : "_blank"
+                    data.link.startsWith("/") ? undefined : "_blank"
                   }
                   rel={
                     data.link.startsWith("/")
