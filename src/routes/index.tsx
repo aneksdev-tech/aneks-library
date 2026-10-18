@@ -468,7 +468,7 @@ function LandingPage() {
                 variant="outline"
                 className="md:h-10 md:px-3.5 md:text-sm lg:h-11 lg:px-4 lg:text-sm"
               >
-                <Link to="/library">Login</Link>
+                <Link to="/dashboard">Login</Link>
               </Button>
 
               {/* <Button asChild size="lg" variant="outline">
