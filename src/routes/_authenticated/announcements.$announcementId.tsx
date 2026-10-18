@@ -7,6 +7,8 @@ import {
   ExternalLink,
   Loader2,
   Megaphone,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { useEffect } from "react";
 
