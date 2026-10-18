@@ -161,7 +161,7 @@ if (!user) {
       <Button
           type="button"
           variant="ghost"
-          onClick={() => router.history.back()}
+          onClick={() => router.back()}
           className="-ml-2 h-8 gap-1.5 px-2 text-xs sm:h-9 sm:gap-2 sm:text-sm"
         >
           <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
