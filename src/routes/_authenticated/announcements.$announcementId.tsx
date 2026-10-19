@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   useQuery,
   useQueryClient,
@@ -31,18 +31,15 @@ function AnnouncementDetailsPage() {
   const queryClient = useQueryClient();
 
   const handleBack = () => {
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.location.href = "/announcements";
-  }
-};
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "/announcements";
+    }
+  };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: [
-      "announcement",
-      announcementId,
-    ],
+    queryKey: ["announcement", announcementId],
     queryFn: async () => {
       const {
         data: announcement,
@@ -71,50 +68,42 @@ function AnnouncementDetailsPage() {
 
     const markAsRead = async () => {
       const {
-  data: { session },
-} = await supabase.auth.getSession();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-const user = session?.user;
+      const user = session?.user;
 
-if (!user) {
-  return;
-}
+      if (!user) {
+        return;
+      }
 
-      const {
-        error,
-      } = await supabase.rpc(
+      const { error: markAsReadError } = await supabase.rpc(
         "mark_announcement_as_read",
         {
-          _announcement_id:
-            data.id,
+          _announcement_id: data.id,
         },
       );
 
-      if (error) {
+      if (markAsReadError) {
         console.error(
           "Failed to mark announcement as read:",
-          error,
+          markAsReadError,
         );
 
         return;
       }
 
-      queryClient.invalidateQueries({
-        queryKey: [
-          "announcements",
-          user.id,
-        ],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: [
-          "announcement-count",
-          user.id,
-        ],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["announcements", user.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["announcement-count", user.id],
+        }),
+      ]);
     };
 
-    markAsRead();
+    void markAsRead();
   }, [data, queryClient]);
 
   if (isLoading) {
@@ -144,12 +133,13 @@ if (!user) {
           </p>
 
           <button
-  type="button"
-  onClick={handleBack}
-  className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
->
-  ← Back
-</button>
+            type="button"
+            onClick={handleBack}
+            className="mt-4 inline-flex h-9 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:mt-5 sm:h-10"
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back
+          </button>
         </div>
       </section>
     );
@@ -157,20 +147,21 @@ if (!user) {
 
   return (
     <section>
-      <button
-  type="button"
-  onClick={handleBack}
-  className="mb-2 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:text-lg"
->
-  <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          Back
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={handleBack}
+        className="-ml-2 mb-2 h-8 gap-1.5 px-2 text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:h-9 sm:text-lg"
+      >
+        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        Back
+      </Button>
 
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">
-          Announcement
-        </p>
+      <article>
+        <div className="py-3.5 sm:py-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">
+            Announcement
+          </p>
 
           <h1 className="mt-2 font-display text-base font-semibold leading-tight sm:mt-3 sm:text-2xl">
             {data.title}
