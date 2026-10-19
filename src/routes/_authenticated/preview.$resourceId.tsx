@@ -21,6 +21,8 @@ import {
   School,
   Download,
   Loader2,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -225,14 +227,16 @@ const semesterLabel = getResourceScopeLabel(
         <div>
           <button
             type="button"
+            variant="ghost"
             onClick={() => window.history.back()}
-            className="mb-4 inline-flex items-center text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-6 sm:text-lg"
-          >
-            ← Back
-          </button>
-
+            className="-ml-2 mb-0 h-8 gap-1.5 px-2 text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:h-9 sm:text-lg"
+            >
+  <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+  Back
+</button>
+        </div>
           <div className="mb-3 flex flex-wrap gap-2 sm:mb-4">
-            <span className="text-[10px] font-medium text-gold sm:text-sm">
+            <span className="text-[10px] font-medium uppercase text-gold sm:text-sm">
               {categoryName}
             </span>
           </div>
