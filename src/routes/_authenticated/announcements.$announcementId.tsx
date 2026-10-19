@@ -7,7 +7,7 @@ import {
   ExternalLink,
   Loader2,
   Megaphone,
-  ArrowBack,
+  ArrowLeft,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -153,7 +153,7 @@ function AnnouncementDetailsPage() {
   onClick={handleBack}
   className="-ml-2 mb-3 h-8 gap-1.5 px-2 text-xs font-medium text-white transition-colors hover:text-muted-foreground sm:h-9 sm:text-xs"
 >
-  <ArrowBack className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+  <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
   Back
 </Button>
 
