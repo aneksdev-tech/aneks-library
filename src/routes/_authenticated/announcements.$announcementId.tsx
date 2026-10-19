@@ -148,21 +148,20 @@ function AnnouncementDetailsPage() {
   return (
     <section>
       <Button
-        type="button"
-        variant="ghost"
-        onClick={handleBack}
-        className="-ml-2 mb-2 h-8 gap-1.5 px-2 text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:mb-2 sm:h-9 sm:text-lg"
-      >
-        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        Back
-      </Button>
+  type="button"
+  variant="ghost"
+  onClick={handleBack}
+  className="-ml-2 mb-0 h-8 gap-1.5 px-2 text-sm font-medium text-white transition-colors hover:text-muted-foreground sm:h-9 sm:text-lg"
+>
+  <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+  Back
+</Button>
 
-      <article>
-        <div className="py-3.5 sm:py-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">
-            Announcement
-          </p>
-
+<article>
+  <div className="pt-1 pb-3.5 sm:pt-2 sm:pb-6">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">
+      Announcement
+    </p>
           <h1 className="mt-2 font-display text-base font-semibold leading-tight sm:mt-3 sm:text-2xl">
             {data.title}
           </h1>
