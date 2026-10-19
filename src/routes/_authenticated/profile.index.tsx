@@ -585,13 +585,13 @@ function ProfilePage() {
 
                 <div className="min-w-0 flex-1 text-left">
                   <div className="flex flex-wrap items-center justify-start gap-1.5 sm:gap-2">
-                    <span className="rounded-sm border border-gold/10 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium text-gold sm:px-3 sm:py-1 sm:text-xs">
+                    <span className="shrink-0 rounded-sm border border-gold/20 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium !text-gold sm:px-3 sm:py-1 sm:text-xs">
                       {roleLabel}
                     </span>
 
-                    <span className="rounded-sm border border-gold/10 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium text-gold dark:text-gold sm:px-3 sm:py-1 sm:text-xs">
-                      {contributor.emoji}{" "}
-                      {contributor.name}
+                   <span className="shrink-0 rounded-sm border border-gold/20 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium !text-gold sm:px-3 sm:py-1 sm:text-xs">
+                     {contributor.emoji}{" "}
+                     {contributor.name}
                     </span>
                   </div>
 

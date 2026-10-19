@@ -241,11 +241,11 @@ const tabs = [
   {tab.to === "/admin/approvals" &&
   approvalCount > 0 ? (
     <span
-      className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[8px] font-semibold text-gold-foreground sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
-      aria-label={`${approvalCount} pending approval items`}
-    >
-      {approvalCount > 99 ? "99+" : approvalCount}
-    </span>
+  className="ml-0.5 grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-gold px-1 text-[8px] font-semibold !text-black sm:ml-0 sm:h-5 sm:min-w-5 sm:text-[10px]"
+  aria-label={`${approvalCount} pending approval items`}
+>
+  {approvalCount > 99 ? "99+" : approvalCount}
+</span>
   ) : null}
 
   {/* Gold active indicator */}

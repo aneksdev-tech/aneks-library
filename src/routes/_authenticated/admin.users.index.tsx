@@ -59,6 +59,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+
 export const Route = createFileRoute(
   "/_authenticated/admin/users/",
 )({
@@ -412,6 +413,14 @@ function UsersPage() {
     roles,
   } = useAuth();
 
+    /*
+   * Online presence is visible only to admins
+   * and co-admins on the Users page.
+   */
+  const canViewUserPresence =
+    roles?.includes("admin") ||
+    roles?.includes("co-admin");
+
   const [search, setSearch] =
     useState("");
 
@@ -421,10 +430,13 @@ function UsersPage() {
   const [roleFilter, setRoleFilter] =
     useState("all");
 
-  const [sort, setSort] =
-    useState<"newest" | "alphabetical">(
-      "newest",
-    );
+    const [sort, setSort] = useState<
+    "newest" |
+    "oldest" |
+    "alphabetical" |
+    "online" |
+    "offline"
+  >("newest");
 
   const [dateFrom, setDateFrom] =
     useState("");
@@ -532,6 +544,42 @@ function UsersPage() {
       );
     },
   });
+  
+  /*
+   * Retrieve online users through the secured RPC.
+   * The database authorizes access to admins and co-admins.
+   */
+  const {
+    data: onlineUsers = [],
+  } = useQuery({
+    queryKey: ["admin-online-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc(
+        "get_library_online_users",
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      return data ?? [];
+    },
+    enabled:
+      canViewUserPresence &&
+      !!currentUser &&
+      !isLoading &&
+      !isError,
+      refetchInterval: 5_000,
+      refetchIntervalInBackground: false,
+  });
+
+  const onlineUserIds = useMemo(
+    () =>
+      new Set(
+        onlineUsers.map((presence) => presence.user_id),
+      ),
+    [onlineUsers],
+  );
 
   const {
     data: auditLogs,
@@ -853,17 +901,51 @@ function UsersPage() {
       );
     });
 
-    if (sort === "alphabetical") {
-      filtered.sort((a, b) =>
-        a.full_name.localeCompare(
-          b.full_name,
-          undefined,
-          {
-            sensitivity: "base",
-          },
-        ),
-      );
-    }
+    filtered.sort((a, b) => {
+      switch (sort) {
+        case "oldest":
+          return (
+            new Date(a.created_at).getTime() -
+            new Date(b.created_at).getTime()
+          );
+
+        case "alphabetical":
+          return a.full_name.localeCompare(
+            b.full_name,
+            undefined,
+            {
+              sensitivity: "base",
+            },
+          );
+
+        case "online": {
+          const aOnline =
+            onlineUserIds.has(a.id);
+
+          const bOnline =
+            onlineUserIds.has(b.id);
+
+          return Number(bOnline) - Number(aOnline);
+        }
+
+        case "offline": {
+          const aOnline =
+            onlineUserIds.has(a.id);
+
+          const bOnline =
+            onlineUserIds.has(b.id);
+
+          return Number(aOnline) - Number(bOnline);
+        }
+
+        case "newest":
+        default:
+          return (
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+          );
+      }
+    });
 
     return filtered;
   }, [
@@ -874,6 +956,7 @@ function UsersPage() {
     sort,
     dateFrom,
     dateTo,
+    onlineUserIds,
   ]);
 
   /*
@@ -1063,12 +1146,13 @@ function UsersPage() {
     );
   };
 
-  const hasActiveFilters =
+    const hasActiveFilters =
     search.trim() !== "" ||
     statusFilter !== "all" ||
     roleFilter !== "all" ||
     dateFrom !== "" ||
-    dateTo !== "";
+    dateTo !== "" ||
+    sort !== "newest";
 
   const totalCount = filteredUsers.length;
 
@@ -1196,12 +1280,25 @@ function UsersPage() {
         <SelectValue placeholder="Sort users" />
       </SelectTrigger>
 
-      <SelectContent>
+            <SelectContent>
         <SelectItem value="newest">
           Newest
         </SelectItem>
+
+        <SelectItem value="oldest">
+          Oldest
+        </SelectItem>
+
         <SelectItem value="alphabetical">
-          Alphabetical
+          Alphabetically
+        </SelectItem>
+
+        <SelectItem value="online">
+          Online
+        </SelectItem>
+
+        <SelectItem value="offline">
+          Offline
         </SelectItem>
       </SelectContent>
     </Select>
@@ -1237,35 +1334,37 @@ function UsersPage() {
     />
   </div>
 </div>
-          {/* Result count and clear filters */}
+          {/* Result count, online count, and clear filters */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-            <p className="pl-1 text-xs text-gold sm:text-sm">
-              {isLoading ? (
-                "Loading users..."
-              ) : isError ? (
-                "Unable to load users"
-              ) : totalCount === 0 ? (
-                <>
-                  Showing{" "}
-                  <span className="font-semibold text-gold">
-                    0
-                  </span>{" "}
-                  users
-                </>
-              ) : (
-                <>
-                  Showing{" "}
-                  <span className="font-semibold text-gold">
-                    {firstResult}–{lastResult}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-semibold text-gold">
-                    {totalCount}
-                  </span>{" "}
-                  {totalCount === 1 ? "user" : "users"}
-                </>
-              )}
-            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="pl-1 text-xs text-gold sm:text-sm">
+                {isLoading ? (
+                  "Loading users..."
+                ) : isError ? (
+                  "Unable to load users"
+                ) : totalCount === 0 ? (
+                  <>
+                    Showing{" "}
+                    <span className="font-semibold text-gold">
+                      0
+                    </span>{" "}
+                    users
+                  </>
+                ) : (
+                  <>
+                    Showing{" "}
+                    <span className="font-semibold text-gold">
+                      {firstResult}–{lastResult}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-gold">
+                      {totalCount}
+                    </span>{" "}
+                    {totalCount === 1 ? "user" : "users"}
+                  </>
+                )}
+              </p>
+            </div>
 
             {hasActiveFilters && (
               <Button
@@ -1281,32 +1380,59 @@ function UsersPage() {
             )}
           </div>
         </div>
+              {canViewUserPresence &&
+                !isLoading &&
+                !isError && (
+                  <p
+                    className="mb-3 ml-5 flex items-center gap-1.5 text-sm text-muted-foreground md:ml-5 sm:ml-5 xs:ml-3"
+                    aria-live="polite"
+                  >
+                    <span>
+                      <span className="font-semibold text-muted-foreground">
+                        {onlineUserIds.size}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-muted-foreground">
+                        {(data ?? []).filter(
+                          (user) => user.status === "active",
+                        ).length}
+                      </span>{" "}
+                      active users online
+                    </span>
 
-        {/* User table */}
-          <div className="rounded-1xl border border-border bg-card shadow-soft">
-            <div className="aneks-horizontal-scroll">
-              <table className="w-full min-w-[850px] text-xs sm:text-sm">
-                <thead className="border-b border-border text-left text-[9px] uppercase tracking-wider text-muted-foreground sm:text-xs">
-                  <tr>
-                  <th className="p-3 font-medium sm:p-4">
-                    User
-                  </th>
+                    <span
+                    className="h-3 w-3 shrink-0 rounded-full bg-green-500 animate-pulse"
+                    aria-label="Online"
+                    title="Online"
+                  />
+                  </p>
+                )}
 
-                  <th className="p-3 font-medium sm:p-4">
-                    Role
-                  </th>
+{/* User table */}
+<div className="rounded-1xl border border-border bg-card shadow-soft">
+  <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-background scrollbar-track-background">
+    <table className="w-full min-w-[850px] text-xs sm:text-sm">
+      <thead className="border-b border-border text-left text-[9px] uppercase tracking-wider text-muted-foreground sm:text-xs">
+        <tr>
+          <th className="p-3 !pl-5 font-medium sm:p-4 sm:!pl-5">
+  User
+</th>
 
-                  <th className="p-3 font-medium sm:p-4">
-                    Status
-                  </th>
+<th className="p-3 !pl-5.5 font-medium sm:p-4 sm:!pl-5.5">
+  Role
+</th>
 
-                  <th className="p-3 font-medium sm:p-4">
-                    Registered
-                  </th>
+<th className="p-3 !pl-5.5 font-medium sm:p-4 sm:!pl-5.5">
+  Status
+</th>
 
-                  <th className="p-3 text-right font-medium sm:p-4">
-                    Actions
-                  </th>
+<th className="p-3 !pl-5.5 font-medium sm:p-4 sm:!pl-5.5">
+  Registered
+</th>
+
+<th className="p-none !pl-43 text-center font-medium sm:p-4 sm:!pl-43">
+  Actions
+</th>
                 </tr>
               </thead>
 
@@ -1374,19 +1500,42 @@ function UsersPage() {
                         <tr className="transition-colors hover:bg-muted/30">
                           <td className="p-3 sm:p-4">
                             <div className="flex items-center gap-2.5 sm:gap-3">
-                              {user.avatar_url ? (
-                                <img
-                                  src={user.avatar_url}
-                                  alt={user.full_name}
-                                  className="h-8 w-8 shrink-0 rounded-full border border-border object-cover sm:h-9 sm:w-9"
-                                />
-                              ) : (
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold sm:h-9 sm:w-9 sm:text-xs">
-                                  {getInitials(
-                                    user.full_name || "User",
-                                  )}
-                                </div>
-                              )}
+                              <div className="relative h-8 w-8 shrink-0 sm:h-9 sm:w-9">
+                                {user.avatar_url ? (
+                                  <img
+                                    src={user.avatar_url}
+                                    alt={user.full_name}
+                                    className="h-full w-full rounded-full border border-border object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center rounded-full bg-muted text-[10px] font-semibold sm:text-xs">
+                                    {getInitials(
+                                      user.full_name || "User",
+                                    )}
+                                  </div>
+                                )}
+
+                                {canViewUserPresence && (
+                                  <span
+                                    role="img"
+                                    aria-label={
+                                      onlineUserIds.has(user.id)
+                                        ? "Online"
+                                        : "Offline"
+                                    }
+                                    title={
+                                      onlineUserIds.has(user.id)
+                                        ? "Online"
+                                        : "Offline"
+                                    }
+                                    className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card sm:h-3 sm:w-3 ${
+                                      onlineUserIds.has(user.id)
+                                        ? "bg-green-500"
+                                        : "bg-gray-400"
+                                    }`}
+                                  />
+                                )}
+                              </div>
 
                               <div className="min-w-0">
                                 <div className="font-medium">

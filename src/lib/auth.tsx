@@ -311,6 +311,68 @@ setProfile(nextProfile);
   }, []);
 
   /*
+   * Publish this user's online heartbeat.
+   *
+   * The server derives the user ID from auth.uid().
+   * Heartbeats expire after 90 seconds, so a crashed
+   * browser eventually becomes offline.
+   */
+  useEffect(() => {
+    const uid = session?.user?.id;
+
+    if (
+      !uid ||
+      profile?.status !== "active"
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    let heartbeatInFlight = false;
+
+    const sendHeartbeat = async () => {
+      if (cancelled || heartbeatInFlight) {
+        return;
+      }
+
+      heartbeatInFlight = true;
+
+      try {
+        const { error } = await supabase.rpc(
+          "heartbeat_user_presence",
+        );
+
+        if (error && !cancelled) {
+          console.error(
+            "Unable to update online presence:",
+            error.message,
+          );
+        }
+      } finally {
+        heartbeatInFlight = false;
+      }
+    };
+
+    // Publish immediately, then refresh every 30 seconds.
+    void sendHeartbeat();
+
+    const intervalId = window.setInterval(
+      () => {
+        void sendHeartbeat();
+      },
+      30_000,
+    );
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [
+    session?.user?.id,
+    profile?.status,
+  ]);
+
+  /*
    * Enforce account-status and admin-area access
    * directly from the authentication provider.
    *
@@ -464,13 +526,25 @@ if (
           roles.includes("admin"),
 
         refresh,
-
         signOut: async () => {
-          await supabase.auth.signOut();
+  try {
+    const { error } = await supabase.rpc(
+      "clear_user_presence",
+    );
 
-          window.location.href =
-            "/auth?mode=login";
-        },
+    if (error) {
+      console.error(
+        "Unable to clear online presence:",
+        error.message,
+      );
+    }
+  } finally {
+    await supabase.auth.signOut();
+
+    window.location.href =
+      "/auth?mode=login";
+  }
+},
       }}
     >
       {children}

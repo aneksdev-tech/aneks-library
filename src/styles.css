@@ -233,33 +233,6 @@
   animation-play-state: paused;
 }
 
-/* Aneks Library — Gold horizontal scrollbar */
-.aneks-horizontal-scroll {
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--muted) var(--secondary);
-}
-
-/* Chrome, Edge and Safari */
-.aneks-horizontal-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.aneks-horizontal-scroll::-webkit-scrollbar-track {
-  background: #183a2b;
-  border-radius: 9999px;
-}
-
-.aneks-horizontal-scroll::-webkit-scrollbar-thumb {
-  background: var(--gold);
-  border: 2px solid #183a2b;
-  border-radius: 9999px;
-}
-
-.aneks-horizontal-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(99.405% 0.00011 271.152);
-}
-
 /* Dark mode: make the calendar icon light */
 .dark input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
