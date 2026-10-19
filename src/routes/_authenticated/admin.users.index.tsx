@@ -99,7 +99,7 @@ if (!session?.user) {
   component: UsersPage,
 });
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const STATUSES: AccountStatus[] = [
   "active",
@@ -425,6 +425,12 @@ function UsersPage() {
     useState<"newest" | "alphabetical">(
       "newest",
     );
+
+  const [dateFrom, setDateFrom] =
+    useState("");
+
+  const [dateTo, setDateTo] =
+    useState("");
 
   const [page, setPage] = useState(1);
 
@@ -811,10 +817,39 @@ function UsersPage() {
         roleFilter === "all" ||
         user.primary_role === roleFilter;
 
+      const createdAt = new Date(
+        user.created_at,
+      );
+
+      const createdDateKey =
+        Number.isNaN(createdAt.getTime())
+          ? null
+          : `${createdAt.getFullYear()}-${String(
+              createdAt.getMonth() + 1,
+            ).padStart(2, "0")}-${String(
+              createdAt.getDate(),
+            ).padStart(2, "0")}`;
+
+      const matchesDateFrom =
+        !dateFrom ||
+        (
+          createdDateKey !== null &&
+          createdDateKey >= dateFrom
+        );
+
+      const matchesDateTo =
+        !dateTo ||
+        (
+          createdDateKey !== null &&
+          createdDateKey <= dateTo
+        );
+
       return (
         matchesSearch &&
         matchesStatus &&
-        matchesRole
+        matchesRole &&
+        matchesDateFrom &&
+        matchesDateTo
       );
     });
 
@@ -837,6 +872,8 @@ function UsersPage() {
     statusFilter,
     roleFilter,
     sort,
+    dateFrom,
+    dateTo,
   ]);
 
   /*
@@ -850,6 +887,8 @@ function UsersPage() {
     statusFilter,
     roleFilter,
     sort,
+    dateFrom,
+    dateTo,
   ]);
 
   /*
@@ -1027,7 +1066,9 @@ function UsersPage() {
   const hasActiveFilters =
     search.trim() !== "" ||
     statusFilter !== "all" ||
-    roleFilter !== "all";
+    roleFilter !== "all" ||
+    dateFrom !== "" ||
+    dateTo !== "";
 
   const totalCount = filteredUsers.length;
 
@@ -1059,6 +1100,8 @@ function UsersPage() {
     setStatusFilter("all");
     setRoleFilter("all");
     setSort("newest");
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
   };
 
@@ -1068,11 +1111,11 @@ function UsersPage() {
         {/* Filters */}
         <div
           ref={searchTopRef}
-          className="scroll-mt-21 rounded-sm border border-border bg-card p-3.5 shadow-soft sm:p-4"
+          className="scroll-mt-21 rounded-sm border border-border bg-card p-3.5 shadow-soft sm:p-5"
         >
-          <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_170px_170px]">
             {/* Search */}
-            <div className="relative flex-1">
+            <div className="relative col-span-2 min-w-0 lg:col-span-2">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:left-3 sm:h-4 sm:w-4" />
 
               <Input
@@ -1134,32 +1177,66 @@ function UsersPage() {
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Sort */}
-            <Select
-              value={sort}
-              onValueChange={(value) =>
-                setSort(
-                  value as typeof sort,
-                )
-              }
-            >
-              <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
-                <SelectValue placeholder="Sort users" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="newest">
-                  Newest first
-                </SelectItem>
-
-                <SelectItem value="alphabetical">
-                  Alphabetical (A–Z)
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </div>
+          
+          {/* Sort and date range */}
+<div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+  {/* Sort */}
+  <div className="col-span-2 min-w-0 sm:col-span-1">
+    <Select
+      value={sort}
+      onValueChange={(value) =>
+        setSort(value as typeof sort)
+      }
+    >
+      <SelectTrigger
+        id="users-sort"
+        className="h-10 w-full min-w-0 px-3 text-xs sm:text-sm"
+      >
+        <SelectValue placeholder="Sort users" />
+      </SelectTrigger>
 
+      <SelectContent>
+        <SelectItem value="newest">
+          Newest
+        </SelectItem>
+        <SelectItem value="alphabetical">
+          Alphabetical
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  {/* Date from */}
+  <div className="min-w-0">
+    <input
+      id="users-date-from"
+      type="date"
+      value={dateFrom}
+      max={dateTo || undefined}
+      onChange={(event) =>
+        setDateFrom(event.target.value)
+      }
+      aria-label="Filter users registered from this date"
+      className="block h-10 w-full min-w-0 appearance-none rounded-md border border-input bg-card px-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:px-2 sm:text-sm"
+    />
+  </div>
+
+  {/* Date to */}
+  <div className="min-w-0">
+    <input
+      id="users-date-to"
+      type="date"
+      value={dateTo}
+      min={dateFrom || undefined}
+      onChange={(event) =>
+        setDateTo(event.target.value)
+      }
+      aria-label="Filter users registered up to this date"
+      className="block h-10 w-full min-w-0 appearance-none rounded-md border border-input bg-card px-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:px-2 sm:text-sm"
+    />
+  </div>
+</div>
           {/* Result count and clear filters */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
             <p className="pl-1 text-xs text-gold sm:text-sm">
@@ -1422,12 +1499,12 @@ function UsersPage() {
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 px-2 text-[10px] text-gold sm:h-9 sm:px-2.5 sm:text-xs"
+                                className="h-8 px-2 text-[10px] text-muted-foreground sm:h-9 sm:px-2.5 sm:text-xs"
                                 onClick={() =>
                                   toggleHistory(user.id)
                                 }
                               >
-                                <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5 text-gold" />
+                                <History className="mr-1 h-3 w-3 sm:mr-1.5 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
 
                                 {historyOpen ? (
                                   <>

@@ -1447,62 +1447,65 @@ const availableDepartments =
       </SelectContent>
     </Select>
 
-        {/* Sort and date range */}
-    <div className="col-span-full grid grid-cols-3 items-end gap-2.5 sm:gap-3">
-      {/* Sort */}
-      <div className="min-w-0">
-        <Select
-          value={sortOrder}
-          onValueChange={(value) => {
-            setSortOrder(value as "newest" | "oldest");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger
-            id="admin-resources-sort"
-            className="h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
-          >
-            <SelectValue />
-          </SelectTrigger>
+        
+{/* Sort and date range */}
+<div className="col-span-full grid grid-cols-3 items-end gap-2.5 sm:gap-3">
+  {/* Sort */}
+  <div className="min-w-0">
+    <Select
+      value={sortOrder}
+      onValueChange={(value) => {
+        setSortOrder(value as "newest" | "oldest");
+        setPage(1);
+      }}
+    >
+      <SelectTrigger
+        id="admin-resources-sort"
+        className="h-9 w-full min-w-0 px-2 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
+      >
+        <SelectValue />
+      </SelectTrigger>
 
-          <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="oldest">Oldest</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Date from */}
-<div className="min-w-0">
-  <input
-    id="library-date-from"
-    type="date"
-    value={dateFrom}
-    max={dateTo || undefined}
-    onChange={(event) =>
-      setDateFrom(event.target.value)
-    }
-    aria-label="Filter resources from this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
-</div>
-
-{/* Date to */}
-<div className="min-w-0">
-  <input
-    id="library-date-to"
-    type="date"
-    value={dateTo}
-    min={dateFrom || undefined}
-    onChange={(event) =>
-      setDateTo(event.target.value)
-    }
-    aria-label="Filter resources up to this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
-</div>
-    </div>
+      <SelectContent>
+        <SelectItem value="newest">Newest</SelectItem>
+        <SelectItem value="oldest">Oldest</SelectItem>
+      </SelectContent>
+    </Select>
   </div>
+
+  {/* Date from */}
+  <div className="min-w-0">
+    <input
+      id="library-date-from"
+      type="date"
+      value={dateFrom}
+      max={dateTo || undefined}
+      onChange={(event) => {
+        setDateFrom(event.target.value);
+        setPage(1);
+      }}
+      aria-label="Filter resources from this date"
+      className="block box-border h-9 w-full min-w-0 rounded-md border border-input bg-card px-1.5 text-[10px] text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+    />
+  </div>
+
+  {/* Date to */}
+  <div className="min-w-0">
+    <input
+      id="library-date-to"
+      type="date"
+      value={dateTo}
+      min={dateFrom || undefined}
+      onChange={(event) => {
+        setDateTo(event.target.value);
+        setPage(1);
+      }}
+      aria-label="Filter resources up to this date"
+      className="block box-border h-9 w-full min-w-0 rounded-md border border-input bg-card px-1.5 text-[10px] text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+    />
+  </div>
+</div>
+</div>
 
   <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
       <p className="pl-2 text-[10px] text-gold sm:text-xs">

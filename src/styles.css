@@ -237,7 +237,7 @@
 .aneks-horizontal-scroll {
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--gold) var(--secondary);
+  scrollbar-color: var(--muted) var(--secondary);
 }
 
 /* Chrome, Edge and Safari */

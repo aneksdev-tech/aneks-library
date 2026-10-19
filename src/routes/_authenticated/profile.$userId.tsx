@@ -162,18 +162,18 @@ function PublicProfilePage() {
   })();
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5 sm:space-y-6">
-      <div>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => router.history.back()}
-          className="-ml-2 h-8 gap-1.5 px-2 text-xs sm:h-9 sm:gap-2 sm:text-sm"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          Back
-        </Button>
-      </div>
+    <div className="mx-auto max-w-6xl space-y-4 sm:space-y-4">
+    <div>
+      <Button
+      type="button"
+      variant="ghost"
+      onClick={() => window.history.back()}
+      className="-ml-2 h-8 gap-1.5 px-2 text-xs transition-colors hover:bg-transparent hover:text-muted-foreground sm:h-9 sm:gap-2 sm:text-sm"
+    >
+      <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        Back
+      </Button>
+    </div>
 
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">

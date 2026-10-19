@@ -151,12 +151,12 @@ function AnnouncementDetailsPage() {
   type="button"
   variant="ghost"
   onClick={handleBack}
-  className="-ml-2 mb-3 h-8 gap-1.5 px-2 text-xs font-medium text-white transition-colors hover:text-muted-foreground sm:h-9 sm:text-xs"
+  className="-ml-2 h-8 gap-1.5 px-2 mb-4 text-xs transition-colors hover:bg-transparent hover:text-muted-foreground sm:h-9 sm:gap-2 sm:text-sm"
 >
   <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-  Back
-</Button>
-
+    Back
+  </Button>
+  
 <article>
   <div className="pt-1 pb-3.5 sm:pt-1 sm:pb-6">
     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold sm:text-xs">

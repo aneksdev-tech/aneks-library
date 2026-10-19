@@ -985,19 +985,19 @@ function UserDetailsPage() {
 
   if (userError) {
     return (
-      <div className="space-y-4">
+      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-4">
         <Button
           variant="ghost"
-          className="h-8 px-0 text-xs sm:h-9 sm:text-sm"
+          className="-ml-2 h-8 gap-1.5 px-2 mb-4 text-xs transition-colors hover:bg-transparent hover:text-muted-foreground sm:h-9 sm:gap-2 sm:text-sm"
           onClick={() =>
             navigate({
               to: "/admin/users",
             })
           }
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
-          Back to Users
-        </Button>
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Back
+            </Button>
 
         <div className="border border-border bg-card p-5 text-center text-xs text-destructive sm:p-8 sm:text-sm">
           Failed to load user
@@ -1009,19 +1009,19 @@ function UserDetailsPage() {
 
   if (!user) {
     return (
-      <div className="space-y-4">
+      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-4">
         <Button
           variant="ghost"
-          className="h-8 px-0 text-xs sm:h-9 sm:text-sm"
+          className="-ml-2 h-8 gap-1.5 px-2 mb-4 text-xs transition-colors hover:bg-transparent hover:text-muted-foreground sm:h-9 sm:gap-2 sm:text-sm"
           onClick={() =>
             navigate({
               to: "/admin/users",
             })
           }
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
-          Back to Users
-        </Button>
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Back
+            </Button>
 
         <div className="border border-border bg-card p-5 text-center text-xs text-muted-foreground sm:p-8 sm:text-sm">
           User not found.
@@ -1042,19 +1042,19 @@ function UserDetailsPage() {
     <>
       <div className="w-full space-y-5 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <Button
-              variant="ghost"
-              className="mb-1.5 -ml-2 h-8 px-2 text-xs sm:mb-2 sm:-ml-3 sm:h-9 sm:px-3 sm:text-sm"
-              onClick={() =>
-                navigate({
-                  to: "/admin/users",
-                })
-              }
-            >
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
-              Back to Users
+        <div className="mx-auto max-w-6xl space-y-4 sm:space-y-4">
+        <div>
+          <Button
+          variant="ghost"
+          className="-ml-2 h-8 gap-1.5 px-2 mb-4 text-xs transition-colors hover:bg-transparent hover:text-muted-foreground sm:h-9 sm:gap-2 sm:text-sm"
+          onClick={() =>
+            navigate({
+              to: "/admin/users",
+            })
+          }
+        >
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Back
             </Button>
 
             <h1 className="text-lg font-semibold tracking-tight sm:text-2xl">

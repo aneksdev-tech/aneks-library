@@ -380,74 +380,69 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Sort and date range */}
-          <div className="grid grid-cols-3 items-end gap-2.5 sm:gap-3">
-            {/* Sort */}
-            <div className="min-w-0">
-              <Select
-                value={sort}
-                onValueChange={(value) =>
-                  setSort(value as typeof sort)
-                }
-              >
-                <SelectTrigger
-                  id="library-sort"
-                  className="mt-0 h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <SelectValue />
-                </SelectTrigger>
+          
+{/* Sort and date range */}
+<div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
 
-                <SelectContent>
-                  <SelectItem value="newest">
-                    Newest
-                  </SelectItem>
+  {/* Sort */}
+  <div className="col-span-2 min-w-0 sm:col-span-1">
+    <Select
+      value={sort}
+      onValueChange={(value) =>
+        setSort(value as typeof sort)
+      }
+    >
+      <SelectTrigger
+        id="library-sort"
+        className="h-10 w-full min-w-0 px-3 text-xs sm:text-sm"
+      >
+        <SelectValue />
+      </SelectTrigger>
 
-                  <SelectItem value="oldest">
-                    Oldest
-                  </SelectItem>
+      <SelectContent>
+        <SelectItem value="newest">Newest</SelectItem>
+        <SelectItem value="oldest">Oldest</SelectItem>
+        <SelectItem value="downloads">
+          Most downloaded
+        </SelectItem>
+        <SelectItem value="bookmarks">
+          Most bookmarked
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 
-                  <SelectItem value="downloads">
-                    Most downloaded
-                  </SelectItem>
+  {/* Date from */}
+  <div className="min-w-0">
+    <input
+      id="library-date-from"
+      type="date"
+      value={dateFrom}
+      max={dateTo || undefined}
+      onChange={(event) =>
+        setDateFrom(event.target.value)
+      }
+      aria-label="Filter resources from this date"
+      className="block h-10 w-full min-w-0 rounded-md border border-input bg-card px-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:px-2 sm:text-sm"
+    />
+  </div>
 
-                  <SelectItem value="bookmarks">
-                    Most bookmarked
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-{/* Date from */}
-<div className="min-w-0">
-  <input
-    id="library-date-from"
-    type="date"
-    value={dateFrom}
-    max={dateTo || undefined}
-    onChange={(event) =>
-      setDateFrom(event.target.value)
-    }
-    aria-label="Filter resources from this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
+  {/* Date to */}
+  <div className="min-w-0">
+    <input
+      id="library-date-to"
+      type="date"
+      value={dateTo}
+      min={dateFrom || undefined}
+      onChange={(event) =>
+        setDateTo(event.target.value)
+      }
+      aria-label="Filter resources up to this date"
+      className="block h-10 w-full min-w-0 rounded-md border border-input bg-card px-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:px-2 sm:text-sm"
+    />
+  </div>
 </div>
-
-{/* Date to */}
-<div className="min-w-0">
-  <input
-    id="library-date-to"
-    type="date"
-    value={dateTo}
-    min={dateFrom || undefined}
-    onChange={(event) =>
-      setDateTo(event.target.value)
-    }
-    aria-label="Filter resources up to this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
 </div>
-          </div>
-        </div>
 
         {/* Result count and clear filters */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
@@ -704,7 +699,7 @@ const semesterLabel = getResourceScopeLabel(
   return (
     <article className="group flex flex-col rounded-sm border border-border bg-card p-3 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elegant sm:p-5">
       <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-3">
-        <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-gold sm:text-xs">
+        <span className="min-w-0 flex-1 truncate text-[10px] uppercase font-medium text-gold sm:text-xs">
           {categoryName}
         </span>
         <div className="shrink-0">
@@ -713,7 +708,6 @@ const semesterLabel = getResourceScopeLabel(
           />
         </div>
       </div>
-
       <h3 className="line-clamp-2 font-display text-[13px] font-semibold leading-snug sm:text-lg">
         {r.title}
       </h3>

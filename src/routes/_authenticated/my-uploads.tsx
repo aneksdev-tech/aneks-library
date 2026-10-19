@@ -495,69 +495,65 @@ function MyUploads() {
             </div>
           </div>
         </div>
-        {/* Sorting and date range */}
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
-            {/* Sort */}
-            <div className="min-w-0">
-              <Select
-                value={sortBy}
-                onValueChange={(value) =>
-                  setSortBy(value as SortOption)
-                }
-              >
-                <SelectTrigger
-                  id="upload-sort"
-                  className="h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
-                >
-                  <SelectValue placeholder="Newest first" />
-                </SelectTrigger>
+        
+{/* Sorting and date range */}
+<div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
 
-                <SelectContent>
-                  <SelectItem value="newest">
-                    Newest
-                  </SelectItem>
-                  <SelectItem value="oldest">
-                    Oldest
-                  </SelectItem>
-                  <SelectItem value="status">
-                    Status
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+  {/* Sort */}
+  <div className="col-span-2 min-w-0 sm:col-span-1">
+    <Select
+      value={sortBy}
+      onValueChange={(value) =>
+        setSortBy(value as SortOption)
+      }
+    >
+      <SelectTrigger
+        id="upload-sort"
+        className="h-10 w-full min-w-0 px-3 text-xs sm:text-sm"
+      >
+        <SelectValue placeholder="Newest first" />
+      </SelectTrigger>
 
-            {/* Date from */}
-<div className="min-w-0">
-  <input
-    id="library-date-from"
-    type="date"
-    value={dateFrom}
-    max={dateTo || undefined}
-    onChange={(event) =>
-      setDateFrom(event.target.value)
-    }
-    aria-label="Filter resources from this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
+      <SelectContent>
+        <SelectItem value="newest">Newest</SelectItem>
+        <SelectItem value="oldest">Oldest</SelectItem>
+        <SelectItem value="status">Status</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  {/* Date from */}
+  <div className="min-w-0">
+    <input
+      id="upload-date-from"
+      type="date"
+      value={dateFrom}
+      max={dateTo || undefined}
+      onChange={(event) =>
+        setDateFrom(event.target.value)
+      }
+      aria-label="Filter uploads from this date"
+      className="block h-10 w-full min-w-0 rounded-md border border-input bg-card px-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:px-2 sm:text-sm"
+    />
+  </div>
+
+  {/* Date to */}
+  <div className="min-w-0">
+    <input
+      id="upload-date-to"
+      type="date"
+      value={dateTo}
+      min={dateFrom || undefined}
+      onChange={(event) =>
+        setDateTo(event.target.value)
+      }
+      aria-label="Filter uploads up to this date"
+      className="block h-10 w-full min-w-0 rounded-md border border-input bg-card px-1 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:px-2 sm:text-sm"
+    />
+  </div>
 </div>
 
-{/* Date to */}
-<div className="min-w-0">
-  <input
-    id="library-date-to"
-    type="date"
-    value={dateTo}
-    min={dateFrom || undefined}
-    onChange={(event) =>
-      setDateTo(event.target.value)
-    }
-    aria-label="Filter resources up to this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
-</div>
-          </div>
-
-          {/* Filter footer */}
+         {/* Filter footer */}
           <div className="flex items-center justify-between gap-3 pt-1">
             <p className="ml-2 mt-3 text-[10px] font-medium text-gold sm:text-xs">
               {totalCount > 0

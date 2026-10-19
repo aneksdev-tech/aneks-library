@@ -265,7 +265,7 @@ const [categoryFilter, setCategoryFilter] =
 
 const [sortOrder, setSortOrder] = useState<
   "newest" | "oldest"
->("newest");
+>("oldest");
 
 const [dateFrom, setDateFrom] = useState("");
 const [dateTo, setDateTo] = useState("");
@@ -482,7 +482,7 @@ useEffect(() => {
   levelFilter !== ALL_OPTION ||
   semesterFilter !== ALL_OPTION ||
   categoryFilter !== ALL_OPTION ||
-  sortOrder !== "newest" ||
+  sortOrder !== "oldest" ||
   dateFrom !== "" ||
   dateTo !== "";
 
@@ -1236,65 +1236,62 @@ useEffect(() => {
       </div>
     </div>
 
-    {/* Sort and date range */}
-    <div className="grid grid-cols-3 items-end gap-2.5 sm:gap-3">
-      {/* Sort */}
-      <div className="min-w-0">
-        <Select
-          value={sortOrder}
-          onValueChange={(value) =>
-            setSortOrder(value as "newest" | "oldest")
-          }
-        >
-          <SelectTrigger
-            id="academic-sort"
-            className="mt-0 h-9 w-full min-w-0 px-3 text-[10px] sm:h-10 sm:px-3 sm:text-sm"
-          >
-            <SelectValue />
-          </SelectTrigger>
+    
+{/* Sort and date range */}
+<div className="grid grid-cols-2 items-end gap-2.5 sm:grid-cols-3 sm:gap-3">
 
-          <SelectContent>
-            <SelectItem value="newest">
-              Newest
-            </SelectItem>
+  {/* Sort */}
+  <div className="col-span-2 min-w-0 sm:col-span-1">
+    <Select
+      value={sortOrder}
+      onValueChange={(value) =>
+        setSortOrder(value as "newest" | "oldest")
+      }
+    >
+      <SelectTrigger
+        id="academic-sort"
+        className="h-9 w-full min-w-0 px-3 text-xs sm:h-10 sm:text-sm"
+      >
+        <SelectValue />
+      </SelectTrigger>
 
-            <SelectItem value="oldest">
-              Oldest
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <SelectContent>
+        <SelectItem value="newest">Newest</SelectItem>
+        <SelectItem value="oldest">Oldest</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 
-      {/* Date from */}
-<div className="min-w-0">
-  <input
-    id="library-date-from"
-    type="date"
-    value={dateFrom}
-    max={dateTo || undefined}
-    onChange={(event) =>
-      setDateFrom(event.target.value)
-    }
-    aria-label="Filter resources from this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
+  {/* Date from */}
+  <div className="min-w-0">
+    <input
+      id="academic-date-from"
+      type="date"
+      value={dateFrom}
+      max={dateTo || undefined}
+      onChange={(event) =>
+        setDateFrom(event.target.value)
+      }
+      aria-label="Filter academic resources from this date"
+      className="block box-border h-9 w-full min-w-0 rounded-sm border border-input bg-card px-1 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+    />
+  </div>
+
+  {/* Date to */}
+  <div className="min-w-0">
+    <input
+      id="academic-date-to"
+      type="date"
+      value={dateTo}
+      min={dateFrom || undefined}
+      onChange={(event) =>
+        setDateTo(event.target.value)
+      }
+      aria-label="Filter academic resources up to this date"
+      className="block box-border h-9 w-full min-w-0 rounded-sm border border-input bg-card px-1 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-2 sm:text-sm"
+    />
+  </div>
 </div>
-
-{/* Date to */}
-<div className="min-w-0">
-  <input
-    id="library-date-to"
-    type="date"
-    value={dateTo}
-    min={dateFrom || undefined}
-    onChange={(event) =>
-      setDateTo(event.target.value)
-    }
-    aria-label="Filter resources up to this date"
-    className="h-9 w-full min-w-0 appearance-auto rounded-sm border border-input bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-10 sm:px-3 sm:text-sm"
-  />
-</div>
-    </div>
   </div>
 
               {/* Matching count and clear filters */}
