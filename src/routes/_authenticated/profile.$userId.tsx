@@ -285,17 +285,9 @@ function PublicProfilePage() {
               </div>
             </div>
           </section>
-
+          
           <section className="rounded-2xl border border-border bg-card p-3.5 shadow-soft sm:p-6">
-            <div className="mb-3 sm:mb-5">
-              <h2 className="font-display text-base font-semibold sm:text-lg">
-                Uploaded Resources
-              </h2>
-
-              <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-                Approved resources uploaded by this member.
-              </p>
-            </div>
+            
 
             {resources && resources.length > 0 ? (
               <ul className="divide-y divide-border border-y border-border">
@@ -379,19 +371,28 @@ function PublicProfilePage() {
               </div>
             </div>
 
-            <div className="min-w-0 flex-1 text-left">
-              <div className="flex flex-wrap items-center justify-start gap-1.5 sm:gap-2">
-                <span className="shrink-0 rounded-sm border border-gold/20 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium !text-gold sm:px-3 sm:py-1 sm:text-xs">
-                  {roleLabel}
-               </span>
+            <div className="mt-4 border-t border-border pt-4 sm:mt-5 sm:pt-5">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs text-muted-foreground sm:text-sm">
+                  Reputation
+                </span>
 
-                <span className="shrink-0 rounded-sm border border-gold/20 bg-gold/10 px-2.5 py-0.5 text-[10px] font-medium !text-gold sm:px-3 sm:py-1 sm:text-xs">
-                  {contributor.emoji}{" "}
+                <span className="text-sm font-semibold sm:text-base">
+                  {profile.reputation}
+                </span>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <span className="text-xs text-muted-foreground sm:text-sm">
+                  Contributor level
+                </span>
+
+                <span className="text-right text-xs font-medium text-gold sm:text-sm">
                   {contributor.name}
-               </span>
+                </span>
               </div>
             </div>
-            </section>
+          </section>
 
           <section className="rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-6">
             <div className="flex items-center gap-2.5 sm:gap-3">

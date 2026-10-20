@@ -1384,7 +1384,7 @@ function UsersPage() {
                 !isLoading &&
                 !isError && (
                   <p
-                    className="mb-3 ml-5 flex items-center gap-1.5 text-sm text-muted-foreground md:ml-5 sm:ml-5 xs:ml-3"
+                    className="mb-3 ml-5 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm"
                     aria-live="polite"
                   >
                     <span>

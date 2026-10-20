@@ -379,7 +379,7 @@ const semesterLabel = getResourceScopeLabel(
               </div>
             </div>
 
-            <div className="max-w-sm pt-1 sm:pt-2">
+            <div className="max-w-sm pt-1 sm:pt-2 mb-4 lg:mb-5">
               <Button
                 type="button"
                 variant="outline"
