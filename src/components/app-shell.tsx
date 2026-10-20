@@ -349,10 +349,10 @@ useEffect(() => {
                 <img
                   src={logo}
                   alt="Aneks Library"
-                  className="h-5 w-5 shrink-0 rounded-lg object-contain"
+                  className="h-8 w-8 shrink-0 rounded-lg object-contain"
                 />
 
-                <span className="-ml-1 truncate font-display text-[9px] font-semibold tracking-tight">
+                <span className="-ml-1 truncate font-display text-[12px] font-semibold tracking-tight">
                   <span className="text-gold">neks</span>{" "}
                   Library
                 </span>
