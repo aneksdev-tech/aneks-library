@@ -18,6 +18,15 @@ const searchSchema = z.object({
   next: z.string().optional(),
   google_registration_nonce: z.string().optional(),
   google_oauth_popup: z.coerce.string().optional(),
+  debug: z
+    .enum([
+      "guard_missing_session",
+      "guard_profile_query_error",
+      "guard_profile_missing",
+      "guard_role_denied",
+    ])
+    .optional(),
+  debug_path: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -71,11 +80,13 @@ function clearLocalSupabaseSession() {
 
 function AuthPage() {
   const {
-    mode,
-    next,
-    google_registration_nonce,
-    google_oauth_popup,
-  } = Route.useSearch();
+  mode,
+  next,
+  google_registration_nonce,
+  google_oauth_popup,
+  debug,
+  debug_path,
+} = Route.useSearch();
 
   const navigate = useNavigate();
 
@@ -1239,6 +1250,64 @@ function AuthPage() {
         </Link> */}
 
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
+          {debug && (
+  <div
+    role="alert"
+    className="mb-5 rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm"
+  >
+    <h2 className="font-semibold text-destructive">
+      Temporary Navigation Diagnostic
+    </h2>
+
+    <p className="mt-2">
+      <span className="font-medium">
+        Diagnostic code:
+      </span>{" "}
+      {debug}
+    </p>
+
+    <p className="mt-1 break-all">
+      <span className="font-medium">
+        Route being opened:
+      </span>{" "}
+      {debug_path || "Not recorded"}
+    </p>
+
+    {debug === "guard_missing_session" && (
+      <p className="mt-2">
+        The route guard did not find an authenticated
+        Supabase session or user when this route was
+        checked. This does not yet establish why the
+        session was missing.
+      </p>
+    )}
+
+    {debug === "guard_profile_query_error" && (
+      <p className="mt-2">
+        The route guard encountered an error while
+        checking the user's profile.
+      </p>
+    )}
+
+    {debug === "guard_profile_missing" && (
+      <p className="mt-2">
+        The route guard did not find the user's profile.
+      </p>
+    )}
+
+    {debug === "guard_role_denied" && (
+      <p className="mt-2">
+        The user's role did not satisfy the route's
+        access requirements.
+      </p>
+    )}
+
+    <p className="mt-3 text-xs text-muted-foreground">
+      Please take a screenshot of this message before
+      signing in again.
+    </p>
+  </div>
+)}
           {mode === "login" && (
             <LoginForm
               resetGoogleLoginGuard={

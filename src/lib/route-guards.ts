@@ -24,19 +24,30 @@ export async function requireRole(
   });
 
   if (!session?.user) {
-    console.error(
-      "[Route Guard] Redirecting to login: session or user missing",
-    );
+  const attemptedPath =
+    typeof window !== "undefined"
+      ? window.location.pathname
+      : "server";
 
-    throw redirect({
-      to: "/auth",
-      search: {
-        mode: "login",
-        ...(next ? { next } : {}),
-      },
-    });
-  }
+  console.error(
+    "[Route Guard] Redirecting to login: session or user missing",
+    {
+      path: attemptedPath,
+      hasSession: Boolean(session),
+      hasUser: Boolean(session?.user),
+    },
+  );
 
+  throw redirect({
+    to: "/auth",
+    search: {
+      mode: "login",
+      ...(next ? { next } : {}),
+      debug: "guard_missing_session",
+      debug_path: attemptedPath,
+    },
+  });
+}
   // Continue checking the user's current role in the database.
   const { data: profile, error } = await supabase
     .from("private_profiles")
