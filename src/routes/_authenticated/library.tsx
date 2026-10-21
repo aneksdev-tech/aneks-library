@@ -366,16 +366,16 @@ useEffect(() => {
                 </SelectTrigger>
 
                 <SelectContent>
-                  <SelectItem value={ALL_OPTION}>
-                    All Semesters
-                  </SelectItem>
+  <SelectItem value={ALL_OPTION}>
+    Both Semesters
+  </SelectItem>
 
-                  {semesters.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+  {semesters.map((item) => (
+    <SelectItem key={item} value={item}>
+      {item}
+    </SelectItem>
+  ))}
+</SelectContent>
               </Select>
             </div>
           </div>

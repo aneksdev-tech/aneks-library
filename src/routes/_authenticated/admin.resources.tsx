@@ -1437,14 +1437,16 @@ const availableDepartments =
       </SelectTrigger>
 
       <SelectContent>
-        <SelectItem value="all">All Semesters</SelectItem>
+  <SelectItem value={ALL_OPTION}>
+    Both Semesters
+  </SelectItem>
 
-        {semesters.map((item) => (
-          <SelectItem key={item} value={item}>
-            {item}
-          </SelectItem>
-        ))}
-      </SelectContent>
+  {semesters.map((item) => (
+    <SelectItem key={item} value={item}>
+      {item}
+    </SelectItem>
+  ))}
+</SelectContent>
     </Select>
 
         
@@ -2511,34 +2513,43 @@ onValueChange={(value) => {
   )}
 
     <div className="space-y-2">
-      <Label htmlFor="edit-resource-semester">
-        Semester
-      </Label>
-      <Select
-        value={editForm.semester || "none"}
-        onValueChange={(value) =>
-          setEditForm((current) => ({
-            ...current,
-            semester: value === "none" ? "" : value,
-          }))
-        }
-        disabled={editResource.isPending}
-      >
-        <SelectTrigger id="edit-resource-semester">
-          <SelectValue placeholder="Select semester" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">
-            Select semester
-          </SelectItem>
-          {semesters.map((semester) => (
-            <SelectItem key={semester} value={semester}>
-              {semester}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+  <Label htmlFor="edit-resource-semester">
+    Semester
+  </Label>
+
+  <Select
+    value={editForm.semester || "none"}
+    onValueChange={(value) =>
+      setEditForm((current) => ({
+        ...current,
+        semester: value === "none" ? "" : value,
+      }))
+    }
+    disabled={editResource.isPending}
+  >
+    <SelectTrigger id="edit-resource-semester">
+      <SelectValue placeholder="Select semester" />
+    </SelectTrigger>
+
+    <SelectContent>
+      <SelectItem value="none">
+        Select semester
+      </SelectItem>
+
+      {isGlobalCategory && (
+        <SelectItem value="Both Semesters">
+          Both Semesters
+        </SelectItem>
+      )}
+
+      {semesters.map((semester) => (
+        <SelectItem key={semester} value={semester}>
+          {semester}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
 
     <div className="space-y-2">
       <Label htmlFor="edit-resource-year">

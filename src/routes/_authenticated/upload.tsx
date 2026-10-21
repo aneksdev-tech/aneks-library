@@ -299,21 +299,21 @@ const departments =
       throw new Error("Choose a category");
     }
 
-    if (!isPublication && !form.college) {
-      throw new Error("Choose a college");
-    }
+    if (!isGlobalCategory && !form.college) {
+  throw new Error("Choose a college");
+}
 
-    if (
-      !isPublication &&
-      (!isSGS || isGlobalCategory || departments.length > 0) &&
-      !form.department
-    ) {
-      throw new Error("Choose a department");
-    }
+if (
+  !isGlobalCategory &&
+  (!isSGS || departments.length > 0) &&
+  !form.department
+) {
+  throw new Error("Choose a department");
+}
 
-    if (!isPublication && !form.level) {
-      throw new Error("Choose a level");
-    }
+if (!isGlobalCategory && !form.level) {
+  throw new Error("Choose a level");
+}
 
     if (!form.semester) {
       throw new Error("Choose a semester");
@@ -994,36 +994,45 @@ onValueChange={(value) => {
   )}
 
   <div className="space-y-2">
-    <Label className="text-xs sm:text-sm">
-      Semester
-    </Label>
+  <Label className="text-xs sm:text-sm">
+    Semester
+  </Label>
 
-    <Select
-      value={form.semester}
-      onValueChange={(value) =>
-        setForm({
-          ...form,
-          semester: value,
-        })
-      }
-    >
-      <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
-        <SelectValue placeholder="Choose Semester" />
-      </SelectTrigger>
+  <Select
+    value={form.semester}
+    onValueChange={(value) =>
+      setForm({
+        ...form,
+        semester: value,
+      })
+    }
+  >
+    <SelectTrigger className="h-9 text-xs sm:h-10 sm:text-sm">
+      <SelectValue placeholder="Choose Semester" />
+    </SelectTrigger>
 
-      <SelectContent>
-        {semesters.map((semester) => (
-          <SelectItem
-            key={semester}
-            value={semester}
-            className="text-xs sm:text-sm"
-          >
-            {semester}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
+    <SelectContent>
+      {isGlobalCategory && (
+        <SelectItem
+          value="Both Semesters"
+          className="text-xs sm:text-sm"
+        >
+          Both Semesters
+        </SelectItem>
+      )}
+
+      {semesters.map((semester) => (
+        <SelectItem
+          key={semester}
+          value={semester}
+          className="text-xs sm:text-sm"
+        >
+          {semester}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
 
   <div className="space-y-2">
     <Label className="text-xs sm:text-sm">
