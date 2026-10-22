@@ -12,6 +12,7 @@ import { EmptyState } from "./dashboard";
 import { DocumentPreview } from "@/components/document-preview/DocumentPreview";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { colleges, levels, semesters, getDepartments, ALL_OPTION } from "@/lib/academicData";
+import { getResourceScopeLabel } from "@/lib/resource-scope-labels";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAGE_SIZE = 10;
@@ -960,30 +961,47 @@ useEffect(() => {
                           label="File size"
                           value={formatFileSize(resource.file_size)}
                         />
-                        <AuditItem
-                          label="Course code"
-                          value={resource.course_code || "Not provided"}
-                        />
-                        <AuditItem
-                          label="College"
-                          value={resource.college || "Not provided"}
-                        />
-                        <AuditItem
-                          label="Department"
-                          value={resource.department || "Not provided"}
-                        />
-                        <AuditItem
-                          label="Level"
-                          value={resource.level || "Not provided"}
-                        />
-                        <AuditItem
-                          label="Semester"
-                          value={resource.semester || "Not provided"}
-                        />
-                        <AuditItem
-                          label="Year"
-                          value={resource.year?.toString() || "Not provided"}
-                        />
+                        {resource.course_code?.trim() && (
+    <AuditItem
+      label="Course code"
+      value={resource.course_code.trim()}
+    />
+  )}
+
+  {resource.college?.trim() && (
+    <AuditItem
+      label="College"
+      value={getResourceScopeLabel(resource.college, "college")}
+    />
+  )}
+
+  {resource.department?.trim() && (
+    <AuditItem
+      label="Department"
+      value={getResourceScopeLabel(resource.department, "department")}
+    />
+  )}
+
+  {resource.level?.trim() && (
+    <AuditItem
+      label="Level"
+      value={getResourceScopeLabel(resource.level, "level")}
+    />
+  )}
+
+  {resource.semester?.trim() && (
+    <AuditItem
+      label="Semester"
+      value={getResourceScopeLabel(resource.semester, "semester")}
+    />
+  )}
+
+  {resource.year && (
+    <AuditItem
+      label="Year"
+      value={String(resource.year)}
+    />
+  )}
                       </div>
 
                       {/* Resource metadata */}

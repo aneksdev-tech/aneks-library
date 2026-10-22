@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ALL_OPTION, colleges, getDepartments, levels, semesters } from "@/lib/academicData";
+import { getResourceScopeLabel } from "@/lib/resource-scope-labels";
 import { Check, CheckCircle2, Clock3, ChevronLeft, ChevronRight, Eye, FileText, Loader2, Search, UserRound, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "./dashboard";
@@ -1427,38 +1428,47 @@ useEffect(() => {
                                     value={formatFileSize(resource.file_size)}
                                   />
 
-                                  <AuditItem
-                                    label="Course code"
-                                    value={resource.course_code || "Not provided"}
-                                  />
+                                  {resource.course_code?.trim() && (
+    <AuditItem
+      label="Course code"
+      value={resource.course_code.trim()}
+    />
+  )}
 
-                                  <AuditItem
-                                    label="College"
-                                    value={resource.college || "Not provided"}
-                                  />
+  {resource.college?.trim() && (
+    <AuditItem
+      label="College"
+      value={getResourceScopeLabel(resource.college, "college")}
+    />
+  )}
 
-                                  <AuditItem
-                                    label="Department"
-                                    value={resource.department || "Not provided"}
-                                  />
+  {resource.department?.trim() && (
+    <AuditItem
+      label="Department"
+      value={getResourceScopeLabel(resource.department, "department")}
+    />
+  )}
 
-                                  <AuditItem
-                                    label="Level"
-                                    value={resource.level || "Not provided"}
-                                  />
+  {resource.level?.trim() && (
+    <AuditItem
+      label="Level"
+      value={getResourceScopeLabel(resource.level, "level")}
+    />
+  )}
 
-                                  <AuditItem
-                                    label="Semester"
-                                    value={resource.semester || "Not provided"}
-                                  />
+  {resource.semester?.trim() && (
+    <AuditItem
+      label="Semester"
+      value={getResourceScopeLabel(resource.semester, "semester")}
+    />
+  )}
 
-                                  <AuditItem
-                                    label="Year"
-                                    value={
-                                      resource.year?.toString() ||
-                                      "Not provided"
-                                    }
-                                  />
+  {resource.year && (
+    <AuditItem
+      label="Year"
+      value={String(resource.year)}
+    />
+  )}
                                 </div>
                               </div>
                             </div>

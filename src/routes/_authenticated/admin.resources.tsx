@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { useAccess } from "@/hooks/useAccess";
 import { downloadResource } from "@/lib/download";
 import { colleges, levels, semesters, years, getDepartments, ALL_OPTION } from "@/lib/academicData";
+import { getResourceScopeLabel } from "@/lib/resource-scope-labels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1702,28 +1703,28 @@ const availableDepartments =
   {resource.college?.trim() && (
     <AuditItem
       label="College"
-      value={resource.college.trim()}
+      value={getResourceScopeLabel(resource.college, "college")}
     />
   )}
 
   {resource.department?.trim() && (
     <AuditItem
       label="Department"
-      value={resource.department.trim()}
+      value={getResourceScopeLabel(resource.department, "department")}
     />
   )}
 
   {resource.level?.trim() && (
     <AuditItem
       label="Level"
-      value={resource.level.trim()}
+      value={getResourceScopeLabel(resource.level, "level")}
     />
   )}
 
   {resource.semester?.trim() && (
     <AuditItem
       label="Semester"
-      value={resource.semester.trim()}
+      value={getResourceScopeLabel(resource.semester, "semester")}
     />
   )}
 
