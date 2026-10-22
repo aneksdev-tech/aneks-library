@@ -1265,7 +1265,7 @@ function AuthPage() {
           className="absolute inset-0 h-full w-full object-cover"
         />
 
-        <div className="absolute inset-0 bg-gradient-emerald opacity-80 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
         <div className="relative flex h-full flex-col justify-end p-12 text-primary-foreground">
           <p className="text-xs uppercase tracking-[0.2em] text-gold">
@@ -1578,17 +1578,19 @@ function LoginForm({
           Remember me on this device
         </label>
 
-        <Button
-          type="submit"
-          disabled={busy}
-          className="w-full bg-gradient-emerald text-primary-foreground shadow-soft"
-        >
-          {busy && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
+       <Button
+  type="submit"
+  disabled={busy}
+  className="group w-full bg-gradient-emerald text-primary-foreground shadow-soft transition-all hover:bg-none hover:bg-accent hover:shadow-md"
+>
+  {busy && (
+    <Loader2 className="mr-2 h-4 w-4 animate-spin transition-colors group-hover:text-primary" />
+  )}
 
-          Log In
-        </Button>
+  <span className="transition-colors group-hover:text-primary">
+    Log In
+  </span>
+</Button>
       </form>
 
       <p className="mt-6 text-left text-sm text-muted-foreground">
@@ -1624,6 +1626,9 @@ function RegisterForm() {
 
   const [showValidationErrors, setShowValidationErrors] =
     useState(false);
+
+  const [registrationMethod, setRegistrationMethod] =
+  useState<"choose" | "google" | "email">("choose");
 
   const [role, setRole] =
     useState<RegistrationRole | "">(
@@ -1756,16 +1761,39 @@ function RegisterForm() {
         )
       )
     );
+  
+  const googleCanSubmit =
+  role !== "" &&
+  (
+    !needsCollege ||
+    (
+      form.college !== "" &&
+      form.department !== "" &&
+      (
+        !needsLevel ||
+        form.level !== ""
+      )
+    )
+  );
 
   const handleGoogle =
     async () => {
       if (!role) {
-        toast.error(
-          "Please select your role first.",
-        );
+  toast.error("Please select your role first.");
+  return;
+}
 
-        return;
-      }
+if (!googleCanSubmit) {
+  toast.error(
+    needsLevel && !form.level
+      ? "Please select your level."
+      : !form.college
+        ? "Please select your college."
+        : "Please select your department.",
+  );
+
+  return;
+}
 
       setBusy(true);
 
@@ -2097,6 +2125,7 @@ function RegisterForm() {
       }
     };
 
+    if (registrationMethod === "choose") {
   return (
     <div>
       <h1 className="font-display text-2xl font-semibold">
@@ -2104,28 +2133,292 @@ function RegisterForm() {
       </h1>
 
       <p className="mt-2 text-sm text-muted-foreground">
-      If you don't want to use Email and Password, select ONLY your Role and complete any fields that appear after selecting your Role, then click "Continue with Google", not "Create account".
-      <br /><br />
-      If you prefer Email and Password, fill in all the fields below, then click "Create account" not "Continue with Google".
+        Choose how you'd like to join Aneks Library.
+        You only need to use one registration method.
       </p>
 
       <Button
         type="button"
         variant="outline"
-        className="mt-6 w-full"
-        onClick={handleGoogle}
-        disabled={busy}
+        className="mt-6 h-auto w-full justify-start py-4"
+        onClick={() => setRegistrationMethod("google")}
       >
         <GoogleIcon />
-        Continue with Google
+        <span className="flex flex-col items-start">
+          <span className="font-semibold">
+            Continue with Google
+          </span>
+          <span className="mt-1 text-xs font-normal text-muted-foreground">
+            Use Google for your name and email.
+          </span>
+        </span>
       </Button>
 
-      <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
+      <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
-        or with email
+        or
         <span className="h-px flex-1 bg-border" />
       </div>
 
+      <Button
+  type="button"
+  className="group h-auto w-full justify-start bg-gradient-emerald py-4 text-primary-foreground shadow-soft transition-all hover:bg-none hover:bg-accent hover:shadow-md"
+  onClick={() => setRegistrationMethod("email")}
+>
+  <Mail className="mr-2 h-4 w-4 transition-colors group-hover:text-primary" />
+
+  <span className="flex flex-col items-start">
+    <span className="font-semibold transition-colors group-hover:text-primary">
+      Create account with email
+    </span>
+
+    <span className="mt-1 text-xs font-normal text-primary-foreground/80 transition-colors group-hover:text-primary">
+      Enter your details and create a password.
+    </span>
+  </span>
+</Button>
+
+      <p className="mt-6 text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link
+          to="/auth"
+          search={{ mode: "login" }}
+          className="font-medium text-primary hover:underline"
+        >
+          Log in
+        </Link>
+        {" | "}
+        <Link
+          to="/"
+          className="font-medium text-primary hover:underline"
+        >
+          Home
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+if (registrationMethod === "google") {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setRegistrationMethod("choose")}
+        className="mb-10 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="mr-1 inline h-4 w-4" />
+        Back
+      </button>
+
+      <h1 className="font-display text-2xl font-semibold">
+        Register with Google
+      </h1>
+
+      <p className="mt-2 text-sm text-muted-foreground">
+        Select your role and complete the required academic
+        details.
+      </p>
+
+      <div className="mt-10 space-y-4">
+        <div>
+          <Label className="mb-4 block">Account role</Label>
+
+          <Select
+            value={role}
+            onValueChange={(v) => {
+              setRole(v as RegistrationRole);
+
+              setForm((prev) => ({
+                ...prev,
+                college:
+                  v === "student" ||
+                  v === "lecturer" ||
+                  v === "staff"
+                    ? prev.college
+                    : "",
+                department:
+                  v === "student" ||
+                  v === "lecturer" ||
+                  v === "staff"
+                    ? prev.department
+                    : "",
+                level:
+                  v === "student"
+                    ? prev.level
+                    : "",
+              }));
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your role" />
+            </SelectTrigger>
+
+            <SelectContent>
+              {ROLES.map((r) => (
+                <SelectItem key={r.value} value={r.value}>
+                  {r.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {role !== "" && role !== "student" && (
+          <p className="text-xs font-medium leading-relaxed text-destructive">
+            {ROLES.find((r) => r.value === role)?.label}{" "}
+            accounts require admin approval before dashboard access.
+          </p>
+        )}
+
+        {needsCollege && (
+          <>
+            <div>
+              <Label>College</Label>
+
+              <Select
+                value={form.college}
+                onValueChange={(value) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    college: value,
+                    department: "",
+                  }));
+                }}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Select College" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {colleges.map((college) => (
+                    <SelectItem key={college.id} value={college.id}>
+                      <span className="sm:hidden">
+                        {college.id}
+                      </span>
+                      <span className="hidden sm:inline">
+                        {college.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Department</Label>
+
+              <Select
+                value={form.department}
+                onValueChange={(value) =>
+                  setField("department", value)
+                }
+                disabled={!form.college}
+              >
+                <SelectTrigger className="mt-1.5">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {departments.map((department) => (
+                    <SelectItem key={department} value={department}>
+                      {department}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
+        {needsLevel && (
+          <div>
+            <Label>Level</Label>
+
+            <Select
+              value={form.level}
+              onValueChange={(value) =>
+                setField("level", value)
+              }
+            >
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Select Level" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {levels.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+<Button
+  type="button"
+  className="group w-full bg-gradient-emerald text-primary-foreground shadow-soft transition-all hover:bg-none hover:bg-accent hover:shadow-md"
+  disabled={busy}
+  onClick={handleGoogle}
+>
+  {busy ? (
+    <Loader2 className="h-4 w-4 animate-spin transition-colors group-hover:text-primary"/>
+  ) : (
+    <span className="transition-colors group-hover:text-primary">
+      <GoogleIcon />
+    </span>
+  )}
+
+  <span className="transition-colors group-hover:text-primary">
+    Continue with Google
+  </span>
+</Button>
+      </div>
+
+      <p className="mt-6 text-left text-sm text-muted-foreground">
+        Already have an account? &nbsp;{" "}
+        <Link
+          to="/auth"
+          search={{
+            mode: "login",
+          }}
+          className="font-medium text-primary hover:underline"
+        >
+          Login&nbsp;
+        </Link>{" "}
+        | &nbsp;
+
+        <Link
+          to="/"
+          className="font-medium text-primary hover:underline"
+        >
+          Home
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+  return (
+    <div>
+      <button
+  type="button"
+  onClick={() => setRegistrationMethod("choose")}
+  className="mb-10 text-sm text-muted-foreground hover:text-foreground"
+>
+  <ArrowLeft className="mr-1 inline h-4 w-4" />
+  Back
+</button>
+
+<h1 className="font-display text-2xl font-semibold">
+  Create account with email
+</h1>
+
+<p className="mt-2 mb-8 text-sm text-muted-foreground">
+  Enter your details below, choose your role, and create
+  a password to register with your email address.
+</p>
       <form
         onSubmit={handleSubmit}
         className="space-y-4"
@@ -2631,16 +2924,20 @@ function RegisterForm() {
         </div>
 
         <Button
-          type="submit"
-          disabled={busy}
-          className="w-full bg-gradient-emerald text-primary-foreground shadow-soft"
-        >
-          {busy && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
+  type="submit"
+  disabled={busy}
+  className="group w-full bg-gradient-emerald text-primary-foreground shadow-soft transition-all hover:bg-none hover:bg-accent hover:shadow-md"
+>
+  {busy && (
+    <Loader2 className="mr-2 h-4 w-4 animate-spin transition-colors group-hover:text-primary" />
+  )}
 
-          Create account
-        </Button>
+  <Mail className="mr-2 h-4 w-4 transition-colors group-hover:text-primary" />
+
+  <span className="transition-colors group-hover:text-primary">
+    Create account
+  </span>
+</Button>
       </form>
 
       <p className="mt-6 text-left text-sm text-muted-foreground">
