@@ -1,17 +1,15 @@
 import express from "express";
 import cors from "cors";
 import sharp from "sharp";
-import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { PDFDocument, StandardFonts, rgb, degrees, } from "pdf-lib";
-import os from "os";
-import { execFile } from "child_process";
-import { promisify } from "util";
-import { v4 as uuid } from "uuid";
+import { PDFDocument } from "pdf-lib";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { WATERMARK, createWatermarkSvg, } from "./watermarkTemplate.js";
+import {
+  WATERMARK,
+  createWatermarkSvg,
+} from "./watermarkTemplate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,8 +21,6 @@ dotenv.config({
   override: false,
 });
 
-const execFileAsync = promisify(execFile);
-
 if (!process.env.SUPABASE_URL) {
   throw new Error("SUPABASE_URL is missing");
 }
@@ -35,14 +31,8 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
-
-const SOFFICE =
-  process.env.SOFFICE_PATH ??
-  (process.platform === "win32"
-    ? "C:\\Program Files\\LibreOffice\\program\\soffice.com"
-    : "soffice");
 
 const app = express();
 
@@ -63,18 +53,13 @@ if (!WATERMARK_SERVER_SECRET) {
   );
 }
 
-function requireWatermarkSecret(
-  req,
-  res,
-  next,
-) {
+function requireWatermarkSecret(req, res, next) {
   const suppliedSecret =
     req.headers["x-watermark-secret"];
 
   if (
     typeof suppliedSecret !== "string" ||
-    suppliedSecret !==
-      WATERMARK_SERVER_SECRET
+    suppliedSecret !== WATERMARK_SERVER_SECRET
   ) {
     return res.status(401).json({
       error: "Unauthorized.",
@@ -85,182 +70,62 @@ function requireWatermarkSecret(
 }
 
 // -------------------------------------------------
-// DOCX → PDF Converter
+// PDF Watermarking
 // -------------------------------------------------
 
-async function processDocx(
-  docxBuffer,
-) {
-  const id = uuid();
-
-  const tempDir =
-    os.tmpdir();
-
-  const inputPath =
-    path.join(
-      tempDir,
-      `${id}.docx`,
-    );
-
-  const outputDir =
-    path.join(
-      tempDir,
-      id,
-    );
-
-  await fs.mkdir(outputDir, {
-    recursive: true,
-  });
-
-  await fs.writeFile(
-    inputPath,
-    docxBuffer,
-  );
-
-  const stat = await fs.stat(inputPath);
-
-console.log(
-  "DOCX written:",
-  inputPath,
-  stat.size,
-  "bytes",
-);
-
-console.log("Using soffice:", SOFFICE);
-
-const result = await execFileAsync(
-  SOFFICE,
-  [
-    "--headless",
-    "--convert-to",
-    "pdf",
-    "--outdir",
-    outputDir,
-    inputPath,
-  ],
-);
-
-console.log("LibreOffice stdout:");
-console.log(result.stdout);
-
-console.log("LibreOffice stderr:");
-console.log(result.stderr);
-
-  const files =
-  await fs.readdir(outputDir);
-
-console.log("Output directory:", files);
-
-const pdfFile =
-  files.find((f) =>
-    f.toLowerCase().endsWith(".pdf")
-  );
-
-if (!pdfFile) {
-  throw new Error(
-    "LibreOffice did not generate a PDF."
-  );
-}
-
-const pdfPath =
-  path.join(outputDir, pdfFile);
-
-const pdfBytes =
-  await fs.readFile(pdfPath);
-
-
-  await fs.rm(inputPath, {
-    force: true,
-  });
-
-  await fs.rm(outputDir, {
-    recursive: true,
-    force: true,
-  });
-
-  return pdfBytes;
-}
-
-async function processPdf(
-  pdfBytes,
-  email,
-) {
-  const pdfDoc =
-    await PDFDocument.load(pdfBytes);
-
-  const pages =
-    pdfDoc.getPages();
+async function processPdf(pdfBytes) {
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const pages = pdfDoc.getPages();
 
   for (const page of pages) {
+    const { width, height } = page.getSize();
 
-    const { width, height } =
-      page.getSize();
+    const watermarkWidth = Math.round(
+      Math.min(width, height) * 1.5,
+    );
 
-    // Calculate desired width (same idea as images)
-    const watermarkWidth =
-      Math.round(
-        Math.min(width, height) * 1.50,
-      );
-
-    // Prepare watermark with Sharp
-    const watermarkBuffer =
-      await sharp(
-        path.join(
-          __dirname,
-          "aneks-watermark.png",
-        ),
-      )
-        .resize({
-          width: watermarkWidth,
-          withoutEnlargement: true,
-        })
-        .rotate(-WATERMARK.rotation, {
-          background: {
-            r: 0,
-            g: 0,
-            b: 0,
-            alpha: 0,
-          },
-        })
-        .png()
-        .toBuffer();
+    const watermarkBuffer = await sharp(
+      path.join(__dirname, "aneks-watermark.png"),
+    )
+      .resize({
+        width: watermarkWidth,
+        withoutEnlargement: true,
+      })
+      .rotate(-WATERMARK.rotation, {
+        background: {
+          r: 0,
+          g: 0,
+          b: 0,
+          alpha: 0,
+        },
+      })
+      .png()
+      .toBuffer();
 
     const rotatedMeta =
-  await sharp(
-    watermarkBuffer,
-  ).metadata();
+      await sharp(watermarkBuffer).metadata();
 
-const wmWidth =
-  rotatedMeta.width ?? 0;
+    const wmWidth = rotatedMeta.width ?? 0;
+    const wmHeight = rotatedMeta.height ?? 0;
 
-const wmHeight =
-  rotatedMeta.height ?? 0;
+    const watermarkImage =
+      await pdfDoc.embedPng(watermarkBuffer);
 
-const watermarkImage =
-  await pdfDoc.embedPng(
-    watermarkBuffer,
-  );
+    page.drawImage(watermarkImage, {
+      x: (width - wmWidth) / 2,
+      y: (height - wmHeight) / 2,
+      width: wmWidth,
+      height: wmHeight,
+      opacity: WATERMARK.opacity,
+    });
+  }
 
-    page.drawImage(
-  watermarkImage,
-  {
-    x: (width - wmWidth) / 2,
-
-    y: (height - wmHeight) / 2,
-
-    width: wmWidth,
-
-    height: wmHeight,
-
-    opacity: WATERMARK.opacity,
-  },
-);
+  return Buffer.from(await pdfDoc.save());
 }
 
-  return Buffer.from(
-    await pdfDoc.save(),
-  );
-}
+// -------------------------------------------------
+// Health Check
+// -------------------------------------------------
 
 app.get("/", (req, res) => {
   res.json({
@@ -269,393 +134,202 @@ app.get("/", (req, res) => {
   });
 });
 
+// -------------------------------------------------
+// Image Watermarking
+// -------------------------------------------------
+
 app.post(
   "/watermark",
   requireWatermarkSecret,
   async (req, res) => {
-  console.log("===== VERSION 2 =====");
-  try {
-    const { image } = req.body;
+    try {
+      const { image } = req.body;
 
-    if (!image) {
-      return res.status(400).json({
-        error: "Missing image.",
-      });
-    }
+      if (!image) {
+        return res.status(400).json({
+          error: "Missing image.",
+        });
+      }
 
-    const imageBuffer = Buffer.from(
-      image,
-      "base64",
-    );
+      const imageBuffer = Buffer.from(
+        image,
+        "base64",
+      );
 
-    console.log(
-      "Received image:",
-      imageBuffer.length,
-      "bytes",
-    );
+      console.log(
+        "Received image:",
+        imageBuffer.length,
+        "bytes",
+      );
 
-      const original =
-      sharp(imageBuffer);
+      const original = sharp(imageBuffer);
+      const metadata = await original.metadata();
 
-    const metadata =
-      await original.metadata();
+      const format = metadata.format ?? "jpeg";
+      const width = metadata.width ?? 0;
+      const height = metadata.height ?? 0;
 
-    const format =
-      metadata.format ?? "jpeg";
+      if (!width || !height) {
+        return res.status(400).json({
+          error: "Unable to determine image size.",
+        });
+      }
 
-    const width =
-      metadata.width ?? 0;
+      const watermarkSvg = createWatermarkSvg(
+        width,
+        height,
+      );
 
-    const height =
-      metadata.height ?? 0;
+      const watermarkBuffer = Buffer.from(
+        watermarkSvg,
+      );
 
-    if (!width || !height) {
-      return res.status(400).json({
-        error:
-          "Unable to determine image size.",
-      });
-    }
+      const watermark = await sharp(watermarkBuffer)
+        .png()
+        .toBuffer();
 
-  const watermarkSvg =
-  createWatermarkSvg(
-    width,
-    height,
-  );
+      const meta = await sharp(watermark).metadata();
 
-const watermarkBuffer =
-  Buffer.from(watermarkSvg);
+      const wmWidth = meta.width ?? width;
+      const wmHeight = meta.height ?? height;
 
-const watermark =
-  await sharp(watermarkBuffer)
-    .png()
-    .toBuffer();
+      const composites = [
+        {
+          input: watermark,
+          left: Math.round((width - wmWidth) / 2),
+          top: Math.round((height - wmHeight) / 2),
+        },
+      ];
 
-const meta =
-  await sharp(watermark).metadata();
+      const processed = original.composite(composites);
 
-const wmWidth =
-  meta.width ?? width;
+      let output;
 
-const wmHeight =
-  meta.height ?? height;
+      switch (format) {
+        case "png":
+          output = await processed.png().toBuffer();
+          break;
 
-const composites = [
-  {
-    input: watermark,
-    left: Math.round(
-      (width - wmWidth) / 2,
-    ),
-    top: Math.round(
-      (height - wmHeight) / 2,
-    ),
-  },
-];
-
-    // -----------------------------------------
-    // Apply watermark
-    // -----------------------------------------
-
-    const processed =
-      original.composite(composites);
-
-    let output;
-
-    switch (format) {
-
-      case "png":
-
-        output =
-          await processed
-            .png()
-            .toBuffer();
-
-        break;
-
-      case "webp":
-
-        output =
-          await processed
+        case "webp":
+          output = await processed
             .webp({
               quality: 100,
             })
             .toBuffer();
+          break;
 
-        break;
-
-      default:
-
-        output =
-          await processed
+        default:
+          output = await processed
             .jpeg({
               quality: 100,
             })
             .toBuffer();
+      }
 
+      let contentType = "image/jpeg";
+
+      if (format === "png") {
+        contentType = "image/png";
+      }
+
+      if (format === "webp") {
+        contentType = "image/webp";
+      }
+
+      res.setHeader("Content-Type", contentType);
+
+      return res.send(output);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : String(err);
+
+      const stderr =
+        typeof err === "object" &&
+        err !== null &&
+        "stderr" in err
+          ? String(err.stderr)
+          : "";
+
+      console.error("Image watermarking failed:", {
+        message,
+        stderr: stderr.trim(),
+      });
+
+      return res.status(500).json({
+        error: "Unable to process this image.",
+      });
     }
-
-    // -----------------------------------------
-    // Return image
-    // -----------------------------------------
-
-    let contentType =
-      "image/jpeg";
-
-    if (format === "png") {
-      contentType = "image/png";
-    }
-
-    if (format === "webp") {
-      contentType = "image/webp";
-    }
-
-    res.setHeader(
-      "Content-Type",
-      contentType,
-    );
-
-    return res.send(output);
-
-  } catch (err) {
-
-  console.error(
-  "DOCX conversion failed:",
-  typeof err === "object" &&
-  err !== null &&
-  "stderr" in err
-    ? String(err.stderr).trim()
-    : err instanceof Error
-      ? err.message
-      : String(err),
+  },
 );
 
-  const stderr =
-    err &&
-    typeof err === "object" &&
-    "stderr" in err
-      ? String(err.stderr)
-      : "";
-
-  // Bad or unsupported DOCX
-  if (
-    stderr.includes("source file could not be loaded")
-  ) {
-    return res.status(400).json({
-      error:
-        "This DOCX file appears to be damaged or uses an unsupported document structure. Please upload a valid Microsoft Word (.docx) document.",
-    });
-  }
-
-  if (
-    message.includes(
-      "LibreOffice did not generate a PDF"
-    )
-  ) {
-    return res.status(400).json({
-      error:
-        "This DOCX document could not be converted to PDF.",
-    });
-  }
-
-  return res.status(500).json({
-    error:
-      "Unable to process this DOCX document.",
-  });
-
-}
-
-});
+// -------------------------------------------------
+// PDF Watermarking Endpoint
+// -------------------------------------------------
 
 app.post(
   "/watermark-pdf",
   requireWatermarkSecret,
   async (req, res) => {
-  try {
+    try {
+      const { filePath } = req.body;
 
-    const {
-      filePath,
-      email,
-    } = req.body;
+      if (!filePath) {
+        return res.status(400).json({
+          error: "Missing filePath.",
+        });
+      }
 
-    if (!filePath) {
-      return res.status(400).json({
-        error: "Missing filePath.",
-      });
-    }
+      const {
+        data: pdfBlob,
+        error: downloadError,
+      } = await supabase.storage
+        .from("resources")
+        .download(filePath);
 
-    if (!email) {
-      return res.status(400).json({
-        error: "Missing email.",
-      });
-    }
+      if (downloadError || !pdfBlob) {
+        console.error(
+          "PDF Storage download failed:",
+          downloadError,
+        );
 
-    const {
-      data: pdfBlob,
-      error: downloadError,
-    } = await supabase.storage
-      .from("resources")
-      .download(filePath);
+        return res.status(404).json({
+          error: "Unable to download PDF from Storage.",
+        });
+      }
 
-    if (downloadError || !pdfBlob) {
-
-      console.error(downloadError);
-
-      return res.status(404).json({
-        error: "Unable to download PDF from Storage.",
-      });
-
-    }
-
-    const pdfBytes =
-      Buffer.from(
+      const pdfBytes = Buffer.from(
         await pdfBlob.arrayBuffer(),
       );
 
-    console.log(
-      "Downloaded PDF:",
-      pdfBytes.length,
-      "bytes",
-    );
-
-
-    const output =
-      await processPdf(
-        pdfBytes,
-        email,
+      console.log(
+        "Downloaded PDF:",
+        pdfBytes.length,
+        "bytes",
       );
 
-    res.setHeader(
-      "Content-Type",
-      "application/pdf",
-    );
+      const output = await processPdf(pdfBytes);
 
-    return res.send(output);
+      res.setHeader(
+        "Content-Type",
+        "application/pdf",
+      );
 
-  } catch (err) {
+      return res.send(output);
+    } catch (err) {
+      console.error("PDF watermarking failed:", err);
 
-    console.error(err);
-
-    return res.status(500).json({
-      error:
-        err instanceof Error
-          ? err.message
-          : String(err),
-    });
-
-  }
-});
-
-app.post(
-  "/watermark-docx",
-  requireWatermarkSecret,
-  async (req, res) => {
-
-  try {
-
-    const {
-  filePath,
-  email,
-} = req.body;
-
-    if (!filePath) {
-      return res.status(400).json({
-      error: "Missing filePath.",
-    });
-    }
-
-    if (!email) {
-      return res.status(400).json({
-        error: "Missing email.",
+      return res.status(500).json({
+        error: "Unable to process this PDF.",
       });
     }
-
-    const {
-  data: docxBlob,
-  error: downloadError,
-} = await supabase.storage
-  .from("resources")
-  .download(filePath);
-
-if (downloadError || !docxBlob) {
-
-  console.error(downloadError);
-
-  return res.status(404).json({
-    error: "Unable to download DOCX from Storage.",
-  });
-
-}
-
-const docxBytes = Buffer.from(
-  await docxBlob.arrayBuffer(),
+  },
 );
 
-console.log(
-  "Downloaded DOCX:",
-  docxBytes.length,
-  "bytes",
-);
-
-    const pdfBytes =
-      await processDocx(
-        docxBytes,
-      );
-
-    console.log(
-      "DOCX converted to PDF.",
-    );
-
-    const output =
-      await processPdf(
-        pdfBytes,
-        email,
-      );
-
-    console.log(
-      "DOCX watermark applied.",
-    );
-
-    res.setHeader(
-      "Content-Type",
-      "application/pdf",
-    );
-
-    return res.send(output);
-
-  } catch (err) {
-
-    console.error(err);
-
-    const stderr =
-      typeof err === "object" &&
-      err !== null &&
-      "stderr" in err
-        ? String(err.stderr).toLowerCase()
-        : "";
-
-    const message =
-      err instanceof Error
-        ? err.message.toLowerCase()
-        : String(err).toLowerCase();
-
-    if (
-  stderr.includes("source file could not be loaded") ||
-  stderr.includes("could not find platform independent libraries") ||
-  message.includes("source file could not be loaded")
-) {
-  return res.status(400).json({
-    error:
-      "This DOCX file appears to be damaged or uses an unsupported document structure. Please upload a valid Microsoft Word (.docx) document.",
-  });
-}
-
-    return res.status(500).json({
-      error:
-        "Unable to process this DOCX document at this time.",
-    });
-
-  }
-
-});
+// -------------------------------------------------
+// Start Server
+// -------------------------------------------------
 
 const PORT = process.env.PORT || 3001;
 
