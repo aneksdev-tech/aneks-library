@@ -275,16 +275,48 @@ async function handleWatermark(
       500,
     );
   }
-
+  
   let body: {
     filePath?: unknown;
     type?: unknown;
   };
 
   try {
-    body = await request.json();
-  } catch {
-    return jsonResponse({ error: "Invalid JSON request." }, 400);
+    const contentType = request.headers.get("content-type");
+    const rawBody = await request.text();
+
+    console.log("Watermark request diagnostics:", {
+      method: request.method,
+      contentType,
+      bodyLength: rawBody.length,
+      bodyStart: rawBody.slice(0, 120),
+    });
+
+    if (!rawBody.trim()) {
+      return jsonResponse(
+        { error: "Request body is empty." },
+        400,
+      );
+    }
+
+    if (!contentType?.toLowerCase().includes("application/json")) {
+      return jsonResponse(
+        { error: "Content-Type must be application/json." },
+        415,
+      );
+    }
+
+    body = JSON.parse(rawBody);
+  } catch (error) {
+    console.error(
+      "Watermark JSON parsing failed:",
+      error instanceof Error ? error.message : "Unknown error",
+    );
+
+    return jsonResponse(
+      { error: "Invalid JSON request." },
+      400,
+    );
   }
 
   const { filePath, type } = body;
