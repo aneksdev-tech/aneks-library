@@ -29,6 +29,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedPremiumRouteImport } from './routes/_authenticated/premium'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedUploadRouteImport } from './routes/_authenticated/upload'
+import { Route as ApiWatermarkRouteImport } from './routes/api.watermark'
 import { Route as AuthenticatedAcademicIndexRouteImport } from './routes/_authenticated/academic.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAnnouncementsRouteImport } from './routes/_authenticated/admin.announcements'
@@ -146,6 +147,11 @@ const AuthenticatedUploadRoute = AuthenticatedUploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiWatermarkRoute = ApiWatermarkRouteImport.update({
+  id: '/api/watermark',
+  path: '/api/watermark',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAcademicIndexRoute =
   AuthenticatedAcademicIndexRouteImport.update({
     id: '/',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/premium': typeof AuthenticatedPremiumRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/upload': typeof AuthenticatedUploadRouteWithChildren
+  '/api/watermark': typeof ApiWatermarkRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/premium': typeof AuthenticatedPremiumRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/watermark': typeof ApiWatermarkRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/_authenticated/premium': typeof AuthenticatedPremiumRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/upload': typeof AuthenticatedUploadRouteWithChildren
+  '/api/watermark': typeof ApiWatermarkRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/approvals': typeof AuthenticatedAdminApprovalsRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -372,6 +381,7 @@ export interface FileRouteTypes {
     | '/premium'
     | '/settings'
     | '/upload'
+    | '/api/watermark'
     | '/admin/announcements'
     | '/admin/approvals'
     | '/admin/categories'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/premium'
     | '/settings'
+    | '/api/watermark'
     | '/admin/announcements'
     | '/admin/approvals'
     | '/admin/categories'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/_authenticated/premium'
     | '/_authenticated/settings'
     | '/_authenticated/upload'
+    | '/api/watermark'
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/approvals'
     | '/_authenticated/admin/categories'
@@ -472,6 +484,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SuspendedRoute: typeof SuspendedRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  ApiWatermarkRoute: typeof ApiWatermarkRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -615,6 +628,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/upload'
       preLoaderRoute: typeof AuthenticatedUploadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/watermark': {
+      id: '/api/watermark'
+      path: '/api/watermark'
+      fullPath: '/api/watermark'
+      preLoaderRoute: typeof ApiWatermarkRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/academic/': {
       id: '/_authenticated/academic/'
@@ -845,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SuspendedRoute: SuspendedRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  ApiWatermarkRoute: ApiWatermarkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
