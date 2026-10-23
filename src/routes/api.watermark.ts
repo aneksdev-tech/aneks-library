@@ -1,10 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import TextToSVG from "text-to-svg";
 import { createFileRoute } from "@tanstack/react-router";
 import { PDFDocument } from "pdf-lib";
 import sharp from "sharp";
-import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 const BUCKET = "resources";
@@ -25,7 +22,6 @@ type WatermarkType = "image" | "pdf";
 
 type WatermarkAssets = {
   watermarkPng: Buffer;
-  textToSVG: ReturnType<typeof TextToSVG.loadSync>;
 };
 
 let assetsPromise: Promise<WatermarkAssets> | undefined;
@@ -36,33 +32,18 @@ async function loadAssets(request: Request): Promise<WatermarkAssets> {
       const assetUrl = (filename: string) =>
         new URL(`/watermark-assets/${filename}`, request.url);
 
-      const [pngResponse, fontResponse] = await Promise.all([
-        fetch(assetUrl("aneks-watermark.png")),
-        fetch(assetUrl("NotoSans-Regular.ttf")),
-      ]);
+      const pngResponse = await fetch(
+        assetUrl("aneks-watermark.png"),
+      );
 
-      if (!pngResponse.ok || !fontResponse.ok) {
+      if (!pngResponse.ok) {
         throw new Error("Unable to load watermark assets.");
       }
 
-      const watermarkPng = Buffer.from(
-        await pngResponse.arrayBuffer(),
-      );
-
-      const fontBytes = Buffer.from(
-        await fontResponse.arrayBuffer(),
-      );
-
-      const fontPath = path.join(
-        os.tmpdir(),
-        "aneks-library-NotoSans-Regular.ttf",
-      );
-
-      await fs.writeFile(fontPath, fontBytes);
-
       return {
-        watermarkPng,
-        textToSVG: TextToSVG.loadSync(fontPath),
+        watermarkPng: Buffer.from(
+          await pngResponse.arrayBuffer(),
+        ),
       };
     })().catch((error) => {
       assetsPromise = undefined;
@@ -122,20 +103,11 @@ function getImageContentType(format: string): string | null {
 }
 
 function createWatermarkSvg(
-  textToSVG: ReturnType<typeof TextToSVG.loadSync>,
   width: number,
   height: number,
 ): string {
   const fontSize =
     Math.min(width, height) * WATERMARK.imageTitleScale;
-
-  const svgPath = textToSVG.getD(WATERMARK.text, {
-    x: 0,
-    y: 0,
-    fontSize,
-    anchor: "center middle",
-    letterSpacing: WATERMARK.letterSpacing,
-  });
 
   return `
 <svg xmlns="http://www.w3.org/2000/svg"
@@ -147,16 +119,21 @@ function createWatermarkSvg(
     )
     rotate(${-WATERMARK.rotation})
   ">
-    <path
-      d="${svgPath}"
+    <text
+      x="0"
+      y="0"
+      text-anchor="middle"
+      dominant-baseline="central"
+      font-family="sans-serif"
+      font-size="${fontSize}"
+      letter-spacing="${WATERMARK.letterSpacing}"
       fill="rgba(
         ${WATERMARK.color.r},
         ${WATERMARK.color.g},
         ${WATERMARK.color.b},
         ${WATERMARK.opacity}
       )"
-      paint-order="fill"
-    />
+    >${WATERMARK.text}</text>
   </g>
 </svg>`;
 }
@@ -176,11 +153,7 @@ async function watermarkImage(
     throw new Error("Unsupported or invalid image.");
   }
 
-  const svg = createWatermarkSvg(
-    assets.textToSVG,
-    width,
-    height,
-  );
+ const svg = createWatermarkSvg(width, height);
 
   const watermark = await sharp(Buffer.from(svg))
     .png()
