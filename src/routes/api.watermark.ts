@@ -10,8 +10,8 @@ const OUTPUT_BUCKET = "watermarked-temp";
 const WATERMARK = {
   text: "ANEKS LIBRARY",
   rotation: 55,
-  imageOpacity: 0.20,
-  pdfOpacity: 0.20,
+  imageOpacity: 0.40,
+  pdfOpacity: 0.40,
 };
 
 type WatermarkType = "image" | "pdf";
