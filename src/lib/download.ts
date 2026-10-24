@@ -34,7 +34,7 @@ function getFilenameFromDisposition(
     }
   }
 
-  // Support both quoted and unquoted filename parameters.
+  // Support quoted and unquoted filename parameters.
   const regularMatch = disposition.match(
     /filename\s*=\s*(?:"([^"]+)"|([^;]+))/i,
   );
@@ -44,6 +44,45 @@ function getFilenameFromDisposition(
   )?.trim();
 
   return filename || null;
+}
+
+function getFilenameFromResource(
+  filename: string | null | undefined,
+  contentType: string,
+): string {
+  const extension = contentType.includes("application/pdf")
+    ? ".pdf"
+    : contentType.includes(
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+      ? ".docx"
+      : contentType.includes("image/png")
+        ? ".png"
+        : contentType.includes("image/webp")
+          ? ".webp"
+          : contentType.startsWith("image/")
+            ? ".jpg"
+            : "";
+
+  const original = filename?.trim();
+
+  if (!original) {
+    return `resource${extension}`;
+  }
+
+  // Preserve Unicode characters, including ñ, and apostrophes.
+  // Replace only characters that are unsafe in local filenames.
+  const safeOriginal = getSafeFilename(original);
+
+  if (!extension) {
+    return safeOriginal;
+  }
+
+  // Match the actual output format, since the Edge Function may
+  // convert the uploaded file to PDF or an image format.
+  const withoutExtension = safeOriginal.replace(/\.[^.]+$/, "");
+
+  return `${withoutExtension || "resource"}${extension}`;
 }
 
 function triggerBlobDownload(
@@ -125,21 +164,27 @@ export async function downloadResource(
     const serverFilename =
       getFilenameFromDisposition(disposition);
 
-    const isDocx = contentType.includes(
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    );
+    // The filename is already stored in the resources table.
+    // Use it when Content-Disposition is missing.
+    const { data: resource, error } = await supabase
+      .from("resources")
+      .select("file_name")
+      .eq("id", resourceId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "Could not retrieve resource filename:",
+        error.message,
+      );
+    }
 
     const filename =
       serverFilename ??
-      (isDocx
-        ? "resource.docx"
-        : contentType.includes("application/pdf")
-          ? "resource.pdf"
-          : contentType.includes("image/png")
-            ? "resource.png"
-            : contentType.includes("image/webp")
-              ? "resource.webp"
-              : "resource.jpg");
+      getFilenameFromResource(
+        resource?.file_name,
+        contentType,
+      );
 
     triggerBlobDownload(blob, filename);
     return;
