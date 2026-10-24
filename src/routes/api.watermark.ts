@@ -123,7 +123,7 @@ async function watermarkImage(
   // Match the watermark sizing used by watermarkPdf().
   const watermarkWidth = Math.max(
     1,
-    Math.round(Math.min(width, height) * 2.0),
+    Math.round(Math.min(width, height) * 1.5),
   );
 
   // Resize the watermark to the calculated width, allowing enlargement.
