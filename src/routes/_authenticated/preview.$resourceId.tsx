@@ -39,8 +39,7 @@ function PreviewPage() {
   const { resourceId } = Route.useParams();
 
   const { user } = useAuth();
-  
-const {
+  const {
   canDownload,
   isAdmin,
   isPremium,
