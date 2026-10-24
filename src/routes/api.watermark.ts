@@ -10,7 +10,8 @@ const OUTPUT_BUCKET = "watermarked-temp";
 const WATERMARK = {
   text: "ANEKS LIBRARY",
   rotation: 55,
-  opacity: 0.10,
+  imageOpacity: 0.20,
+  pdfOpacity: 0.20,
 };
 
 type WatermarkType = "image" | "pdf";
@@ -101,8 +102,7 @@ async function watermarkImage(
   originalBytes: Buffer,
   assets: WatermarkAssets,
 ): Promise<{ bytes: Buffer; contentType: string }> {
-  const original = sharp(originalBytes);
-  const metadata = await original.metadata();
+  const metadata = await sharp(originalBytes).metadata();
 
   const width = metadata.width ?? 0;
   const height = metadata.height ?? 0;
@@ -112,14 +112,16 @@ async function watermarkImage(
     throw new Error("Unsupported or invalid image.");
   }
 
-  // Reuse the existing PNG watermark asset instead of rendering SVG text.
-  const watermarkWidth = Math.round(
-    Math.min(width, height) * 1.1,
+  // Start with a watermark sized relative to the image.
+  const watermarkWidth = Math.max(
+    1,
+    Math.round(Math.min(width, height) * 1.1),
   );
 
   const rotatedWatermark = await sharp(assets.watermarkPng)
     .resize({
       width: watermarkWidth,
+      withoutEnlargement: true,
     })
     .rotate(-WATERMARK.rotation, {
       background: {
@@ -133,8 +135,21 @@ async function watermarkImage(
     .png()
     .toBuffer();
 
-  // Reduce the watermark alpha channel to the configured opacity.
-  const watermarkWithAlpha = await sharp(rotatedWatermark)
+  // Rotation can enlarge the watermark canvas, so fit it
+  // inside the original image before compositing.
+  const fittedWatermark = await sharp(rotatedWatermark)
+    .resize({
+      width,
+      height,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+
+  // Apply the configured watermark opacity to the alpha channel.
+  const watermarkWithAlpha = await sharp(fittedWatermark)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -143,7 +158,7 @@ async function watermarkImage(
 
   for (let index = 3; index < data.length; index += info.channels) {
     data[index] = Math.round(
-      data[index] * WATERMARK.opacity,
+      data[index] * WATERMARK.imageOpacity,
     );
   }
 
@@ -158,15 +173,19 @@ async function watermarkImage(
     .toBuffer();
 
   const watermarkMetadata = await sharp(watermark).metadata();
+  const watermarkWidthFinal = watermarkMetadata.width ?? 0;
+  const watermarkHeightFinal = watermarkMetadata.height ?? 0;
 
-  const processed = original.composite([
+  const processed = sharp(originalBytes).composite([
     {
       input: watermark,
-      left: Math.round(
-        (width - (watermarkMetadata.width ?? width)) / 2,
+      left: Math.max(
+        0,
+        Math.round((width - watermarkWidthFinal) / 2),
       ),
-      top: Math.round(
-        (height - (watermarkMetadata.height ?? height)) / 2,
+      top: Math.max(
+        0,
+        Math.round((height - watermarkHeightFinal) / 2),
       ),
       blend: "over",
     },
@@ -180,15 +199,12 @@ async function watermarkImage(
       break;
 
     case "webp":
-      bytes = await processed
-        .webp({ quality: 100 })
-        .toBuffer();
+      bytes = await processed.webp({ quality: 100 }).toBuffer();
       break;
 
     default:
-      bytes = await processed
-        .jpeg({ quality: 100 })
-        .toBuffer();
+      bytes = await processed.jpeg({ quality: 100 }).toBuffer();
+      break;
   }
 
   return { bytes, contentType };
@@ -240,7 +256,7 @@ async function watermarkPdf(
       y: (height - imageHeight) / 2,
       width: imageWidth,
       height: imageHeight,
-      opacity: WATERMARK.opacity,
+      opacity: WATERMARK.pdfOpacity,
     });
   }
 

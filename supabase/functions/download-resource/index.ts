@@ -470,14 +470,23 @@ Deno.serve(async (req) => {
             : contentType === "image/webp"
               ? "webp"
               : "jpg";
+  
+console.log("Download filename diagnostics:", {
+  resourceId: resource.id,
+  storedFilename: resource.file_name,
+  storedPath: resource.file_path,
+  outputExtension,
+});
 
-      const filename = getResourceFilename(
-        resource.file_name,
-        resource.file_path,
-        outputExtension,
-      );
+const filename = getResourceFilename(
+  resource.file_name,
+  resource.file_path,
+  outputExtension,
+);
 
-      // Record only after processing and retrieval succeed.
+console.log("Generated download filename:", filename);
+
+// Record only after processing and retrieval succeed.
       await recordDownload(
         userSupabase,
         user.id,
