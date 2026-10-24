@@ -13,23 +13,37 @@ function getFilenameFromDisposition(
 ): string | null {
   if (!disposition) return null;
 
+  // Prefer filename* because it supports UTF-8 characters.
   const encodedMatch = disposition.match(
-    /filename\*=UTF-8''([^;]+)/i,
+    /filename\*\s*=\s*UTF-8''([^;]+)/i,
   );
 
   if (encodedMatch?.[1]) {
     try {
-      return decodeURIComponent(encodedMatch[1]);
+      const filename = decodeURIComponent(
+        encodedMatch[1]
+          .trim()
+          .replace(/^"|"$/g, ""),
+      );
+
+      if (filename.trim()) {
+        return filename;
+      }
     } catch {
       // Fall back to the regular filename.
     }
   }
 
+  // Support both quoted and unquoted filename parameters.
   const regularMatch = disposition.match(
-    /filename="?([^";]+)"?/i,
+    /filename\s*=\s*(?:"([^"]+)"|([^;]+))/i,
   );
 
-  return regularMatch?.[1]?.trim() ?? null;
+  const filename = (
+    regularMatch?.[1] ?? regularMatch?.[2]
+  )?.trim();
+
+  return filename || null;
 }
 
 function triggerBlobDownload(
@@ -121,7 +135,11 @@ export async function downloadResource(
         ? "resource.docx"
         : contentType.includes("application/pdf")
           ? "resource.pdf"
-          : "resource.jpg");
+          : contentType.includes("image/png")
+            ? "resource.png"
+            : contentType.includes("image/webp")
+              ? "resource.webp"
+              : "resource.jpg");
 
     triggerBlobDownload(blob, filename);
     return;
