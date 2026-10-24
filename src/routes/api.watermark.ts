@@ -511,7 +511,17 @@ async function handleWatermark(
     const outputName = `${timestamp}-${originalName}`;
     const outputPath = `${requestId}/${outputName}`;
 
-    const { error: uploadError } = await supabase.storage
+    console.log("Watermark upload starting:", {
+      bucket: OUTPUT_BUCKET,
+      outputPath,
+      contentType,
+      outputSize: outputBytes.length,
+    });
+
+    const {
+      data: uploadData,
+      error: uploadError,
+    } = await supabase.storage
       .from(OUTPUT_BUCKET)
       .upload(outputPath, outputBytes, {
         contentType,
@@ -520,19 +530,24 @@ async function handleWatermark(
       });
 
     if (uploadError) {
-      console.error(
-        "Watermarked file upload failed:",
-        uploadError.message,
-      );
+      console.error("Watermarked file upload failed:", {
+        bucket: OUTPUT_BUCKET,
+        outputPath,
+        message: uploadError.message,
+        statusCode: uploadError.statusCode,
+      });
 
       return jsonResponse(
-        {
-          error:
-            "Unable to store the processed resource.",
-        },
+        { error: "Unable to store the processed resource." },
         500,
       );
     }
+
+    console.log("Watermark upload succeeded:", {
+      bucket: OUTPUT_BUCKET,
+      outputPath: uploadData.path,
+      outputSize: outputBytes.length,
+    });
 
     return jsonResponse({
       success: true,
