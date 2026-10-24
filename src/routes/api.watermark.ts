@@ -350,6 +350,29 @@ async function handleWatermark(
     );
   }
 
+  let projectHost: string;
+
+  try {
+    const parsedSupabaseUrl = new URL(supabaseUrl);
+
+    if (
+      parsedSupabaseUrl.protocol !== "https:" ||
+      parsedSupabaseUrl.username ||
+      parsedSupabaseUrl.password
+    ) {
+      throw new Error("Invalid Supabase project URL.");
+    }
+
+    projectHost = parsedSupabaseUrl.hostname;
+  } catch {
+    console.error("Watermark Supabase URL is invalid.");
+
+    return jsonResponse(
+      { error: "Watermark service is not configured." },
+      500,
+    );
+  }
+
   let body: {
     filePath?: unknown;
     type?: unknown;
@@ -453,6 +476,13 @@ async function handleWatermark(
   );
 
   try {
+    console.log("Watermark processing started:", {
+      projectHost,
+      sourceBucket: BUCKET,
+      outputBucket: OUTPUT_BUCKET,
+      resourceType: type,
+    });
+
     const {
       data: originalBlob,
       error: downloadError,
@@ -463,7 +493,11 @@ async function handleWatermark(
     if (downloadError || !originalBlob) {
       console.error(
         "Watermark original download failed:",
-        downloadError?.message,
+        {
+          projectHost,
+          message: downloadError?.message,
+          statusCode: downloadError?.statusCode,
+        },
       );
 
       return jsonResponse(
@@ -478,6 +512,12 @@ async function handleWatermark(
     const originalBytes = Buffer.from(
       await originalBlob.arrayBuffer(),
     );
+
+    console.log("Watermark original downloaded:", {
+      projectHost,
+      sourceBucket: BUCKET,
+      originalSize: originalBytes.length,
+    });
 
     const assets = await loadAssets(request);
 
@@ -512,6 +552,7 @@ async function handleWatermark(
     const outputPath = `${requestId}/${outputName}`;
 
     console.log("Watermark upload starting:", {
+      projectHost,
       bucket: OUTPUT_BUCKET,
       outputPath,
       contentType,
@@ -531,8 +572,9 @@ async function handleWatermark(
 
     if (uploadError) {
       console.error("Watermarked file upload failed:", {
+        projectHost,
         bucket: OUTPUT_BUCKET,
-        outputPath,
+        requestedPath: outputPath,
         message: uploadError.message,
         statusCode: uploadError.statusCode,
       });
@@ -544,8 +586,11 @@ async function handleWatermark(
     }
 
     console.log("Watermark upload succeeded:", {
+      projectHost,
       bucket: OUTPUT_BUCKET,
-      outputPath: uploadData.path,
+      requestedPath: outputPath,
+      returnedPath: uploadData.path,
+      returnedId: uploadData.id,
       outputSize: outputBytes.length,
     });
 
