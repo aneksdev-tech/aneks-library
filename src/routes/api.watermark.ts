@@ -123,7 +123,7 @@ async function watermarkImage(
   // Match the watermark sizing used by watermarkPdf().
   const watermarkWidth = Math.max(
     1,
-    Math.round(Math.min(width, height) * 5.0),
+    Math.round(Math.min(width, height) * 4.0),
   );
 
   // Use the same PNG asset and rotation as PDF downloads.
