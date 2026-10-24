@@ -37,7 +37,7 @@ function getResourceFilename(
 
   const withoutExtension =
     original.replace(/\.[^.]+$/, "");
-
+    
   return `${withoutExtension || "resource"}.${extension}`;
 }
 
@@ -47,18 +47,38 @@ function attachmentResponse(
   filename: string,
 ) {
   const safeFilename = getSafeFilename(filename);
-  const encodedFilename = encodeURIComponent(filename);
+  const encodedFilename = encodeURIComponent(filename).replace(
+  /['()*]/g,
+  (character) =>
+    `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+);
 
-  return new Response(blob, {
+  const contentDisposition =
+    `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`;
+
+  const response = new Response(blob, {
     headers: {
       ...corsHeaders,
       "Content-Type": contentType,
-      "Content-Disposition":
-        `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`,
+      "Content-Disposition": contentDisposition,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
     },
   });
+
+  console.log("Attachment response diagnostics:", {
+    filename,
+    contentType,
+    contentDisposition,
+    actualContentDisposition: response.headers.get(
+      "Content-Disposition",
+    ),
+    exposedHeaders: response.headers.get(
+      "Access-Control-Expose-Headers",
+    ),
+  });
+
+  return response;
 }
 
 async function recordDownload(
@@ -470,21 +490,21 @@ Deno.serve(async (req) => {
             : contentType === "image/webp"
               ? "webp"
               : "jpg";
-  
-console.log("Download filename diagnostics:", {
-  resourceId: resource.id,
-  storedFilename: resource.file_name,
-  storedPath: resource.file_path,
-  outputExtension,
-});
+              
+      console.log("Download filename diagnostics:", {
+          resourceId: resource.id,
+          storedFilename: resource.file_name,
+          storedPath: resource.file_path,
+          outputExtension,
+      });
 
-const filename = getResourceFilename(
-  resource.file_name,
-  resource.file_path,
-  outputExtension,
-);
-
-console.log("Generated download filename:", filename);
+      const filename = getResourceFilename(
+        resource.file_name,
+        resource.file_path,
+        outputExtension,
+      );
+      
+      console.log("Generated download filename:", filename);
 
 // Record only after processing and retrieval succeed.
       await recordDownload(

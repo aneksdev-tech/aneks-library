@@ -10,8 +10,8 @@ const OUTPUT_BUCKET = "watermarked-temp";
 const WATERMARK = {
   text: "ANEKS LIBRARY",
   rotation: 55,
-  imageOpacity: 0.40,
-  pdfOpacity: 0.40,
+  imageOpacity: 0.4,
+  pdfOpacity: 0.4,
 };
 
 type WatermarkType = "image" | "pdf";
@@ -22,7 +22,9 @@ type WatermarkAssets = {
 
 let assetsPromise: Promise<WatermarkAssets> | undefined;
 
-async function loadAssets(request: Request): Promise<WatermarkAssets> {
+async function loadAssets(
+  request: Request,
+): Promise<WatermarkAssets> {
   if (!assetsPromise) {
     assetsPromise = (async () => {
       const assetUrl = (filename: string) =>
@@ -62,7 +64,9 @@ function jsonResponse(
   });
 }
 
-function isSafeResourcePath(filePath: unknown): filePath is string {
+function isSafeResourcePath(
+  filePath: unknown,
+): filePath is string {
   if (
     typeof filePath !== "string" ||
     filePath.length === 0 ||
@@ -85,7 +89,9 @@ function isSafeResourcePath(filePath: unknown): filePath is string {
   );
 }
 
-function getImageContentType(format: string): string | null {
+function getImageContentType(
+  format: string,
+): string | null {
   switch (format) {
     case "jpeg":
       return "image/jpeg";
@@ -106,19 +112,24 @@ async function watermarkImage(
 
   const width = metadata.width ?? 0;
   const height = metadata.height ?? 0;
-  const contentType = getImageContentType(metadata.format ?? "");
+  const contentType = getImageContentType(
+    metadata.format ?? "",
+  );
 
   if (!width || !height || !contentType) {
     throw new Error("Unsupported or invalid image.");
   }
 
-  // Start with a watermark sized relative to the image.
+  // Match the watermark sizing used by watermarkPdf().
   const watermarkWidth = Math.max(
     1,
-    Math.round(Math.min(width, height) * 1.1),
+    Math.round(Math.min(width, height) * 2.0),
   );
 
-  const rotatedWatermark = await sharp(assets.watermarkPng)
+  // Use the same PNG asset and rotation as PDF downloads.
+  const rotatedWatermark = await sharp(
+    assets.watermarkPng,
+  )
     .resize({
       width: watermarkWidth,
       withoutEnlargement: true,
@@ -135,28 +146,77 @@ async function watermarkImage(
     .png()
     .toBuffer();
 
-  // Rotation can enlarge the watermark canvas, so fit it
-  // inside the original image before compositing.
-  const fittedWatermark = await sharp(rotatedWatermark)
-    .resize({
-      width,
-      height,
-      fit: "inside",
-      withoutEnlargement: true,
+  const rotatedMetadata =
+    await sharp(rotatedWatermark).metadata();
+
+  const rotatedWidth = rotatedMetadata.width ?? 0;
+  const rotatedHeight = rotatedMetadata.height ?? 0;
+
+  if (!rotatedWidth || !rotatedHeight) {
+    throw new Error("Unable to prepare watermark image.");
+  }
+
+  // Clip the rotated watermark to the original image bounds,
+  // keeping its center aligned instead of shrinking it.
+  const cropWidth = Math.min(width, rotatedWidth);
+  const cropHeight = Math.min(height, rotatedHeight);
+
+  const cropLeft = Math.max(
+    0,
+    Math.floor((rotatedWidth - cropWidth) / 2),
+  );
+
+  const cropTop = Math.max(
+    0,
+    Math.floor((rotatedHeight - cropHeight) / 2),
+  );
+
+  const croppedWatermark = await sharp(rotatedWatermark)
+    .extract({
+      left: cropLeft,
+      top: cropTop,
+      width: cropWidth,
+      height: cropHeight,
     })
-    .ensureAlpha()
+    .png()
+    .toBuffer();
+
+  // Restore transparent padding where the watermark is smaller
+  // than the original image.
+  const left = Math.floor((width - cropWidth) / 2);
+  const right = width - cropWidth - left;
+  const top = Math.floor((height - cropHeight) / 2);
+  const bottom = height - cropHeight - top;
+
+  const centeredWatermark = await sharp(croppedWatermark)
+    .extend({
+      left,
+      right,
+      top,
+      bottom,
+      background: {
+        r: 0,
+        g: 0,
+        b: 0,
+        alpha: 0,
+      },
+    })
     .png()
     .toBuffer();
 
   // Apply the configured watermark opacity to the alpha channel.
-  const watermarkWithAlpha = await sharp(fittedWatermark)
+  const watermarkWithAlpha = await sharp(centeredWatermark)
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
   const { data, info } = watermarkWithAlpha;
 
-  for (let index = 3; index < data.length; index += info.channels) {
+  for (
+    let index = 3;
+    index < data.length;
+    index += info.channels
+  ) {
     data[index] = Math.round(
       data[index] * WATERMARK.imageOpacity,
     );
@@ -172,21 +232,11 @@ async function watermarkImage(
     .png()
     .toBuffer();
 
-  const watermarkMetadata = await sharp(watermark).metadata();
-  const watermarkWidthFinal = watermarkMetadata.width ?? 0;
-  const watermarkHeightFinal = watermarkMetadata.height ?? 0;
-
   const processed = sharp(originalBytes).composite([
     {
       input: watermark,
-      left: Math.max(
-        0,
-        Math.round((width - watermarkWidthFinal) / 2),
-      ),
-      top: Math.max(
-        0,
-        Math.round((height - watermarkHeightFinal) / 2),
-      ),
+      left: 0,
+      top: 0,
       blend: "over",
     },
   ]);
@@ -199,11 +249,15 @@ async function watermarkImage(
       break;
 
     case "webp":
-      bytes = await processed.webp({ quality: 100 }).toBuffer();
+      bytes = await processed
+        .webp({ quality: 100 })
+        .toBuffer();
       break;
 
     default:
-      bytes = await processed.jpeg({ quality: 100 }).toBuffer();
+      bytes = await processed
+        .jpeg({ quality: 100 })
+        .toBuffer();
       break;
   }
 
@@ -266,36 +320,45 @@ async function watermarkPdf(
 async function handleWatermark(
   request: Request,
 ): Promise<Response> {
-  const expectedSecret = process.env.WATERMARK_SERVER_SECRET;
-  const suppliedSecret = request.headers.get("X-Watermark-Secret");
+  const expectedSecret =
+    process.env.WATERMARK_SERVER_SECRET;
+  const suppliedSecret =
+    request.headers.get("X-Watermark-Secret");
 
   if (
     !expectedSecret ||
     !suppliedSecret ||
     suppliedSecret !== expectedSecret
   ) {
-    return jsonResponse({ error: "Unauthorized." }, 401);
+    return jsonResponse(
+      { error: "Unauthorized." },
+      401,
+    );
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
-    console.error("Watermark server environment is incomplete.");
+    console.error(
+      "Watermark server environment is incomplete.",
+    );
 
     return jsonResponse(
       { error: "Watermark service is not configured." },
       500,
     );
   }
-  
+
   let body: {
     filePath?: unknown;
     type?: unknown;
   };
 
   try {
-    const contentType = request.headers.get("content-type");
+    const contentType =
+      request.headers.get("content-type");
     const rawBody = await request.text();
 
     console.log("Watermark request diagnostics:", {
@@ -312,9 +375,16 @@ async function handleWatermark(
       );
     }
 
-    if (!contentType?.toLowerCase().includes("application/json")) {
+    if (
+      !contentType
+        ?.toLowerCase()
+        .includes("application/json")
+    ) {
       return jsonResponse(
-        { error: "Content-Type must be application/json." },
+        {
+          error:
+            "Content-Type must be application/json.",
+        },
         415,
       );
     }
@@ -323,7 +393,9 @@ async function handleWatermark(
   } catch (error) {
     console.error(
       "Watermark JSON parsing failed:",
-      error instanceof Error ? error.message : "Unknown error",
+      error instanceof Error
+        ? error.message
+        : "Unknown error",
     );
 
     return jsonResponse(
@@ -335,7 +407,10 @@ async function handleWatermark(
   const { filePath, type } = body;
 
   if (!isSafeResourcePath(filePath)) {
-    return jsonResponse({ error: "Invalid resource path." }, 400);
+    return jsonResponse(
+      { error: "Invalid resource path." },
+      400,
+    );
   }
 
   if (type !== "image" && type !== "pdf") {
@@ -347,16 +422,22 @@ async function handleWatermark(
 
   const extension = path.extname(filePath).toLowerCase();
 
-  const supportedImage = [".jpg", ".jpeg", ".png", ".webp"].includes(
-    extension,
-  );
+  const supportedImage = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+  ].includes(extension);
 
   if (
     (type === "image" && !supportedImage) ||
     (type === "pdf" && extension !== ".pdf")
   ) {
     return jsonResponse(
-      { error: "File type does not match the requested operation." },
+      {
+        error:
+          "File type does not match the requested operation.",
+      },
       400,
     );
   }
@@ -373,10 +454,12 @@ async function handleWatermark(
   );
 
   try {
-    const { data: originalBlob, error: downloadError } =
-      await supabase.storage
-        .from(BUCKET)
-        .download(filePath);
+    const {
+      data: originalBlob,
+      error: downloadError,
+    } = await supabase.storage
+      .from(BUCKET)
+      .download(filePath);
 
     if (downloadError || !originalBlob) {
       console.error(
@@ -385,7 +468,10 @@ async function handleWatermark(
       );
 
       return jsonResponse(
-        { error: "Unable to retrieve the original resource." },
+        {
+          error:
+            "Unable to retrieve the original resource.",
+        },
         404,
       );
     }
@@ -441,7 +527,10 @@ async function handleWatermark(
       );
 
       return jsonResponse(
-        { error: "Unable to store the processed resource." },
+        {
+          error:
+            "Unable to store the processed resource.",
+        },
         500,
       );
     }
@@ -457,7 +546,9 @@ async function handleWatermark(
   } catch (error) {
     console.error(
       "Watermark processing failed:",
-      error instanceof Error ? error.message : "Unknown error",
+      error instanceof Error
+        ? error.message
+        : "Unknown error",
     );
 
     return jsonResponse(

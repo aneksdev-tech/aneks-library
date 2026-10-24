@@ -1,4 +1,4 @@
-import { PREVIEW_WATERMARK } from "./watermarkConfig";
+import { WatermarkOverlay } from "./WatermarkOverlay";
 
 interface ImageViewerProps {
   url: string;
@@ -22,6 +22,7 @@ export function ImageViewer({
         onDragStart={(e) => e.preventDefault()}
         onContextMenu={(e) => e.preventDefault()}
         className="
+          block
           w-full
           rounded-2xl
           select-none
@@ -31,52 +32,12 @@ export function ImageViewer({
         "
       />
 
-      {/* Image watermark */}
-      <div
-        className="
-          absolute
-          inset-0
-          flex
-          items-center
-          justify-center
-          pointer-events-none
-          select-none
-          z-10
-        "
-      >
-        <div
-          style={{
-            transform: `
-            translate(
-            ${PREVIEW_WATERMARK.horizontalOffset},
-            ${PREVIEW_WATERMARK.verticalOffset}
-        )
-            rotate(${PREVIEW_WATERMARK.rotation})
-            `,
-            color: PREVIEW_WATERMARK.color,
-        }}
-        >
-          <div
-            className="
-              font-bold
-              uppercase
-              whitespace-nowrap
-            "
-            style={{
-              fontSize:
-                PREVIEW_WATERMARK.titleFontSize,
-              letterSpacing:
-                PREVIEW_WATERMARK.titleLetterSpacing,
-            }}
-          >
-            {PREVIEW_WATERMARK.text}
-          </div>
-        </div>
-      </div>
+      <WatermarkOverlay />
 
       {/* Invisible interaction shield */}
       <div
-        className="absolute inset-0 z-20"
+        aria-hidden="true"
+        className="absolute inset-0 z-30"
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
       />

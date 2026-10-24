@@ -1,263 +1,277 @@
 import { useEffect, useRef, useState } from "react";
 import { renderAsync } from "docx-preview";
-import { PREVIEW_WATERMARK } from "./watermarkConfig";
 
 interface DocxViewerProps {
   blob: Blob;
 }
 
+const WATERMARK_ASSET =
+  "/watermark-assets/aneks-watermark.png";
+
+const WATERMARK_OPACITY = 0.4;
+const WATERMARK_ROTATION = "-55deg";
+const WATERMARK_SCALE = 1.5;
+
 export function DocxViewer({
   blob,
 }: DocxViewerProps) {
-  const wrapperRef =
-    useRef<HTMLDivElement>(null);
-
-  const documentRef =
-    useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const documentRef = useRef<HTMLDivElement>(null);
 
   const resizeObserver =
     useRef<ResizeObserver | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const updateWatermarkSizes = () => {
+    if (!documentRef.current) return;
+
+    const pages =
+      documentRef.current.querySelectorAll(
+        "section.docx-preview",
+      );
+
+    pages.forEach((page) => {
+      const pageElement = page as HTMLElement;
+
+      const watermark =
+        pageElement.querySelector(
+          ".aneks-watermark",
+        ) as HTMLDivElement | null;
+
+      const image = watermark?.querySelector("img");
+
+      if (!watermark || !image) return;
+
+      const width = pageElement.clientWidth;
+      const height = pageElement.clientHeight;
+
+      if (!width || !height) return;
+
+      image.style.width = `${
+        Math.round(
+          Math.min(width, height) * WATERMARK_SCALE,
+        )
+      }px`;
+    });
+  };
 
   const applyScale = () => {
-  if (
-    !wrapperRef.current ||
-    !documentRef.current
-  )
-    return;
-
-  const firstPage =
-    documentRef.current.querySelector(
-      "section.docx-preview"
-    ) as HTMLElement | null;
-
-  if (!firstPage) return;
-
-  const wrapperWidth =
-    wrapperRef.current.clientWidth;
-
-  const pageWidth =
-    firstPage.offsetWidth;
-
-  if (!pageWidth) return;
-
-  const scale =
-    Math.min(1, wrapperWidth / pageWidth);
-
-  documentRef.current.style.transform =
-    `scale(${scale})`;
-
-  documentRef.current.style.transformOrigin =
-    "top center";
-
-  documentRef.current.style.width =
-    `${pageWidth}px`;
-
-  documentRef.current.style.margin =
-    "0 auto";
-
-  const originalHeight =
-    documentRef.current.scrollHeight;
-
-  documentRef.current.style.height =
-    `${originalHeight * scale}px`;
-};
-
-  useEffect(() => {
-  let cancelled = false;
-
-  async function renderDocument() {
-    if (!documentRef.current) {
-      requestAnimationFrame(renderDocument);
+    if (!wrapperRef.current || !documentRef.current) {
       return;
     }
 
-    setLoading(true);
-    setError("");
+    const firstPage =
+      documentRef.current.querySelector(
+        "section.docx-preview",
+      ) as HTMLElement | null;
 
-    try {
-      documentRef.current.innerHTML = "";
+    if (!firstPage) return;
 
-      await renderAsync(
-        blob,
-        documentRef.current,
-        undefined,
-        {
-          className: "docx-preview",
-          inWrapper: true,
-          breakPages: true,
-        }
-      );
+    const wrapperWidth =
+      wrapperRef.current.clientWidth;
 
-      if (cancelled) return;
+    const pageWidth = firstPage.offsetWidth;
 
-      const pages =
-        documentRef.current.querySelectorAll(
-          "section.docx-preview"
+    if (!pageWidth) return;
+
+    const scale = Math.min(
+      1,
+      wrapperWidth / pageWidth,
+    );
+
+    documentRef.current.style.transform =
+      `scale(${scale})`;
+
+    documentRef.current.style.transformOrigin =
+      "top center";
+
+    documentRef.current.style.width =
+      `${pageWidth}px`;
+
+    documentRef.current.style.margin =
+      "0 auto";
+
+    const originalHeight =
+      documentRef.current.scrollHeight;
+
+    documentRef.current.style.height =
+      `${originalHeight * scale}px`;
+
+    updateWatermarkSizes();
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    let animationFrame = 0;
+
+    async function renderDocument() {
+      if (!documentRef.current) {
+        animationFrame =
+          requestAnimationFrame(renderDocument);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        documentRef.current.innerHTML = "";
+
+        await renderAsync(
+          blob,
+          documentRef.current,
+          undefined,
+          {
+            className: "docx-preview",
+            inWrapper: true,
+            breakPages: true,
+          },
         );
 
-      pages.forEach((page) => {
-        const pageEl =
-          page as HTMLElement;
+        if (cancelled) return;
 
-        pageEl.style.position =
-          "relative";
-
-        const old =
-          pageEl.querySelector(
-            ".aneks-watermark"
+        const pages =
+          documentRef.current.querySelectorAll(
+            "section.docx-preview",
           );
 
-        old?.remove();
+        pages.forEach((page) => {
+          const pageElement = page as HTMLElement;
 
-const watermark =
-  document.createElement("div");
+          pageElement.style.position = "relative";
 
-watermark.className =
-  "aneks-watermark";
+          pageElement
+            .querySelector(".aneks-watermark")
+            ?.remove();
 
-Object.assign(watermark.style, {
-  position: "absolute",
-  inset: "0",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  pointerEvents: "none",
-  userSelect: "none",
-  zIndex: "999",
+          const watermark =
+            document.createElement("div");
 
-  transform: `rotate(${PREVIEW_WATERMARK.rotation})`,
-  color: PREVIEW_WATERMARK.color,
-});
+          watermark.className = "aneks-watermark";
 
-const title =
-  document.createElement("div");
+          Object.assign(watermark.style, {
+            position: "absolute",
+            inset: "0",
+            overflow: "hidden",
+            pointerEvents: "none",
+            userSelect: "none",
+            zIndex: "999",
+          });
 
-title.textContent =
-  PREVIEW_WATERMARK.text;
+          const image =
+            document.createElement("img");
 
-Object.assign(title.style, {
-  fontSize:
-    PREVIEW_WATERMARK.titleFontSize,
+          image.src = WATERMARK_ASSET;
+          image.alt = "";
+          image.draggable = false;
 
-  fontWeight: "700",
+          Object.assign(image.style, {
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: "0",
+            height: "auto",
+            maxWidth: "none",
+            opacity: String(WATERMARK_OPACITY),
+            transform:
+              `translate(-50%, -50%) rotate(${WATERMARK_ROTATION})`,
+          });
 
-  textTransform: "uppercase",
+          watermark.appendChild(image);
+          pageElement.appendChild(watermark);
+        });
 
-  letterSpacing:
-    PREVIEW_WATERMARK.titleLetterSpacing,
+        applyScale();
 
-  whiteSpace: "nowrap",
-});
+        resizeObserver.current?.disconnect();
 
-watermark.appendChild(title);
-
-pageEl.appendChild(watermark);
-
-pageEl.appendChild(watermark);
-      });
-
-      
-      applyScale();
-
-      resizeObserver.current?.disconnect();
-
-      resizeObserver.current =
-        new ResizeObserver(() => {
+        resizeObserver.current = new ResizeObserver(() => {
           applyScale();
         });
 
-      if (wrapperRef.current) {
-        resizeObserver.current.observe(
-          wrapperRef.current
+        if (wrapperRef.current) {
+          resizeObserver.current.observe(
+            wrapperRef.current,
+          );
+        }
+      } catch (err) {
+        console.error(
+          "DOCX preview rendering failed:",
+          err,
         );
-      }
-      } catch {
-      setError(
-        "Unable to preview this Word document. Please try again later.",
-      );
-      } finally {
 
-      if (!cancelled) {
-        setLoading(false);
+        if (!cancelled) {
+          setError(
+            "Unable to preview this Word document. Please try again later.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
-  }
 
-  renderDocument();
+    void renderDocument();
 
-window.addEventListener(
-  "resize",
-  applyScale
-);
+    window.addEventListener("resize", applyScale);
 
-return () => {
-  cancelled = true;
+    return () => {
+      cancelled = true;
 
-  resizeObserver.current?.disconnect();
+      cancelAnimationFrame(animationFrame);
 
-  window.removeEventListener(
-    "resize",
-    applyScale
-  );
-};
-}, [blob]);
+      resizeObserver.current?.disconnect();
+
+      window.removeEventListener(
+        "resize",
+        applyScale,
+      );
+    };
+  }, [blob]);
 
   return (
-  <div className="relative w-full">
+    <div className="relative w-full">
+      {/* Loading */}
+      {loading && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-background/90">
+          <span className="text-sm font-medium">
+            Loading Word document...
+          </span>
+        </div>
+      )}
 
-    {/* Loading */}
-    {loading && (
-      <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-background/90">
-        <span className="text-sm font-medium">
-          Loading Word document...
-        </span>
-      </div>
-    )}
+      {/* Error */}
+      {error && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-background/90 text-center">
+          <p className="font-semibold text-destructive">
+            Failed to load Word document.
+          </p>
 
-    {/* Error */}
-    {error && (
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-background/90 text-center">
-        <p className="font-semibold text-destructive">
-          Failed to load Word document.
-        </p>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            {error}
+          </p>
+        </div>
+      )}
 
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          {error}
-        </p>
-      </div>
-    )}
-
-    {/* Viewer */}
-    <div
-      ref={wrapperRef}
-      className="
-        w-full
-        overflow-hidden
-        rounded-2xl
-        border
-        bg-muted/20
-        p-4
-      "
-    >
+      {/* Viewer */}
       <div
+        ref={wrapperRef}
         className="
-          flex
-          justify-center
-          items-start
+          w-full
+          overflow-hidden
+          rounded-2xl
+          border
+          bg-muted/20
+          p-4
         "
       >
-        <div
-          ref={documentRef}
-        />
+        <div className="flex items-start justify-center">
+          <div ref={documentRef} />
+        </div>
       </div>
     </div>
-
-  </div>
-);
+  );
 }
