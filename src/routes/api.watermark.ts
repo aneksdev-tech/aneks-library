@@ -123,9 +123,9 @@ async function watermarkImage(
   // Match the watermark sizing used by watermarkPdf().
   const watermarkWidth = Math.max(
     1,
-    Math.round(Math.min(width, height) * 3.0),
+    Math.round(Math.min(width, height) * 2.0),
   );
-  
+
   // Resize the watermark to the calculated width, allowing enlargement.
   const rotatedWatermark = await sharp(
     assets.watermarkPng,
