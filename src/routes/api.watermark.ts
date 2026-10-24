@@ -125,14 +125,13 @@ async function watermarkImage(
     1,
     Math.round(Math.min(width, height) * 3.0),
   );
-
-  // Use the same PNG asset and rotation as PDF downloads.
+  
+  // Resize the watermark to the calculated width, allowing enlargement.
   const rotatedWatermark = await sharp(
     assets.watermarkPng,
   )
     .resize({
       width: watermarkWidth,
-      withoutEnlargement: true,
     })
     .rotate(-WATERMARK.rotation, {
       background: {
