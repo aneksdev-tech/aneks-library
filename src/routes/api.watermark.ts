@@ -584,8 +584,26 @@ async function handleWatermark(
         500,
       );
     }
+    
+    // Diagnostic: verify the uploaded object is readable through Storage.
+const {
+  data: verificationBlob,
+  error: verificationError,
+} = await supabase.storage
+  .from(OUTPUT_BUCKET)
+  .download(outputPath);
 
-    console.log("Watermark upload succeeded:", {
+console.log("Watermark upload verification:", {
+  projectHost,
+  bucket: OUTPUT_BUCKET,
+  outputPath,
+  readable: Boolean(verificationBlob),
+  verificationSize: verificationBlob?.size ?? null,
+  errorMessage: verificationError?.message ?? null,
+  errorName: verificationError?.name ?? null,
+});
+
+console.log("Watermark upload succeeded:", {
       projectHost,
       bucket: OUTPUT_BUCKET,
       requestedPath: outputPath,
