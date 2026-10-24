@@ -41,3 +41,5 @@ supabase/.temp/
 
 # Optional OS files
 Thumbs.db
+# Vercel generated files and local configuration
+.vercel/

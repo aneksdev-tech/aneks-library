@@ -1,4 +1,3 @@
-
 import {
   createFileRoute,
   Link,
@@ -110,13 +109,13 @@ const STATUSES: AccountStatus[] = [
 ];
 
 const ROLES: AppRole[] = [
-  "admin",
-  "co-admin",
-  "staff",
+  "guest",
+  "student",
   "lecturer",
   "researcher",
-  "student",
-  "guest",
+  "staff",
+  "co-admin",
+  "admin",
 ];
 
 type DatabaseAppRole =
@@ -427,15 +426,16 @@ function UsersPage() {
   const [statusFilter, setStatusFilter] =
     useState("all");
 
-  const [roleFilter, setRoleFilter] =
+    const [roleFilter, setRoleFilter] =
     useState("all");
 
-    const [sort, setSort] = useState<
+  const [presenceFilter, setPresenceFilter] =
+    useState<"all" | "online" | "offline">("all");
+
+  const [sort, setSort] = useState<
     "newest" |
     "oldest" |
-    "alphabetical" |
-    "online" |
-    "offline"
+    "alphabetical"
   >("newest");
 
   const [dateFrom, setDateFrom] =
@@ -544,7 +544,7 @@ function UsersPage() {
       );
     },
   });
-  
+
   /*
    * Retrieve online users through the secured RPC.
    * The database authorizes access to admins and co-admins.
@@ -865,6 +865,13 @@ function UsersPage() {
         roleFilter === "all" ||
         user.primary_role === roleFilter;
 
+      const isOnline = onlineUserIds.has(user.id);
+
+      const matchesPresence =
+        presenceFilter === "all" ||
+        (presenceFilter === "online" && isOnline) ||
+        (presenceFilter === "offline" && !isOnline);
+
       const createdAt = new Date(
         user.created_at,
       );
@@ -896,6 +903,7 @@ function UsersPage() {
         matchesSearch &&
         matchesStatus &&
         matchesRole &&
+        matchesPresence &&
         matchesDateFrom &&
         matchesDateTo
       );
@@ -918,27 +926,7 @@ function UsersPage() {
             },
           );
 
-        case "online": {
-          const aOnline =
-            onlineUserIds.has(a.id);
-
-          const bOnline =
-            onlineUserIds.has(b.id);
-
-          return Number(bOnline) - Number(aOnline);
-        }
-
-        case "offline": {
-          const aOnline =
-            onlineUserIds.has(a.id);
-
-          const bOnline =
-            onlineUserIds.has(b.id);
-
-          return Number(aOnline) - Number(bOnline);
-        }
-
-        case "newest":
+       case "newest":
         default:
           return (
             new Date(b.created_at).getTime() -
@@ -948,11 +936,12 @@ function UsersPage() {
     });
 
     return filtered;
-  }, [
+    }, [
     data,
     search,
     statusFilter,
     roleFilter,
+    presenceFilter,
     sort,
     dateFrom,
     dateTo,
@@ -963,12 +952,13 @@ function UsersPage() {
    * Reset pagination when search, filters,
    * or sort order changes.
    */
-  useEffect(() => {
+    useEffect(() => {
     setPage(1);
   }, [
     search,
     statusFilter,
     roleFilter,
+    presenceFilter,
     sort,
     dateFrom,
     dateTo,
@@ -1150,6 +1140,7 @@ function UsersPage() {
     search.trim() !== "" ||
     statusFilter !== "all" ||
     roleFilter !== "all" ||
+    presenceFilter !== "all" ||
     dateFrom !== "" ||
     dateTo !== "" ||
     sort !== "newest";
@@ -1183,6 +1174,7 @@ function UsersPage() {
     setSearch("");
     setStatusFilter("all");
     setRoleFilter("all");
+    setPresenceFilter("all");
     setSort("newest");
     setDateFrom("");
     setDateTo("");
@@ -1197,7 +1189,7 @@ function UsersPage() {
           ref={searchTopRef}
           className="scroll-mt-21 rounded-sm border border-border bg-card p-3.5 shadow-soft sm:p-5"
         >
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_170px_170px]">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_170px_170px]">
             {/* Search */}
             <div className="relative col-span-2 min-w-0 lg:col-span-2">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:left-3 sm:h-4 sm:w-4" />
@@ -1217,7 +1209,7 @@ function UsersPage() {
               value={statusFilter}
               onValueChange={setStatusFilter}
             >
-              <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
+              <SelectTrigger className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
 
@@ -1242,7 +1234,7 @@ function UsersPage() {
               value={roleFilter}
               onValueChange={setRoleFilter}
             >
-              <SelectTrigger className="h-9 w-full text-xs sm:h-10 sm:text-sm lg:w-[180px]">
+              <SelectTrigger className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm">
                 <SelectValue placeholder="All roles" />
               </SelectTrigger>
 
@@ -1261,48 +1253,48 @@ function UsersPage() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          
-          {/* Sort and date range */}
-<div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
-  {/* Sort */}
-  <div className="col-span-2 min-w-0 sm:col-span-1">
-    <Select
-      value={sort}
-      onValueChange={(value) =>
-        setSort(value as typeof sort)
-      }
+{/* Presence */}
+{canViewUserPresence && (
+  <Select
+    value={presenceFilter}
+    onValueChange={(value) =>
+      setPresenceFilter(value as typeof presenceFilter)
+    }
+  >
+    <SelectTrigger className="h-9 w-full min-w-0 text-xs sm:h-10 sm:text-sm">
+      <SelectValue placeholder="All presence" />
+    </SelectTrigger>
+
+    <SelectContent>
+      <SelectItem value="all">All users</SelectItem>
+      <SelectItem value="online">Online</SelectItem>
+      <SelectItem value="offline">Offline</SelectItem>
+    </SelectContent>
+  </Select>
+)}
+
+{/* Sort */}
+<div className="min-w-0">
+  <Select
+    value={sort}
+    onValueChange={(value) =>
+      setSort(value as typeof sort)
+    }
+  >
+    <SelectTrigger
+      id="users-sort"
+      className="h-9 w-full min-w-0 px-3 text-xs sm:h-10 sm:text-sm"
     >
-      <SelectTrigger
-        id="users-sort"
-        className="h-10 w-full min-w-0 px-3 text-xs sm:text-sm"
-      >
-        <SelectValue placeholder="Sort users" />
-      </SelectTrigger>
+      <SelectValue placeholder="Sort users" />
+    </SelectTrigger>
 
-            <SelectContent>
-        <SelectItem value="newest">
-          Newest
-        </SelectItem>
-
-        <SelectItem value="oldest">
-          Oldest
-        </SelectItem>
-
-        <SelectItem value="alphabetical">
-          Alphabetically
-        </SelectItem>
-
-        <SelectItem value="online">
-          Online
-        </SelectItem>
-
-        <SelectItem value="offline">
-          Offline
-        </SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
+    <SelectContent>
+      <SelectItem value="newest">Newest</SelectItem>
+      <SelectItem value="oldest">Oldest</SelectItem>
+      <SelectItem value="alphabetical">Alphabetically</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
 
   {/* Date from */}
   <div className="min-w-0">
@@ -1613,7 +1605,7 @@ function UsersPage() {
                                 setStatus.isPending
                               }
                             >
-                              
+
 <SelectTrigger
   className={`h-8 w-[135px] text-[10px] sm:h-9 sm:w-[150px] sm:text-xs ${getStatusTextColor(user.status)}`}
 >
@@ -1621,7 +1613,7 @@ function UsersPage() {
 </SelectTrigger>
 
 
-                              
+
 <SelectContent>
   {STATUSES.map((status) => (
     <SelectItem
@@ -1643,7 +1635,7 @@ function UsersPage() {
                           </td>
 
                           <td className="p-3 sm:p-4">
-                            <div className="flex items-center justify-end gap-1">
+                            <div className="flex items-center justify-start gap-2">
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -1669,8 +1661,8 @@ function UsersPage() {
                               </Button>
 
                               {isSelf ? (
-                                <span className="px-2 text-[10px] text-muted-foreground sm:text-xs">
-                                  Your account
+                                <span className="px-2 pl-4 text-[10px] text-muted-foreground sm:text-xs">
+                                  You
                                 </span>
                               ) : (
                                 <Link

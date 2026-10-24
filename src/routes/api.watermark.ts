@@ -10,12 +10,7 @@ const OUTPUT_BUCKET = "watermarked-temp";
 const WATERMARK = {
   text: "ANEKS LIBRARY",
   rotation: 55,
-  opacity: 0.05,
-  horizontalOffset: 60,
-  verticalOffset: -110,
-  imageTitleScale: 0.07,
-  letterSpacing: 0.3,
-  color: { r: 0, g: 0, b: 0 },
+  opacity: 0.10,
 };
 
 type WatermarkType = "image" | "pdf";
@@ -102,42 +97,6 @@ function getImageContentType(format: string): string | null {
   }
 }
 
-function createWatermarkSvg(
-  width: number,
-  height: number,
-): string {
-  const fontSize =
-    Math.min(width, height) * WATERMARK.imageTitleScale;
-
-  return `
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="${width}" height="${height}">
-  <g transform="
-    translate(
-      ${width / 2 + WATERMARK.horizontalOffset}
-      ${height / 2 + WATERMARK.verticalOffset}
-    )
-    rotate(${-WATERMARK.rotation})
-  ">
-    <text
-      x="0"
-      y="0"
-      text-anchor="middle"
-      dominant-baseline="central"
-      font-family="sans-serif"
-      font-size="${fontSize}"
-      letter-spacing="${WATERMARK.letterSpacing}"
-      fill="rgba(
-        ${WATERMARK.color.r},
-        ${WATERMARK.color.g},
-        ${WATERMARK.color.b},
-        ${WATERMARK.opacity}
-      )"
-    >${WATERMARK.text}</text>
-  </g>
-</svg>`;
-}
-
 async function watermarkImage(
   originalBytes: Buffer,
   assets: WatermarkAssets,
@@ -153,15 +112,54 @@ async function watermarkImage(
     throw new Error("Unsupported or invalid image.");
   }
 
- const svg = createWatermarkSvg(width, height);
+  // Reuse the existing PNG watermark asset instead of rendering SVG text.
+  const watermarkWidth = Math.round(
+    Math.min(width, height) * 1.1,
+  );
 
-  const watermark = await sharp(Buffer.from(svg))
+  const rotatedWatermark = await sharp(assets.watermarkPng)
+    .resize({
+      width: watermarkWidth,
+    })
+    .rotate(-WATERMARK.rotation, {
+      background: {
+        r: 0,
+        g: 0,
+        b: 0,
+        alpha: 0,
+      },
+    })
+    .ensureAlpha()
     .png()
     .toBuffer();
 
-const watermarkMetadata = await sharp(watermark).metadata();
+  // Reduce the watermark alpha channel to the configured opacity.
+  const watermarkWithAlpha = await sharp(rotatedWatermark)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
 
-  const composites = [
+  const { data, info } = watermarkWithAlpha;
+
+  for (let index = 3; index < data.length; index += info.channels) {
+    data[index] = Math.round(
+      data[index] * WATERMARK.opacity,
+    );
+  }
+
+  const watermark = await sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: info.channels,
+    },
+  })
+    .png()
+    .toBuffer();
+
+  const watermarkMetadata = await sharp(watermark).metadata();
+
+  const processed = original.composite([
     {
       input: watermark,
       left: Math.round(
@@ -170,10 +168,9 @@ const watermarkMetadata = await sharp(watermark).metadata();
       top: Math.round(
         (height - (watermarkMetadata.height ?? height)) / 2,
       ),
+      blend: "over",
     },
-  ];
-
-  const processed = original.composite(composites);
+  ]);
 
   let bytes: Buffer;
 

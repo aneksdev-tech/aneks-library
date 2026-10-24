@@ -39,7 +39,16 @@ function PreviewPage() {
   const { resourceId } = Route.useParams();
 
   const { user } = useAuth();
-  const { canDownload } = useAccess();
+  
+const {
+  canDownload,
+  isAdmin,
+  isPremium,
+  loading: accessLoading,
+} = useAccess();
+
+const canViewFullDocument = isAdmin || isPremium;
+
 
   const queryClient = useQueryClient();
 

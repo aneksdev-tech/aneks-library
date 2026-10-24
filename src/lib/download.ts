@@ -1,6 +1,60 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function downloadResource(resourceId: string) {
+function getSafeFilename(filename: string): string {
+  return (
+    filename
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "_")
+      .trim() || "resource"
+  );
+}
+
+function getFilenameFromDisposition(
+  disposition: string | null,
+): string | null {
+  if (!disposition) return null;
+
+  const encodedMatch = disposition.match(
+    /filename\*=UTF-8''([^;]+)/i,
+  );
+
+  if (encodedMatch?.[1]) {
+    try {
+      return decodeURIComponent(encodedMatch[1]);
+    } catch {
+      // Fall back to the regular filename.
+    }
+  }
+
+  const regularMatch = disposition.match(
+    /filename="?([^";]+)"?/i,
+  );
+
+  return regularMatch?.[1]?.trim() ?? null;
+}
+
+function triggerBlobDownload(
+  blob: Blob,
+  filename: string,
+) {
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+
+  anchor.href = objectUrl;
+  anchor.download = getSafeFilename(filename);
+  anchor.style.display = "none";
+
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+  }, 1000);
+}
+
+export async function downloadResource(
+  resourceId: string,
+) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -20,73 +74,69 @@ export async function downloadResource(resourceId: string) {
         import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      resourceId,
-    }),
+    body: JSON.stringify({ resourceId }),
   });
 
   if (!response.ok) {
-
     const contentType =
       response.headers.get("content-type") ?? "";
 
     if (contentType.includes("application/json")) {
-
-      const result =
-        await response.json();
+      const result = await response.json();
 
       throw new Error(
-        result.error ??
-        "Download failed.",
+        result.error ?? "Download failed.",
       );
-
     }
 
-    throw new Error(
-      "Download failed.",
-    );
-
+    throw new Error("Download failed.");
   }
 
   const contentType =
     response.headers.get("content-type") ?? "";
 
-  // ---------------------------------------
-  // Protected files (images + PDFs)
-  // ---------------------------------------
-
+  // Images, PDFs, and DOCX files are returned directly by the Edge Function.
   if (
     contentType.startsWith("image/") ||
-    contentType === "application/pdf"
+    contentType.includes("application/pdf") ||
+    contentType.includes(
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
   ) {
+    const blob = await response.blob();
 
-    const blob =
-      await response.blob();
+    const disposition =
+      response.headers.get("content-disposition");
 
-    const objectUrl =
-      URL.createObjectURL(blob);
+    const serverFilename =
+      getFilenameFromDisposition(disposition);
 
-    window.open(
-      objectUrl,
-      "_blank",
-      "noopener,noreferrer",
+    const isDocx = contentType.includes(
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     );
 
-    return;
+    const filename =
+      serverFilename ??
+      (isDocx
+        ? "resource.docx"
+        : contentType.includes("application/pdf")
+          ? "resource.pdf"
+          : "resource.jpg");
 
+    triggerBlobDownload(blob, filename);
+    return;
   }
 
-  // ---------------------------------------
-  // Other files (signed URL)
-  // ---------------------------------------
+  // Other file types are returned as a signed Storage URL.
+  const result: { url?: string } = await response.json();
 
-  const result =
-    await response.json();
+  if (!result.url) {
+    throw new Error("The download link was not returned.");
+  }
 
   window.open(
     result.url,
     "_blank",
     "noopener,noreferrer",
   );
-
 }
